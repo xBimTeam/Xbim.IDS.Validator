@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Xbim.Essentials" Version="5.1.364-develop" />
+    <PackageReference Include="Xbim.InformationSpecifications" Version="0.3.24" />
+  </ItemGroup>
+
+</Project>
