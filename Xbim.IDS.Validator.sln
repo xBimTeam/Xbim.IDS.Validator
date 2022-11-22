@@ -3,12 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xbim.IDS.Validator.Core", "Xbim.IDS.Validator.Core\Xbim.IDS.Validator.Core.csproj", "{38B27756-6465-4312-80C3-A0A46326EE0C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xbim.IDS.Validator.Core", "Xbim.IDS.Validator.Core\Xbim.IDS.Validator.Core.csproj", "{38B27756-6465-4312-80C3-A0A46326EE0C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xbim.IDS.Validator.Core.Tests", "Xbim.IDS.Validator.Core.Tests\Xbim.IDS.Validator.Core.Tests.csproj", "{6AACCF6C-B750-4290-ADE9-2578CE8DF963}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xbim.IDS.Validator.Core.Tests", "Xbim.IDS.Validator.Core.Tests\Xbim.IDS.Validator.Core.Tests.csproj", "{6AACCF6C-B750-4290-ADE9-2578CE8DF963}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{940B173E-4DD5-4392-AF9E-264285B2121C}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		nuget.config = nuget.config
 	EndProjectSection
 EndProject

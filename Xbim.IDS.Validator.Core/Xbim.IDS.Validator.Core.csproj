@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Xbim.Essentials" Version="5.1.364-develop" />
     <PackageReference Include="Xbim.InformationSpecifications" Version="0.3.24" />
   </ItemGroup>
