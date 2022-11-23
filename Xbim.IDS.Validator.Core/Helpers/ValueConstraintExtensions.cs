@@ -13,9 +13,27 @@ namespace Xbim.IDS.Validator.Core.Helpers
         public static string SingleValue(this ValueConstraint constraint)
         {
             
-            var first = (constraint?.AcceptedValues?.Single() as ExactConstraint);
+            var first = constraint?.AcceptedValues?.Single();
             Debug.Assert(first != null);
-            return first.Value;
+
+            switch(first)
+            {
+                case ExactConstraint ec:
+                    return ec.Value;
+
+                case PatternConstraint pc:
+                    return pc.Pattern;
+
+                case RangeConstraint rc:
+                    return rc.ToString();
+
+                case ValueConstraint vc:
+                    return vc.ToString();
+
+                default:
+                    throw new NotImplementedException(first.GetType().Name);
+            }
+   
         }
     }
 }

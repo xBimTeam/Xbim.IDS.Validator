@@ -6,18 +6,18 @@ using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Tests
 {
-    public class IdsPredicateTests
+    public class IdsFacetBinderTests
     {
 
         private IfcQuery query;
         static IModel model;
 
-        public IdsPredicateTests()
+        public IdsFacetBinderTests()
         {
             query = new IfcQuery();
         }
 
-        static IdsPredicateTests()
+        static IdsFacetBinderTests()
         {
             model = BuildModel();
         }
@@ -42,7 +42,7 @@ namespace Xbim.IDS.Validator.Core.Tests
             var expressType = binder.GetExpressType(facet);
            
             // Act
-            var expression = binder.Bind(query.InstancesExpression, facet, expressType);
+            var expression = binder.BindFilterExpression(query.InstancesExpression, facet, expressType);
 
             // Assert
             
@@ -68,7 +68,7 @@ namespace Xbim.IDS.Validator.Core.Tests
             var expressType = binder.GetExpressType(facet);
 
             // Act
-            var ex = Record.Exception(() => binder.Bind(query.InstancesExpression, facet, expressType));
+            var ex = Record.Exception(() => binder.BindFilterExpression(query.InstancesExpression, facet, expressType));
 
             // Assert
 
@@ -93,7 +93,7 @@ namespace Xbim.IDS.Validator.Core.Tests
             var binder = new IdsFacetBinder(model);
             var expressType = binder.GetExpressType(facet);
             // Act
-            var expression = binder.Bind(query.InstancesExpression, facet, expressType);
+            var expression = binder.BindFilterExpression(query.InstancesExpression, facet, expressType);
 
             // Assert
 
@@ -123,9 +123,9 @@ namespace Xbim.IDS.Validator.Core.Tests
             };
             var binder = new IdsFacetBinder(model);
             var expressType = binder.GetExpressType(ifcFacet);
-            var expression = binder.Bind(query.InstancesExpression, ifcFacet, expressType);
+            var expression = binder.BindFilterExpression(query.InstancesExpression, ifcFacet, expressType);
             // Act
-            expression = binder.Bind(expression, attrFacet, expressType);
+            expression = binder.BindFilterExpression(expression, attrFacet, expressType);
 
             // Assert
 
@@ -153,9 +153,9 @@ namespace Xbim.IDS.Validator.Core.Tests
             };
             var binder = new IdsFacetBinder(model);
             var expressType = binder.GetExpressType(ifcFacet);
-            var expression = binder.Bind(query.InstancesExpression, ifcFacet, expressType);
+            var expression = binder.BindFilterExpression(query.InstancesExpression, ifcFacet, expressType);
             // Act
-            var ex = Record.Exception(() => binder.Bind(expression, attrFacet, expressType));
+            var ex = Record.Exception(() => binder.BindFilterExpression(expression, attrFacet, expressType));
 
             ex.Should().NotBeNull();
             ex.Should().BeOfType<InvalidOperationException>();
