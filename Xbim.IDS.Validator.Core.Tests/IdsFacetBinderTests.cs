@@ -2,6 +2,7 @@
 using Xbim.Common;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
+using Xbim.Ifc4.SharedFacilitiesElements;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Tests
@@ -28,26 +29,36 @@ namespace Xbim.IDS.Validator.Core.Tests
         [InlineData("IfcWall", 5, typeof(IIfcWall))]
         [InlineData("IfcSpace", 4, typeof(IIfcSpace))]
         [InlineData("IfcBuildingElement", 46, typeof(IIfcBuildingElement))] // Abstract
-        [InlineData("IfcFurnitureType", 9, typeof(IIfcFurnitureType))]
         [InlineData("IfcFlowTerminal", 0, typeof(IIfcFlowTerminal))]
+        [InlineData("IfcFurnitureType", 9, typeof(IIfcFurnitureType))]
+        [InlineData("IfcFurniture", 14, typeof(IfcFurniture))]
+        [InlineData("IfcFurniture,IfcFurnitureType", 9 + 14, typeof(IfcFurniture), typeof(IfcFurnitureType))]
         [Theory]
-        public void Can_Query_By_IfcType(string ifcType, int expectedCount, Type expectedType)
+        public void Can_Query_Exact_IfcType(string ifcType, int expectedCount, params Type[] expectedTypes)
         {
             IfcTypeFacet facet = new IfcTypeFacet
             {
-                IfcType = new ValueConstraint(ifcType)
+                IfcType = new ValueConstraint(NetTypeName.String)
             };
+            var types = ifcType.Split(',');
+            foreach(var type in types) { facet.IfcType.AddAccepted(new ExactConstraint(type)); }
 
             var binder = new IdsFacetBinder(model);
-            var expressType = binder.GetExpressType(facet);
            
             // Act
-            var expression = binder.BindFilterExpression(query.InstancesExpression, facet, expressType);
+            var expression = binder.BindFilterExpression(query.InstancesExpression, facet);
 
             // Assert
             
             var result = query.Execute(expression, model);
-            result.Should().HaveCount(expectedCount).And.AllBeAssignableTo(expectedType);
+            result.Should().HaveCount(expectedCount);
+            if(expectedCount > 0)
+            {
+                result.Should().AllSatisfy(t => 
+                    expectedTypes.Where(e => e.IsAssignableFrom(t.GetType()))
+                    .Should().ContainSingle($"Found {t.GetType().Name}, and expected one of {string.Join(',',expectedTypes.Select(t => t.Name))}"));
+            }
+
         }
 
         [InlineData("IfcInvalid")]
@@ -65,10 +76,9 @@ namespace Xbim.IDS.Validator.Core.Tests
             };
 
             var binder = new IdsFacetBinder(model);
-            var expressType = binder.GetExpressType(facet);
 
             // Act
-            var ex = Record.Exception(() => binder.BindFilterExpression(query.InstancesExpression, facet, expressType));
+            var ex = Record.Exception(() => binder.BindFilterExpression(query.InstancesExpression, facet));
 
             // Assert
 
@@ -91,9 +101,8 @@ namespace Xbim.IDS.Validator.Core.Tests
             };
 
             var binder = new IdsFacetBinder(model);
-            var expressType = binder.GetExpressType(facet);
             // Act
-            var expression = binder.BindFilterExpression(query.InstancesExpression, facet, expressType);
+            var expression = binder.BindFilterExpression(query.InstancesExpression, facet);
 
             // Assert
 
@@ -109,7 +118,7 @@ namespace Xbim.IDS.Validator.Core.Tests
         [InlineData("IfcWall", nameof(IIfcWall.Name), "Basic Wall:Wall-Ext_102Bwk-75Ins-100LBlk-12P:285330", 1)]
         [InlineData("IfcSpace", nameof(IIfcSpace.Description), "Lounge", 1)]
         [Theory]
-        public void Can_Query_By_AdditionalAttributes(string ifcType, string attributeFieldName, string attributeValue, int expectedCount)
+        public void Can_Query_By_Ifc_And_Attributes(string ifcType, string attributeFieldName, string attributeValue, int expectedCount)
         {
             IfcTypeFacet ifcFacet = new IfcTypeFacet
             {
@@ -122,10 +131,33 @@ namespace Xbim.IDS.Validator.Core.Tests
                 AttributeValue = new ValueConstraint(attributeValue)
             };
             var binder = new IdsFacetBinder(model);
-            var expressType = binder.GetExpressType(ifcFacet);
-            var expression = binder.BindFilterExpression(query.InstancesExpression, ifcFacet, expressType);
+            
             // Act
-            expression = binder.BindFilterExpression(expression, attrFacet, expressType);
+            var expression = binder.BindFilterExpression(query.InstancesExpression, ifcFacet);
+            expression = binder.BindFilterExpression(expression, attrFacet);
+
+            // Assert
+
+            var result = query.Execute(expression, model);
+            result.Should().HaveCount(expectedCount);
+
+        }
+
+        
+        [InlineData(nameof(IIfcFurniture.ObjectType), "Chair - Dining", 6)]
+        [Theory]
+        public void Can_Query_By_Attributes(string attributeFieldName, string attributeValue, int expectedCount)
+        {
+
+            AttributeFacet attrFacet = new AttributeFacet
+            {
+                AttributeName = attributeFieldName,
+                AttributeValue = new ValueConstraint(attributeValue)
+            };
+            var binder = new IdsFacetBinder(model);
+            
+            // Act
+            var expression = binder.BindFilterExpression(query.InstancesExpression, attrFacet);
 
             // Assert
 
@@ -152,10 +184,10 @@ namespace Xbim.IDS.Validator.Core.Tests
                 AttributeValue = new ValueConstraint("not relevant")
             };
             var binder = new IdsFacetBinder(model);
-            var expressType = binder.GetExpressType(ifcFacet);
-            var expression = binder.BindFilterExpression(query.InstancesExpression, ifcFacet, expressType);
+            
+            var expression = binder.BindFilterExpression(query.InstancesExpression, ifcFacet);
             // Act
-            var ex = Record.Exception(() => binder.BindFilterExpression(expression, attrFacet, expressType));
+            var ex = Record.Exception(() => binder.BindFilterExpression(expression, attrFacet));
 
             ex.Should().NotBeNull();
             ex.Should().BeOfType<InvalidOperationException>();

@@ -40,12 +40,12 @@ namespace Xbim.IDS.Validator.Core
             {
                 throw new InvalidOperationException("Expected a single IfcTypeFacet");
             }
-            var expressType = facetBinder.GetExpressType(ifcFacet);
-            var expression = facetBinder.BindFilterExpression(ifcQuery.InstancesExpression, ifcFacet, expressType);
+            //var expressType = facetBinder.GetExpressType(ifcFacet);
+            var expression = facetBinder.BindFilterExpression(ifcQuery.InstancesExpression, ifcFacet);
 
             foreach (var facet in facets.Except(new[] { ifcFacet}))
             {
-                expression = facetBinder.BindFilters(expression, facet, expressType);
+                expression = facetBinder.BindFilters(expression, facet);
             }
 
             return ifcQuery.Execute(expression, model);

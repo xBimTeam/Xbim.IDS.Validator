@@ -13,6 +13,8 @@ namespace Xbim.IDS.Validator.Core.Helpers
         private static MethodInfo _enumerableWhereMethod = GenericMethodOf(_ => Enumerable.Where<int>(default(IEnumerable<int>), default(Func<int, bool>)));
         private static MethodInfo _enumerableCastMethod = GenericMethodOf(_ => Enumerable.Cast<int>(default(IEnumerable<int>)));
 
+        private static MethodInfo _enumerableConcatMethod = GenericMethodOf(_ => Enumerable.Concat<int>(default(IEnumerable<int>), default(IEnumerable<int>)));
+
 
         //	public static MethodInfo EnumerableOfType
         //	{
@@ -37,6 +39,11 @@ namespace Xbim.IDS.Validator.Core.Helpers
         public static MethodInfo EnumerableCastGeneric
         {
             get { return _enumerableCastMethod; }
+        }
+
+        public static MethodInfo EnumerableConcatGeneric
+        {
+            get { return _enumerableConcatMethod; }
         }
 
         private static MethodInfo GenericMethodOf<TReturn>(Expression<Func<object, TReturn>> expression)

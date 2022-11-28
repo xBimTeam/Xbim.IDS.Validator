@@ -8,6 +8,7 @@ using Xbim.Ifc4.MeasureResource;
 using Xbim.InformationSpecifications;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4.Kernel;
+using Xbim.InformationSpecifications.Helpers;
 
 namespace Xbim.IDS.Validator.Core
 {
@@ -25,10 +26,35 @@ namespace Xbim.IDS.Validator.Core
             this.model = model;
         }
 
-        public ExpressType GetExpressType(IfcTypeFacet ifcFacet)
+        private ExpressType GetExpressType(IfcTypeFacet ifcFacet)
         {
             string ifcTypeName = GetIfcTypeName(ifcFacet);
             return model.Metadata.ExpressType(ifcTypeName.ToUpperInvariant());
+        }
+
+        private IEnumerable<ExpressType> GetExpressTypes(IfcTypeFacet ifcFacet)
+        {
+            if(ifcFacet?.IfcType?.AcceptedValues?.Any() == false)
+            {
+                yield break;
+            }
+            foreach(var ifcTypeConstraint in ifcFacet!.IfcType!.AcceptedValues ?? default)
+            {
+                switch (ifcTypeConstraint)
+                {
+                    case ExactConstraint e:
+                        string ifcTypeName = e.Value;
+                        yield return model.Metadata.ExpressType(ifcTypeName.ToUpperInvariant());
+                        break;
+                    case RangeConstraint r:
+                    case PatternConstraint p:
+                    case StructureConstraint s:
+
+                    default:
+                        throw new NotImplementedException(ifcTypeConstraint.GetType().Name);
+                }
+            }
+            
         }
 
         /// <summary>
@@ -36,24 +62,39 @@ namespace Xbim.IDS.Validator.Core
         /// </summary>
         /// <param name="baseExpression"></param>
         /// <param name="facet"></param>
-        /// <param name="expressType"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public Expression BindFilters(Expression baseExpression, IFacet facet, ExpressType expressType)
+        public Expression BindFilters(Expression baseExpression, IFacet facet)
         {
             switch (facet)
             {
                 case IfcTypeFacet f:
-                    return BindFilterExpression(baseExpression, f, expressType);
+                    return BindFilterExpression(baseExpression, f);
 
                 case AttributeFacet af:
-                    return BindFilterExpression(baseExpression, af, expressType);
+                    return BindFilterExpression(baseExpression, af);
 
                 case IfcPropertyFacet pf:
                     // TODO:
                     return baseExpression;
 
                 case IfcClassificationFacet af:
+                    // TODO: 
+                    return baseExpression;
+
+                case DocumentFacet df:
+                    // TODO: 
+                    return baseExpression;
+
+                case IfcRelationFacet rf:
+                    // TODO: 
+                    return baseExpression;
+
+                case PartOfFacet pf:
+                    // TODO: 
+                    return baseExpression;
+
+                case MaterialFacet mf:
                     // TODO: 
                     return baseExpression;
 
@@ -67,11 +108,10 @@ namespace Xbim.IDS.Validator.Core
         /// </summary>
         /// <param name="baseExpression"></param>
         /// <param name="ifcFacet"></param>
-        /// <param name="expressType"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="InvalidOperationException"></exception>
-        public Expression BindFilterExpression(Expression baseExpression, IfcTypeFacet ifcFacet, ExpressType expressType)
+        public Expression BindFilterExpression(Expression baseExpression, IfcTypeFacet ifcFacet)
         {
             if (baseExpression is null)
             {
@@ -87,12 +127,43 @@ namespace Xbim.IDS.Validator.Core
             {
                 throw new InvalidOperationException("IfcTypeFacet is not valid");
             }
-            ValidateExpressType(expressType);
+
+            var expressTypes = GetExpressTypes(ifcFacet);
+            ValidateExpressTypes(expressTypes);
 
             var expression = baseExpression;
-            expression = BindIfcType(expression, expressType);
-            if (ifcFacet.PredefinedType != null)
-                expression = BindPredefinedTypeFilter(ifcFacet, expression, expressType);
+            bool doConcat = false;
+            foreach(var expressType in expressTypes)
+            {
+                var leftExpr = baseExpression;
+                leftExpr = BindIfcType(leftExpr, expressType);
+                if (ifcFacet.PredefinedType != null)
+                    leftExpr = BindPredefinedTypeFilter(ifcFacet, leftExpr, expressType);
+
+
+                // Union to main expression.
+                if(doConcat)
+                {
+                    expression = BindConcat(expression, leftExpr);
+                }
+                else
+                {
+                    expression = leftExpr;
+                    doConcat = true;
+                }
+            }
+                
+            return expression;
+            
+
+            
+        }
+
+        private Expression BindConcat(Expression expression, Expression leftExpr)
+        {
+            expression = Expression.Call(null, ExpressionHelperMethods.EnumerableCastGeneric.MakeGenericMethod(typeof(IIfcRoot)), expression);
+
+            expression = Expression.Call(null, ExpressionHelperMethods.EnumerableConcatGeneric.MakeGenericMethod(typeof(IIfcRoot)), expression, leftExpr);
             return expression;
         }
 
@@ -102,11 +173,10 @@ namespace Xbim.IDS.Validator.Core
         /// <remarks>e.g Where(p=> p.GlobalId == "someGuid")</remarks>
         /// <param name="baseExpression"></param>
         /// <param name="attrFacet"></param>
-        /// <param name="expressType"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="InvalidOperationException"></exception>
-        public Expression BindFilterExpression(Expression baseExpression, AttributeFacet attrFacet, ExpressType expressType)
+        public Expression BindFilterExpression(Expression baseExpression, AttributeFacet attrFacet)
         {
             if (baseExpression is null)
             {
@@ -123,9 +193,31 @@ namespace Xbim.IDS.Validator.Core
                 // IsValid checks against a know list of all IFC Attributes
                 throw new InvalidOperationException($"Attribute Facet '{attrFacet?.AttributeName}' is not valid");
             }
-            ValidateExpressType(expressType);
+
 
             var expression = baseExpression;
+            // When an Ifc Type has not yet been specified, find correct root type for this Attribute
+            if (expression.Type.IsInterface && expression.Type.IsAssignableTo(typeof(IEntityCollection)))
+            {
+
+                // TODO: Use correct IFC Schema
+                var rootTypes = SchemaInfo.SchemaIfc4.GetAttributeClasses(attrFacet.AttributeName.SingleValue(), onlyTopClasses: true);
+
+                IfcTypeFacet ifcFacet = new IfcTypeFacet
+                {
+                    IfcType = new ValueConstraint(NetTypeName.String)
+                };
+                foreach (var root in rootTypes)
+                {
+                    ifcFacet.IfcType.AcceptedValues?.Add(new ExactConstraint(root));
+                }
+                expression = BindFilterExpression(expression, ifcFacet);
+            }
+            
+            // Get underlying collection type
+            var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
+            var expressType = model.Metadata.ExpressType(collectionType);
+            ValidateExpressType(expressType);
 
             expression = BindEqualsAttributeFilter(expression, expressType, attrFacet.AttributeName.SingleValue(), attrFacet?.AttributeValue.SingleValue());
             return expression;
@@ -139,6 +231,8 @@ namespace Xbim.IDS.Validator.Core
             var activate = Expression.Constant(true, typeof(bool));
             // call .OfType("IfcWall", true)
             expression = Expression.Call(expression, ofTypeMethod, entityTypeName, activate);   // TODO: switch to Generic sig
+
+            // TODO: Is this required?
             // call .Cast<EntityType>()
             expression = Expression.Call(null, ExpressionHelperMethods.EnumerableCastGeneric.MakeGenericMethod(expressType.Type), expression);
 
@@ -154,6 +248,14 @@ namespace Xbim.IDS.Validator.Core
             }
         }
 
+        private static void ValidateExpressTypes(IEnumerable<ExpressType> expressTypes)
+        {
+            foreach(var expressType in expressTypes)
+            {
+                ValidateExpressType(expressType);
+            }
+        }
+
         private Expression BindPredefinedTypeFilter(IfcTypeFacet ifcFacet, Expression expression, ExpressType expressType)
         {
             var predefinedType = (ifcFacet?.PredefinedType?.AcceptedValues?.FirstOrDefault() as ExactConstraint)?.Value;
@@ -162,9 +264,10 @@ namespace Xbim.IDS.Validator.Core
             var propertyMeta = expressType.Properties.First(p => p.Value.Name == "PredefinedType").Value;
             var ifcAttributePropInfo = propertyMeta.PropertyInfo;
             var ifcAttributeValue = GetPredefinedType(ifcFacet);
+
             // TODO: Check IfcObject.ObjectType when USERDEFINED - Or Expression
 
-            return BindEqualsAttributeFilter(expression, expressType, ifcAttributePropInfo, ifcAttributeValue);
+            return BindEqualsAttributeFilter(expression, ifcAttributePropInfo, ifcAttributeValue);
         }
 
 
@@ -181,18 +284,26 @@ namespace Xbim.IDS.Validator.Core
             {
                 throw new NotSupportedException("Cannot filter on collection properties");
             }
-            return BindEqualsAttributeFilter(expression, expressType, propertyMeta.PropertyInfo, ifcAttributeValue);
+            return BindEqualsAttributeFilter(expression, propertyMeta.PropertyInfo, ifcAttributeValue);
         }
 
-        private static Expression BindEqualsAttributeFilter(Expression expression, ExpressType expressType, 
+        private static Expression BindEqualsAttributeFilter(Expression expression,
             PropertyInfo ifcAttributePropInfo, string ifcAttributeValue)
         {
 
+            
+
+            // Get underlying collection type
+            var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
+
+            // call .Cast<EntityType>()
+            expression = Expression.Call(null, ExpressionHelperMethods.EnumerableCastGeneric.MakeGenericMethod(collectionType), expression);
+
             // IEnumerable.Where<TEntity>(...)
-            var whereMethod = ExpressionHelperMethods.EnumerableWhereGeneric.MakeGenericMethod(expressType.Type);
+            var whereMethod = ExpressionHelperMethods.EnumerableWhereGeneric.MakeGenericMethod(collectionType);
 
             // ent => ...
-            ParameterExpression ifcTypeParam = Expression.Parameter(expressType.Type, "ent");
+            ParameterExpression ifcTypeParam = Expression.Parameter(collectionType, "ent");
 
             Expression nameProperty = Expression.Property(ifcTypeParam, ifcAttributePropInfo);
 
