@@ -52,13 +52,13 @@ namespace Xbim.IDS.Validator.Core.Tests
                         var i = item as IIfcRoot;
                         logger.LogInformation("        * {ID}: {Type} {Name} ", item.EntityLabel, item.GetType().Name, i?.Name);
                         //logger.LogInformation("        Requirement: {name} {descr}", spec?.Requirement?.Name, spec.Requirement.Description);
-                        foreach (var req in spec.Requirement.Facets)
+                        foreach (var facet in spec.Requirement.Facets)
                         {
-                            var result = modelBinder.ValidateRequirement(item, req, logger);
+                            var result = modelBinder.ValidateRequirement(item, spec.Requirement, facet, logger);
                             LogLevel level = LogLevel.Information;
                             if (result.ValidationStatus == ValidationStatus.Inconclusive) level = LogLevel.Warning;
                             if (result.ValidationStatus == ValidationStatus.Failed) level = LogLevel.Error;
-                            logger.Log(level, "          {result}: Checking {short} : {req}", result.ValidationStatus, req.Short(), req.ToString());
+                            logger.Log(level, "          {result}: Checking {short} : {req}", result.ValidationStatus, facet.Short(), facet.ToString());
                         }
                     }
 

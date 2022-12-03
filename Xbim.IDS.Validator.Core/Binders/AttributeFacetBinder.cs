@@ -69,6 +69,51 @@ namespace Xbim.IDS.Validator.Core.Binders
             return expression;
         }
 
+        public IDictionary<string,object> GetAttributes(IPersistEntity entity, AttributeFacet facet)
+        {
+            var results = new Dictionary<string, object>();
+
+            var expressType = Model.Metadata.ExpressType(entity);
+            foreach(var constraint in facet.AttributeName.AcceptedValues)
+            {
+                switch(constraint)
+                {
+                    case ExactConstraint e:
+                        var attrName = e.Value;
+                        var propertyMeta = expressType.Properties.FirstOrDefault(p => p.Value.Name == attrName).Value;
+                        if (propertyMeta == null)
+                        {
+                            results.Add(attrName, null);
+                        }
+                        else
+                        {
+                            var ifcAttributePropInfo = propertyMeta.PropertyInfo;
+                            var value = ifcAttributePropInfo.GetValue(entity);
+                            results.Add(attrName, value);
+                        }
+                        break;
+
+                    case PatternConstraint e:
+                        foreach(var prop in expressType.Properties.Values)
+                        {
+                            
+                            if(e.IsSatisfiedBy(prop.Name, facet.AttributeName, true))
+                            {
+                                var value = prop.PropertyInfo.GetValue(entity);
+                                results.Add(prop.Name, value);
+                            }
+                        }
+                        break;
+
+                    default:
+                        throw new NotImplementedException(constraint.GetType().Name);
+                }
+            }
+            
+
+            return results;
+        }
+
 
         internal static Expression BindEqualsAttributeFilter(Expression expression, ExpressType expressType,
             string ifcAttributeName, ValueConstraint constraint)

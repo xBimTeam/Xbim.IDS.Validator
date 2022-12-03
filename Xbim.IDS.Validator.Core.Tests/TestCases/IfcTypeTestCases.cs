@@ -1,26 +1,13 @@
-using Divergic.Logging.Xunit;
 using FluentAssertions;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Xbim.Common;
-using Xbim.Ifc;
-using Xbim.InformationSpecifications;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.TestCases
 {
 
-    public class IfcTypeTestCases
+    public class IfcTypeTestCases: BaseTest
     {
-        private readonly ITestOutputHelper output;
-
-        private readonly ILogger logger;
-
-        public IfcTypeTestCases(ITestOutputHelper output)
+        public IfcTypeTestCases(ITestOutputHelper output) : base(output)
         {
-            this.output = output;
-            logger = GetXunitLogger();
         }
 
         [InlineData(@"TestCases/entity/fail-a_null_predefined_type_should_always_fail_a_specified_predefined_types.ids")]
@@ -60,67 +47,13 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         public void EntityTestPass(string idsFile)
         {
             List<IdsValidationResult> results = VerifyIdsFile(idsFile);
-            ((IEnumerable<IdsValidationResult>)results).Should().NotBeEmpty("Expect at least one result");
+            results.Should().NotBeEmpty("Expect at least one result");
             results.Where((IdsValidationResult r) => r.Failures.Any()).Should().BeEmpty("");
         }
 
-        private List<IdsValidationResult> VerifyIdsFile(string idsFile)
-        {
-            string ifcFile = Path.ChangeExtension(idsFile, "ifc");
-            IfcStore model = IfcStore.Open(ifcFile);
-            Xids ids = Xids.LoadBuildingSmartIDS(idsFile, logger);
-            IdsModelBinder modelBinder = new IdsModelBinder(model);
-            List<IdsValidationResult> results = new List<IdsValidationResult>();
-            foreach (Specification spec in ids.AllSpecifications())
-            {
-                IEnumerable<IPersistEntity> applicable = modelBinder.SelectApplicableEntities(spec);
-                foreach (IFacet req in spec.Requirement!.Facets)
-                {
-                    foreach (IPersistEntity entity in applicable)
-                    {
-                        IdsValidationResult result = modelBinder.ValidateRequirement(entity, req, logger);
-                        results.Add(result);
-                    }
-                }
-            }
-            foreach (IdsValidationResult res in results)
-            {
-                LogLevel logLevel = LogLevel.Information;
-                if (res.ValidationStatus == ValidationStatus.Failed)
-                {
-                    logLevel = LogLevel.Error;
-                }
-                if (res.ValidationStatus == ValidationStatus.Inconclusive)
-                {
-                    logLevel = LogLevel.Warning;
-                }
-                logger.Log(logLevel, "Entity {ent}", res.Entity?.EntityLabel);
-                foreach (string pass in res.Successful)
-                {
-                    logger.LogInformation("  {message}", pass);
-                }
-                foreach (string fail in res.Failures)
-                {
-                    logger.LogError("  {error}", fail);
-                }
-            }
-            return results;
-        }
+        
 
-        internal ILogger GetXunitLogger()
-        {
-            IServiceCollection services = new ServiceCollection().AddLogging(delegate (ILoggingBuilder builder)
-            {
-                builder.AddXunit(output, new LoggingConfig
-                {
-                    LogLevel = LogLevel.Debug
-                });
-            });
-            IServiceProvider provider = services.BuildServiceProvider();
-            ILogger<IfcTypeTestCases> logger = provider.GetRequiredService<ILogger<IfcTypeTestCases>>();
-            Assert.NotNull(logger);
-            return logger;
-        }
+        
     }
 
 }

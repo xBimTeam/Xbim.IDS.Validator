@@ -1,9 +1,15 @@
 ﻿using Microsoft.Extensions.Logging;
+using System.Collections;
+using System.Linq;
 using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.Common.Metadata;
 using Xbim.IDS.Validator.Core.Binders;
+using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
+using Xbim.Ifc4;
+using Xbim.Ifc4.Interfaces;
+using Xbim.Ifc4.MeasureResource;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core
@@ -70,7 +76,7 @@ namespace Xbim.IDS.Validator.Core
         /// <param name="facet"></param>
         /// <param name="logger"></param>
         /// <returns></returns>
-        public IdsValidationResult ValidateRequirement(IPersistEntity item, IFacet facet, ILogger? logger)
+        public IdsValidationResult ValidateRequirement(IPersistEntity item, FacetGroup requirement, IFacet facet, ILogger? logger)
         {
             var facetBinder = new IfcTypeFacetBinder(model);
             var result = new IdsValidationResult()
@@ -81,59 +87,112 @@ namespace Xbim.IDS.Validator.Core
             switch (facet)
             {
                 case IfcTypeFacet f:
-                    var entityType = model.Metadata.ExpressType(item);
-                    if(entityType == null)
                     {
-                        result.Failures.Add($"Invalid IFC Type '{item.GetType().Name}'");
-                    }
-                    var actual = entityType?.Name.ToUpperInvariant();
-
-                    if (f?.IfcType?.IsSatisfiedBy(actual) == true)
-                    {
-                        result.Successful.Add("IfcType '" + actual + "' was " + f.IfcType.Short());
-                    }
-                    else
-                    {
-                        result.Failures.Add("IfcType '" + actual + "' was not " + f?.IfcType?.Short());
-                    }
-                    if(f?.PredefinedType?.HasAnyAcceptedValue() == true)
-                    {
-                        var preDefValue = facetBinder.GetPredefinedType(item);
-                        if (f?.PredefinedType?.IsSatisfiedBy(preDefValue) == true)
+                        var entityType = model.Metadata.ExpressType(item);
+                        if (entityType == null)
                         {
-                            result.Successful.Add("PredefinedType '" + preDefValue + "' was " + f.PredefinedType.Short());
+                            result.Failures.Add($"Invalid IFC Type '{item.GetType().Name}'");
+                        }
+                        var actual = entityType?.Name.ToUpperInvariant();
+
+                        if (f?.IfcType?.SatisfiesRequirement(requirement, actual, logger) == true)
+                        {
+                            result.Successful.Add("IfcType '" + actual + "' was " + f.IfcType.Short());
                         }
                         else
                         {
-                            result.Failures.Add("PredefinedType '" + preDefValue + "' was not " + f?.PredefinedType?.Short());
+                            result.Failures.Add("IfcType '" + actual + "' was not " + f?.IfcType?.Short());
                         }
+                        if (f?.PredefinedType?.HasAnyAcceptedValue() == true)
+                        {
+                            var preDefValue = facetBinder.GetPredefinedType(item);
+                            if (f!.PredefinedType.SatisfiesRequirement(requirement, preDefValue, logger) == true)
+                            {
+                                result.Successful.Add("PredefinedType '" + preDefValue + "' was " + f.PredefinedType.Short());
+                            }
+                            else
+                            {
+                                result.Failures.Add("PredefinedType '" + preDefValue + "' was not " + f?.PredefinedType?.Short());
+                            }
+                        }
+
+                        break;
                     }
-                    
-                    break;
 
                 case IfcPropertyFacet pf:
-                    // Test the Constraints
-                    // TODO: Should be callung IsSatisfiedBy() on Name, PsetName, but needs analysis.
-                    if (pf?.PropertySetName?.IsValid() == true)
-                        result.Successful.Add(pf.PropertySetName.Short());
-                    else
-                        result.Failures.Add(pf?.PropertySetName?.Short());
+                    {
+                        // Test the Constraints
+                        // TODO: Should be callung SatisfiesRequirement() on Name, PsetName, but needs analysis.
+                        if (pf?.PropertySetName?.IsValid() == true)
+                            result.Successful.Add(pf.PropertySetName.Short());
+                        else
+                            result.Failures.Add(pf?.PropertySetName?.Short());
 
-                    if (pf?.PropertyName?.IsValid() == true)
-                        result.Successful.Add(pf.PropertyName.Short());
-                    else
-                        result.Failures.Add(pf?.PropertyName?.Short());
+                        if (pf?.PropertyName?.IsValid() == true)
+                            result.Successful.Add(pf.PropertyName.Short());
+                        else
+                            result.Failures.Add(pf?.PropertyName?.Short());
 
-                    var value = psetFacetBinder.GetProperty(item.EntityLabel, pf.PropertySetName.SingleValue(),
-                        pf.PropertyName.SingleValue());
-                    
-                    if(pf.PropertyValue != null && pf.PropertyValue.IsSatisfiedBy(value?.Value, logger))
-                        result.Successful.Add(pf.PropertyValue.Short());
-                    else
-                        result.Successful.Add(pf?.PropertyValue?.Short());
+                        var value = psetFacetBinder.GetProperty(item.EntityLabel, pf.PropertySetName.SingleValue(),
+                            pf.PropertyName.SingleValue());
+
+                        if (pf.PropertyValue != null)
+                        {
+                            if (pf.PropertyValue.SatisfiesRequirement(requirement, value?.Value, logger))
+                                result.Successful.Add(pf.PropertyValue.Short());
+                            else
+                                result.Failures.Add(pf?.PropertyValue?.Short());
+
+                        }
+                        break;
+                    }
+
+                case AttributeFacet af:
+                    {
+                        
+                        var candidates = attrFacetBinder.GetAttributes(item, af);
+
+                        foreach(var pair in candidates)
+                        {
+                            var attrName = pair.Key;
+                            var attrvalue = pair.Value;
+                            bool isPopulated = IsValueRelevant(attrvalue);
+                            // Name meets requirement if it has a value and is Required. Treat unknown logical as no value
+                            if (af.AttributeName.SatisfiesRequirement(requirement, attrName, logger) && (requirement.IsRequired() == isPopulated))
+                            {
+                                result.Successful.Add("AttributeName " + attrName + " was " + af.AttributeName.Short());
+                            }
+                            else
+                            {
+                                result.Failures.Add("AttributeName " + attrName + " was not " + af!.AttributeName.Short() + " - " + af!.AttributeName.ToString());
+
+                            }
+
+                            if (attrvalue is IExpressBooleanType ifcbool)
+                            {
+                                // IDS Specs expect bools to be upper case
+                                attrvalue = ifcbool.Value.ToString().ToUpperInvariant();
+                            }
+                            // Unpack Ifc Values
+                            if (attrvalue is IIfcValue v)
+                            {
+                                attrvalue = v.Value;
+                            }
+                            if (af.AttributeValue != null)
+                            {
+                                if (af.AttributeValue.SatisfiesRequirement(requirement, attrvalue, logger))
+                                    result.Successful.Add("AttributeValue " + attrvalue?.ToString() + " was " + af.AttributeValue!.Short());
+                                else
+                                    result.Failures.Add("AttributeValue " + attrvalue?.ToString() + " was not " + af.AttributeValue.ToString() + " - " + af.AttributeValue?.Short());
+                            }
+
+                        }
+
+
+                    }
 
                     break;
- 
+
 
                 default:
                     logger.LogWarning("Skipping unimplemented validation {type}", facet.GetType().Name);
@@ -149,6 +208,16 @@ namespace Xbim.IDS.Validator.Core
                 result.ValidationStatus = ValidationStatus.Success;
             }
             return result;
+        }
+
+        private static bool IsValueRelevant(object? value)
+        {
+            if (value == null) return false;
+            if (value is IfcSimpleValue str && string.IsNullOrEmpty(str.Value?.ToString())) return false;
+            //if (value is IfcLogical logical && logical.Value == null) return false;
+            if (value is IList list && list.Count == 0) return false;
+
+            return true;
         }
 
         /// <summary>
