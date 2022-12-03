@@ -2,6 +2,7 @@
 using Xbim.Common;
 using Xbim.Common.Metadata;
 using Xbim.IDS.Validator.Core.Helpers;
+using Xbim.Ifc2x3.Interfaces;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core
@@ -64,12 +65,41 @@ namespace Xbim.IDS.Validator.Core
             var facetBinder = new IdsFacetBinder(model);
             var result = new IdsValidationResult()
             {
-                ValidationStatus = ValidationStatus.Inconclusive
+                ValidationStatus = ValidationStatus.Inconclusive,
+                Entity = item
             };
             switch (facet)
             {
-                //case IfcTypeFacet f:
-                //    return BindExpression(baseExpression, f, expressType);
+                case IfcTypeFacet f:
+                    var entityType = model.Metadata.ExpressType(item);
+                    if(entityType == null)
+                    {
+                        result.Failures.Add($"Invalid IFC Type '{item.GetType().Name}'");
+                    }
+                    var actual = entityType?.Name.ToUpperInvariant();
+
+                    if (f?.IfcType?.IsSatisfiedBy(actual) == true)
+                    {
+                        result.Successful.Add("IfcType '" + actual + "' was " + f.IfcType.Short());
+                    }
+                    else
+                    {
+                        result.Failures.Add("IfcType '" + actual + "' was not " + f?.IfcType?.Short());
+                    }
+                    if(f?.PredefinedType?.HasAnyAcceptedValue() == true)
+                    {
+                        var preDefValue = facetBinder.GetPredefinedType(item);
+                        if (f?.PredefinedType?.IsSatisfiedBy(preDefValue) == true)
+                        {
+                            result.Successful.Add("PredefinedType '" + preDefValue + "' was " + f.PredefinedType.Short());
+                        }
+                        else
+                        {
+                            result.Failures.Add("PredefinedType '" + preDefValue + "' was not " + f?.PredefinedType?.Short());
+                        }
+                    }
+                    
+                    break;
 
                 case IfcPropertyFacet pf:
                     // Test the Constraints
@@ -97,8 +127,8 @@ namespace Xbim.IDS.Validator.Core
 
                 default:
                     logger.LogWarning("Skipping unimplemented validation {type}", facet.GetType().Name);
-                    break;
-                    //throw new NotImplementedException($"Facet not implemented: '{facet.GetType().Name}'");
+                    //break;
+                    throw new NotImplementedException($"Validation of Facet not implemented: '{facet.GetType().Name}' - {facet.Short()}");
             }
             if(result.Failures.Any())
             {

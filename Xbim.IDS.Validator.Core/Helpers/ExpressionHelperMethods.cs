@@ -1,7 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 using Xbim.Common;
+using Xbim.IDS.Validator.Core.Extensions;
+using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Helpers
@@ -14,6 +17,8 @@ namespace Xbim.IDS.Validator.Core.Helpers
         //private static MethodInfo _enumerableOfTypeMethod = GenericMethodOf(_ => Enumerable.OfType<int>(default(IEnumerable)));
         //private static MethodInfo _queryableOfTypeMethod = GenericMethodOf(_ => Queryable.OfType<int>(default(IQueryable)));
         private static MethodInfo _entityCollectionofTypeMethod = typeof(IReadOnlyEntityCollection).GetMethod(nameof(IReadOnlyEntityCollection.OfType), new Type[] { typeof(string), typeof(bool) });
+        private static MethodInfo _enumerableIfcPropertySingleProps = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcPropertySingleValues), new Type[] { typeof(IEnumerable<IIfcRelDefinesByProperties>), typeof(string), typeof(string)});
+        private static MethodInfo _enumerableIfcPropertySinglePropsValue = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcPropertySingleValues), new Type[] { typeof(IEnumerable<IIfcRelDefinesByProperties>), typeof(string), typeof(string), typeof(string) });
 
         private static MethodInfo _idsValidationIsSatisifiedMethod = typeof(IValueConstraintComponent).GetMethod(nameof(IValueConstraintComponent.IsSatisfiedBy), new Type[] { typeof(object), typeof(ValueConstraint), typeof(bool), typeof(ILogger) });
 
@@ -48,6 +53,17 @@ namespace Xbim.IDS.Validator.Core.Helpers
         {
             get { return _idsValidationIsSatisifiedMethod; }
         }
+
+        public static MethodInfo EnumerableIfcPropertySingleProps
+        {
+            get { return _enumerableIfcPropertySingleProps; }
+        }
+
+        public static MethodInfo EnumerableIfcPropertySinglePropsValue
+        {
+            get { return _enumerableIfcPropertySinglePropsValue; }
+        }
+
 
         public static MethodInfo EnumerableCastGeneric
         {

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Xbim.IDS.Validator.Core.Helpers
 {
-
+#nullable disable   
     public static class TypeHelper
     {
         /// <summary>

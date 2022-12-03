@@ -230,6 +230,35 @@ namespace Xbim.IDS.Validator.Core.Tests
 
         }
 
+        [InlineData("PSet_WallCommon", "LoadBearing", "false", 5)]
+        [InlineData("PSet_WallCommon", "LoadBearing", "true", 0)]
+        [InlineData("Pset_MemberCommon", "LoadBearing", "true", 20)]
+        [InlineData("Pset_PlateCommon", "ThermalTransmittance", "6.7069", 6)]
+
+        [InlineData("Pset_MemberCommon", "Span", null, 20)]
+        [InlineData("Pset_MemberCommon", "Span", "2043.570045136", 1)]
+        [Theory]
+        public void Can_Query_By_Properties(string psetName, string propName, string propValue, int expectedCount)
+        {
+
+            IfcPropertyFacet propFacet = new IfcPropertyFacet
+            {
+                PropertySetName = psetName,
+                PropertyName = propName,
+                PropertyValue = propValue
+            };
+            var binder = new IdsFacetBinder(model);
+
+            // Act
+            var expression = binder.BindFilterExpression(query.InstancesExpression, propFacet);
+
+            // Assert
+            
+            var result = query.Execute(expression, model);
+            result.Should().HaveCount(expectedCount);
+
+        }
+
         private static IfcTypeFacet BuildIfcTypeFacetFromCsv(string ifcTypeCsv, string predefinedTypeCsv = "", 
             ConstraintType ifcConstraint = ConstraintType.Exact, ConstraintType preDefConstraint = ConstraintType.Exact)
         {
@@ -263,7 +292,9 @@ namespace Xbim.IDS.Validator.Core.Tests
         private static IModel BuildModel()
         {
             var filename = @"TestModels\SampleHouse4.ifc";
+            //IfcStore.ModelProviderFactory.UseEsentModelProvider();
             return IfcStore.Open(filename);
+            
         }
 
 

@@ -12,7 +12,14 @@
 
   <ItemGroup>
     <PackageReference Include="Xbim.Essentials" Version="5.1.364-develop" />
-    <PackageReference Include="Xbim.InformationSpecifications" Version="0.3.24" />
+    <PackageReference Include="Xbim.InformationSpecifications" Version="0.3.26" />
+    <PackageReference Include="Xbim.IO.Esent" Version="5.1.364-develop" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Example.ids">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
