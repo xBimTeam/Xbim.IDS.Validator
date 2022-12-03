@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Xbim.Common;
+using Xbim.IDS.Validator.Core.Binders;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
@@ -68,7 +69,7 @@ namespace Xbim.IDS.Validator.Core.Tests
                 IfcType = new ValueConstraint(ifcType)
             };
 
-            var binder = new IdsFacetBinder(model);
+            var binder = new IfcTypeFacetBinder(model);
 
             // Act
             var ex = Record.Exception(() => binder.BindFilterExpression(query.InstancesExpression, facet));
@@ -106,7 +107,7 @@ namespace Xbim.IDS.Validator.Core.Tests
         {
             IfcTypeFacet facet = BuildIfcTypeFacetFromCsv(ifcType, predefinedType, ifcTypeConstraint, preDefConstraint: preConstraint);
 
-            var binder = new IdsFacetBinder(model);
+            var binder = new IfcTypeFacetBinder(model);
             // Act
             var expression = binder.BindFilterExpression(query.InstancesExpression, facet);
 
@@ -142,11 +143,13 @@ namespace Xbim.IDS.Validator.Core.Tests
                 AttributeName = attributeFieldName,
                 AttributeValue = new ValueConstraint(attributeValue)
             };
-            var binder = new IdsFacetBinder(model);
-            
+            var ifcbinder = new IfcTypeFacetBinder(model);
+
+            var attrbinder = new AttributeFacetBinder(model);
+
             // Act
-            var expression = binder.BindFilterExpression(query.InstancesExpression, ifcFacet);
-            expression = binder.BindFilterExpression(expression, attrFacet);
+            var expression = ifcbinder.BindFilterExpression(query.InstancesExpression, ifcFacet);
+            expression = attrbinder.BindFilterExpression(expression, attrFacet);
 
             // Assert
 
@@ -166,7 +169,7 @@ namespace Xbim.IDS.Validator.Core.Tests
                 AttributeName = attributeFieldName,
                 AttributeValue = new ValueConstraint(attributeValue)
             };
-            var binder = new IdsFacetBinder(model);
+            var binder = new AttributeFacetBinder(model);
             
             // Act
             var expression = binder.BindFilterExpression(query.InstancesExpression, attrFacet);
@@ -190,7 +193,7 @@ namespace Xbim.IDS.Validator.Core.Tests
             };
             attrFacet.AttributeValue.AddAccepted(new PatternConstraint(attributeValue));
 
-            var binder = new IdsFacetBinder(model);
+            var binder = new AttributeFacetBinder(model);
 
             // Act
             var expression = binder.BindFilterExpression(query.InstancesExpression, attrFacet);
@@ -219,11 +222,12 @@ namespace Xbim.IDS.Validator.Core.Tests
                 AttributeName = attributeFieldName,
                 AttributeValue = new ValueConstraint("not relevant")
             };
-            var binder = new IdsFacetBinder(model);
+            var ifcBinder = new IfcTypeFacetBinder(model);
+            var attrBinder = new AttributeFacetBinder(model);
             
-            var expression = binder.BindFilterExpression(query.InstancesExpression, ifcFacet);
+            var expression = ifcBinder.BindFilterExpression(query.InstancesExpression, ifcFacet);
             // Act
-            var ex = Record.Exception(() => binder.BindFilterExpression(expression, attrFacet));
+            var ex = Record.Exception(() => attrBinder.BindFilterExpression(expression, attrFacet));
 
             ex.Should().NotBeNull();
             ex.Should().BeOfType<InvalidOperationException>();
@@ -247,7 +251,7 @@ namespace Xbim.IDS.Validator.Core.Tests
                 PropertyName = propName,
                 PropertyValue = propValue
             };
-            var binder = new IdsFacetBinder(model);
+            var binder = new PsetFacetBinder(model);
 
             // Act
             var expression = binder.BindFilterExpression(query.InstancesExpression, propFacet);

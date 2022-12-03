@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xbim.Common;
+using Xbim.IDS.Validator.Core.Binders;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
@@ -44,7 +45,7 @@ namespace Xbim.IDS.Validator.Core.Tests
             };
 
 
-            var binder = new IdsFacetBinder(model);
+            var binder = new PsetFacetBinder(model);
 
             var result = binder.GetProperty(entityLabel, psetName, propName);
 
