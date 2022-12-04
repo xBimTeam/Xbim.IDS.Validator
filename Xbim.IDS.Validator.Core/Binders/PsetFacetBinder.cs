@@ -60,12 +60,12 @@ namespace Xbim.IDS.Validator.Core.Binders
             var expressType = Model.Metadata.ExpressType(collectionType);
             ValidateExpressType(expressType);
 
-            expression = BindEqualPsetFilter(expression, expressType, psetFacet);
+            expression = BindEqualPsetFilter(expression, psetFacet);
             return expression;
         }
 
 
-        private Expression BindEqualPsetFilter(Expression expression, ExpressType expressType, IfcPropertyFacet psetFacet)
+        private Expression BindEqualPsetFilter(Expression expression, IfcPropertyFacet psetFacet)
         {
             if (psetFacet is null)
             {
@@ -209,6 +209,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                     .SelectMany(p => ((IIfcPropertySet)p.RelatingPropertyDefinition)
                         .HasProperties.Where(ps => ps.Name == propName)
                         .OfType<IIfcPropertySingleValue>())
+                    
                     .FirstOrDefault();
                 if (psetValue == null)
                 {

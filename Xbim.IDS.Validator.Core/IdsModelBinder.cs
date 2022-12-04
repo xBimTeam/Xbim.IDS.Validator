@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.IDS.Validator.Core.Binders;
@@ -8,6 +9,7 @@ using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4.MeasureResource;
 using Xbim.InformationSpecifications;
+using Xbim.IO.Xml.BsConf;
 
 
 namespace Xbim.IDS.Validator.Core
@@ -120,6 +122,11 @@ namespace Xbim.IDS.Validator.Core
 
         private void ValidateAttribute(IPersistEntity item, FacetGroup requirement, ILogger? logger, IdsValidationResult result, AttributeFacet af)
         {
+            if (af is null)
+            {
+                throw new ArgumentNullException(nameof(af));
+            }
+
             var candidates = attrFacetBinder.GetAttributes(item, af);
 
             foreach (var pair in candidates)
@@ -130,12 +137,11 @@ namespace Xbim.IDS.Validator.Core
                 // Name meets requirement if it has a value and is Required. Treat unknown logical as no value
                 if (af.AttributeName.SatisfiesRequirement(requirement, attrName, logger) && (requirement.IsRequired() == isPopulated))
                 {
-                    result.Successful.Add("AttributeName " + attrName + " was " + af.AttributeName.Short());
+                    result.Messages.Add(ValidationMessage.Success(af, fn => fn.AttributeName!, attrName, "Was populated", item));
                 }
                 else
                 {
-                    result.Failures.Add("AttributeName " + attrName + " was not " + af!.AttributeName.Short() + " - " + af!.AttributeName.ToString());
-
+                    result.Messages.Add(ValidationMessage.Failure(af, fn => fn.AttributeName!, attrName, "No attribute matched", item));
                 }
 
                 attrvalue = HandleBoolConventions(attrvalue);
@@ -148,9 +154,9 @@ namespace Xbim.IDS.Validator.Core
                 {
                     attrvalue = ApplyWorkarounds(attrvalue);
                     if (af.AttributeValue.SatisfiesRequirement(requirement, attrvalue, logger))
-                        result.Successful.Add("AttributeValue " + attrvalue?.ToString() + " was " + af.AttributeValue!.Short());
+                        result.Messages.Add(ValidationMessage.Success(af, fn => fn.AttributeValue!, attrvalue, "Was populated", item));
                     else
-                        result.Failures.Add("AttributeValue " + attrvalue?.ToString() + " was not " + af.AttributeValue.ToString() + " - " + af.AttributeValue?.Short());
+                        result.Messages.Add(ValidationMessage.Failure(af, fn => fn.AttributeValue!, attrvalue, "No attribute value matched", item));
                 }
 
             }
@@ -159,7 +165,6 @@ namespace Xbim.IDS.Validator.Core
         private void ValidateProperty(IPersistEntity item, FacetGroup requirement, ILogger? logger, IdsValidationResult result, IfcPropertyFacet pf)
         {
            
-            
             var psets = psetFacetBinder.GetPropertySetsMatching(item.EntityLabel, pf.PropertySetName, logger);
             if (psets.Any())
             {
@@ -172,16 +177,16 @@ namespace Xbim.IDS.Validator.Core
                         foreach (var prop in props)
                         {
                             var propValue = prop.NominalValue;
-                            ValidateMeasure(result, propValue, pf.Measure);
+                            ValidateMeasure(pf, result, propValue, pf.Measure);
                             object? value = UnwrapValue(propValue);
                             bool isPopulated = IsValueRelevant(value);
                             if (requirement.IsRequired() == isPopulated)
                             {
-                                result.Successful.Add("PropertyName Present " + pset.Name + "." + prop.Name + " was " + pf!.PropertyName?.Short());
+                                result.Messages.Add(ValidationMessage.Success(pf, fn => fn.PropertyName!, value, "Property value matched", prop));
                             }
                             else
                             {
-                                result.Failures.Add("PropertyName Absent " + pset.Name + "." + prop.Name + " was not " + pf!.PropertyName?.Short());
+                                result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyName!, null, "No property value matching", prop));
                             }
 
                             ValidatePropertyValue(requirement, logger, result, pf, value);
@@ -189,17 +194,17 @@ namespace Xbim.IDS.Validator.Core
                         foreach (var quant in quants)
                         {
                             var propValue = UnwrapQuantity(quant);
-                            ValidateMeasure(result, propValue, pf.Measure);
+                            ValidateMeasure(pf, result, propValue, pf.Measure);
                             object? value = UnwrapValue(propValue);
                             bool isPopulated = IsValueRelevant(value);
 
                             if (requirement.IsRequired() == isPopulated)
                             {
-                                result.Successful.Add("PropertyName Present " + pset.Name + "." + quant.Name + " was " + pf!.PropertyName?.Short());
+                                result.Messages.Add(ValidationMessage.Success(pf, fn => fn.PropertyName!, value, "Quantity matched", quant));
                             }
                             else
                             {
-                                result.Failures.Add("PropertyName Absent " + pset.Name + "." + quant.Name + " was not " + pf!.PropertyName?.Short());
+                                result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyName!, null, "No quantity value matching", quant));
                             }
 
                             ValidatePropertyValue(requirement, logger, result, pf, value);
@@ -207,20 +212,20 @@ namespace Xbim.IDS.Validator.Core
                     }
                     else
                     {
-                        result.Failures.Add("PropertyName was not matched " + pf!.PropertyName!.Short() + " - " + pf!.PropertyName.ToString());
+                        result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyName!, null, "No properties matching", pset));
                     }
                 }
             }
 
             else
             {
-                result.Failures.Add("PropertySet was not matched " + pf!.PropertySetName!.Short() + " - " + pf!.PropertySetName.ToString());
+                result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertySetName!, null, "No Psets matching", item));
             }
 
             
         }
 
-        private void ValidateMeasure(IdsValidationResult result, IIfcValue propValue, string? expectedMeasure)
+        private void ValidateMeasure(IfcPropertyFacet clause, IdsValidationResult result, IIfcValue propValue, string? expectedMeasure)
         {
             if (propValue is null)
             {
@@ -232,12 +237,11 @@ namespace Xbim.IDS.Validator.Core
             var measure = model.Metadata.ExpressType(propValue).Name;
             if (measure.Equals(expectedMeasure, StringComparison.InvariantCultureIgnoreCase))
             {
-                result.Successful.Add("Measure " + measure + " was " + expectedMeasure);
+                result.Messages.Add(ValidationMessage.Success(clause, fn => fn.Measure!, measure, "Measure matches"));
             }
             else
-
             {
-                result.Failures.Add("Measure " + measure + " was not " + expectedMeasure);
+                result.Messages.Add(ValidationMessage.Failure(clause, fn => fn.Measure!, measure, "Invalid Measure"));
             }
         }
 
@@ -248,12 +252,12 @@ namespace Xbim.IDS.Validator.Core
                 value = ApplyWorkarounds(value);
                 if (pf.PropertyValue.SatisfiesRequirement(requirement, value, logger))
                 {
-                    result.Successful.Add("PropertyValue "  + value?.ToString() + " was " + pf.PropertyValue!.Short());
+                    result.Messages.Add(ValidationMessage.Success(pf, fn => fn.PropertyValue!, value, "Value matches"));
                     return true;
                 }
                 else
                 {
-                    result.Failures.Add("PropertyValue " + value?.ToString() + " was not " + pf.PropertyValue.ToString() + " - " + pf.PropertyValue?.Short());
+                    result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyValue!, value, "Invalid Value"));
                     return false;
                 }
             }
@@ -264,52 +268,37 @@ namespace Xbim.IDS.Validator.Core
 
         private void ValidateIfcType(IPersistEntity item, FacetGroup requirement, ILogger? logger,  IdsValidationResult result, IfcTypeFacet f)
         {
+  
             var entityType = model.Metadata.ExpressType(item);
             if (entityType == null)
             {
-                result.Failures.Add($"Invalid IFC Type '{item.GetType().Name}'");
+                result.Messages.Add(ValidationMessage.Failure(f, fn => fn.IfcType!, null, "Invalid IFC Type", item));
             }
             var actual = entityType?.Name.ToUpperInvariant();
 
             if (f?.IfcType?.SatisfiesRequirement(requirement, actual, logger) == true)
             {
-                result.Successful.Add("IfcType '" + actual + "' was " + f.IfcType.Short());
+                result.Messages.Add(ValidationMessage.Success(f, fn => fn.IfcType!, actual, "Correct IFC Type", item));
             }
             else
             {
-                result.Failures.Add("IfcType '" + actual + "' was not " + f?.IfcType?.Short());
+                result.Messages.Add(ValidationMessage.Failure(f!, fn => fn.IfcType!, actual, "IFC Type incorrect", item));
             }
             if (f?.PredefinedType?.HasAnyAcceptedValue() == true)
             {
                 var preDefValue = ifcTypeFacetBinder.GetPredefinedType(item);
                 if (f!.PredefinedType.SatisfiesRequirement(requirement, preDefValue, logger) == true)
                 {
-                    result.Successful.Add("PredefinedType '" + preDefValue + "' was " + f.PredefinedType.Short());
+                    result.Messages.Add(ValidationMessage.Success(f, fn => fn.PredefinedType!, actual, "Correct Predefined Type", item));
                 }
                 else
                 {
-                    result.Failures.Add("PredefinedType '" + preDefValue + "' was not " + f?.PredefinedType?.Short());
+                    result.Messages.Add(ValidationMessage.Failure(f, fn => fn.PredefinedType!, preDefValue, "Predefined Type incorrect", item));
                 }
             }
         }
 
-        private object? GetPsetValue(IPersistEntity item, IfcPropertyFacet pf)
-        {
-            var propValue = psetFacetBinder.GetProperty(item.EntityLabel, pf.PropertySetName.SingleValue(), pf.PropertyName.SingleValue());
-            object? value = UnwrapValue(propValue);
-
-            if (value == null)
-            {
-                // Try Quantities
-                var quantity = psetFacetBinder.GetQuantity(item.EntityLabel, pf.PropertySetName.SingleValue(),
-                    pf.PropertyName.SingleValue());
-                if (quantity != null)
-                    value = UnwrapQuantity(quantity)?.Value;
-            }
-
-            return value;
-        }
-
+        
         private object? ApplyWorkarounds([MaybeNull]object? value)
         {
             // Workaround for a bug in XIDS Satisfied test where we don't coerce numeric types correctly

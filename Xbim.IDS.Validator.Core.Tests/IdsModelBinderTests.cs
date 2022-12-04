@@ -40,25 +40,38 @@ namespace Xbim.IDS.Validator.Core.Tests
                 {
                     logger.LogInformation(" -- Spec {spec} : versions {ifcVersions}", spec.Name, spec.IfcVersion);
                     var applicableIfc = spec.Applicability.Facets.OfType<IfcTypeFacet>().FirstOrDefault();
-                    logger.LogInformation("    Applicable to : {entity} with Type {predefined}", applicableIfc.IfcType.SingleValue(), applicableIfc.PredefinedType?.SingleValue());
+                    logger.LogInformation("    Applicable to : {entity} with PredefinedType {predefined}", applicableIfc.IfcType.SingleValue(), applicableIfc.PredefinedType?.SingleValue());
                     foreach(var applicableFacet in spec.Applicability.Facets)
                     {
-                        logger.LogInformation("       - {facetType}: check {description} ", applicableFacet.GetType().Name, applicableFacet.Short() );
+                        logger.LogInformation("       - {facetType}: where {description} ", applicableFacet.GetType().Name, applicableFacet.Short() );
                     }
 
-                    IEnumerable<IPersistEntity> items = modelBinder.SelectApplicableEntities(spec);
-                    foreach(var item in items)
+                    logger.LogInformation("    Requirements {reqCount}: {expectation}", spec.Requirement.Facets.Count, spec.Requirement.RequirementOptions?.FirstOrDefault().ToString() ?? "" );
+                    int idx = 1;
+                    foreach (var reqFacet in spec.Requirement.Facets)
+                    {
+                        logger.LogInformation("       [{i}] {facetType}: check {description} ", idx++, reqFacet.GetType().Name, reqFacet.Short());
+                    }
+                    IEnumerable <IPersistEntity> items = modelBinder.SelectApplicableEntities(spec);
+                    logger.LogInformation("          Checking {count} applicable items", items.Count());
+                    foreach (var item in items)
                     {
                         var i = item as IIfcRoot;
                         logger.LogInformation("        * {ID}: {Type} {Name} ", item.EntityLabel, item.GetType().Name, i?.Name);
-                        //logger.LogInformation("        Requirement: {name} {descr}", spec?.Requirement?.Name, spec.Requirement.Description);
+                        
+                        idx = 1;
                         foreach (var facet in spec.Requirement.Facets)
                         {
                             var result = modelBinder.ValidateRequirement(item, spec.Requirement, facet, logger);
                             LogLevel level = LogLevel.Information;
-                            if (result.ValidationStatus == ValidationStatus.Inconclusive) level = LogLevel.Warning;
-                            if (result.ValidationStatus == ValidationStatus.Failed) level = LogLevel.Error;
-                            logger.Log(level, "          {result}: Checking {short} : {req}", result.ValidationStatus, facet.Short(), facet.ToString());
+                            int pad = 0;
+                            if (result.ValidationStatus == ValidationStatus.Inconclusive) { level = LogLevel.Warning; pad = 4; }
+                            if (result.ValidationStatus == ValidationStatus.Failed) { level = LogLevel.Error; pad = 6; }
+                            logger.Log(level, "{pad}           [{i}] {result}: Checking {short} : {req}", "".PadLeft(pad, ' '), idx++, result.ValidationStatus, facet.Short(), facet.ToString());
+                            foreach(var message in result.Messages)
+                            {
+                                logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
+                            }
                         }
                     }
 
