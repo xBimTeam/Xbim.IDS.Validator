@@ -33,6 +33,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
      <None Update="TestCases\**\*.ifc">
+       <DependentUpon>%(Filename).ids</DependentUpon>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="TestModels\Example.ids">

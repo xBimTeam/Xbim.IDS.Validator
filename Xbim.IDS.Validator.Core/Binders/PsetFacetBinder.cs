@@ -1,4 +1,6 @@
-﻿using System.Linq.Expressions;
+﻿using Microsoft.Extensions.Logging;
+using System.Data;
+using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.Common.Metadata;
 using Xbim.IDS.Validator.Core.Helpers;
@@ -199,15 +201,22 @@ namespace Xbim.IDS.Validator.Core.Binders
                         .OfType<IIfcPropertySingleValue>())
                     .FirstOrDefault();
             }
-            else if (entity is IIfcObject)
+            else if (entity is IIfcObject obj)
             {
-                psetValue = Model.Instances.OfType<IIfcRelDefinesByProperties>()
-                    .Where(r => r.RelatedObjects.Any(o => o.EntityLabel == entityLabel))
+
+                psetValue = obj.IsDefinedBy
                     .Where(r => r.RelatingPropertyDefinition is IIfcPropertySet ps && ps.Name == psetName)
                     .SelectMany(p => ((IIfcPropertySet)p.RelatingPropertyDefinition)
                         .HasProperties.Where(ps => ps.Name == propName)
                         .OfType<IIfcPropertySingleValue>())
                     .FirstOrDefault();
+                if (psetValue == null)
+                {
+                    if (obj.IsTypedBy?.Any() == true)
+                    {
+                        return GetProperty(obj.IsTypedBy.First().RelatingType.EntityLabel, psetName, propName);
+                    }
+                }
             }
             else
             {
@@ -218,5 +227,211 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         }
 
+        public IIfcPhysicalQuantity GetQuantity(int entityLabel, string psetName, string propName)
+        {
+            var entity = Model.Instances[entityLabel];
+
+            IIfcPhysicalQuantity psetValue;
+            if (entity is IIfcTypeObject type)
+            {
+                psetValue = type.HasPropertySets.OfType<IIfcElementQuantity>()
+                    .Where(p => p.Name == psetName)
+                    .SelectMany(p => p.Quantities.Where(ps => ps.Name == propName))
+                    .FirstOrDefault();
+            }
+            else if (entity is IIfcObject obj)
+            {
+
+                psetValue = obj.IsDefinedBy
+                       .Where(r => r.RelatingPropertyDefinition is IIfcElementQuantity ps && ps.Name == psetName)
+                       .SelectMany(p => ((IIfcElementQuantity)p.RelatingPropertyDefinition)
+                            .Quantities.Where(q => q.Name == propName))
+                       .FirstOrDefault();
+
+                if (psetValue == null)
+                {
+                    if (obj.IsTypedBy?.Any() == true)
+                    {
+                        return GetQuantity(obj.IsTypedBy.First().RelatingType.EntityLabel, psetName, propName);
+                    }
+                }
+
+            }
+            else
+            {
+                return default;
+            }
+
+            return psetValue;
+
+        }
+
+        /// <summary>
+        /// Finds all Properties in a pset meeting a constraint
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entityLabel"></param>
+        /// <param name="psetName"></param>
+        /// <param name="constraint"></param>
+        /// <param name="logger"></param>
+        /// <returns></returns>
+        public IEnumerable<T> GetPropertiesMatching<T>(int entityLabel, string psetName, ValueConstraint constraint, ILogger logger = null) where T: IIfcProperty
+        {
+            var entity = Model.Instances[entityLabel];
+            if (entity is IIfcTypeObject type)
+            {
+                var typeProperties = type.HasPropertySets.OfType<IIfcPropertySet>()
+                    .Where(p => p.Name == psetName)
+                    .SelectMany(p => p.HasProperties.Where(ps => constraint.IsSatisfiedBy(ps.Name.Value, true, logger))
+                        .OfType<T>());
+                return typeProperties;
+
+
+            }
+            else if (entity is IIfcObject obj)
+            {
+                var entityProperties = obj.IsDefinedBy
+                    .Where(r => r.RelatingPropertyDefinition is IIfcPropertySet ps && ps.Name == psetName)
+                    .SelectMany(p => ((IIfcPropertySet)p.RelatingPropertyDefinition)
+                        .HasProperties.Where(ps => constraint.IsSatisfiedBy(ps.Name.Value, true, logger))
+                        .OfType<T>());
+                    
+                
+                if (obj.IsTypedBy?.Any() == true)
+                {
+                    // Inherit extra properties from Type - Deduping on name
+                    entityProperties = entityProperties
+                        .Union(GetPropertiesMatching<T>(obj.IsTypedBy.First().RelatingType.EntityLabel, psetName, constraint, logger), new PropertyEqualityComparer<T>());
+                }
+                return entityProperties;
+
+
+            }
+            else
+            {
+                return Enumerable.Empty<T>();
+            }
+        }
+
+        /// <summary>
+        /// Finds all Quantities in a pset meeting a constraint
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entityLabel"></param>
+        /// <param name="psetName"></param>
+        /// <param name="nameConstraint"></param>
+        /// <param name="logger"></param>
+        /// <returns></returns>
+        public IEnumerable<IIfcPhysicalQuantity> GetQuantitiesMatching(int entityLabel, string psetName, ValueConstraint nameConstraint, ILogger logger = null)
+        {
+            var entity = Model.Instances[entityLabel];
+            if (entity is IIfcTypeObject type)
+            {
+                var typeProperties = type.HasPropertySets.OfType<IIfcElementQuantity>()
+                    .Where(p => p.Name == psetName)
+                    .SelectMany(p => p.Quantities.Where(ps => nameConstraint.IsSatisfiedBy(ps.Name.Value, true, logger)));
+                return typeProperties;
+
+
+            }
+            else if (entity is IIfcObject obj)
+            {
+                var entityProperties = obj.IsDefinedBy
+                    .Where(r => r.RelatingPropertyDefinition is IIfcElementQuantity ps && ps.Name == psetName)
+                    .SelectMany(p => ((IIfcElementQuantity)p.RelatingPropertyDefinition)
+                        .Quantities.Where(ps => nameConstraint.IsSatisfiedBy(ps.Name.Value, true, logger)));
+
+
+                if (obj.IsTypedBy?.Any() == true)
+                {
+                    // Inherit extra properties from Type - Deduping on Name
+                    entityProperties = entityProperties
+                        .Union(GetQuantitiesMatching(obj.IsTypedBy.First().RelatingType.EntityLabel, psetName, nameConstraint, logger), new QuantityEqualityComparer());
+                }
+                return entityProperties;
+
+
+            }
+            else
+            {
+                return Enumerable.Empty<IIfcPhysicalQuantity>();
+            }
+        }
+
+
+        public IEnumerable<IIfcPropertySetDefinition> GetPropertySetsMatching(int entityLabel, ValueConstraint psetConstraint, ILogger logger = null)
+        {
+            var entity = Model.Instances[entityLabel];
+            if (entity is IIfcTypeObject type)
+            {
+                var typeProperties = type.HasPropertySets.OfType<IIfcPropertySetDefinition>()
+                    .Where(p => psetConstraint.IsSatisfiedBy(p.Name.ToString(), true, logger));
+                return typeProperties;
+
+            }
+            else if (entity is IIfcObject obj)
+            {
+                //var part1 = obj.IsDefinedBy.ToList();
+                //var part2 = part1.Where(t => t.RelatingPropertyDefinition is IIfcPropertySetDefinition ps && psetConstraint.IsSatisfiedBy(ps.Name.ToString(), true, logger)).ToList();
+                //var part2s = part1.Where(t => t.RelatingPropertyDefinition is IIfcElementQuantity ps && psetConstraint.IsSatisfiedBy(ps.Name.ToString(), true, logger)).ToList();
+                //var part3 = part2.Select(p => (IIfcPropertySetDefinition)p.RelatingPropertyDefinition).ToList();
+
+
+
+                var entityProperties = obj.IsDefinedBy
+                    .Where(t => t.RelatingPropertyDefinition is IIfcPropertySetDefinition ps && psetConstraint.IsSatisfiedBy(ps.Name.ToString(), true, logger))
+                    .Select(p => (IIfcPropertySetDefinition)p.RelatingPropertyDefinition);
+
+
+                if (obj.IsTypedBy?.Any() == true)
+                {
+                    // Inherit extra properties from Type
+                    entityProperties = entityProperties.Concat(GetPropertySetsMatching(obj.IsTypedBy.First().RelatingType.EntityLabel, psetConstraint, logger));
+                }
+
+
+                return entityProperties;
+
+
+            }
+            else
+            {
+                return Enumerable.Empty<IIfcPropertySet>();
+            }
+        }
+
+        public IIfcUnitAssignment GetUnits()
+        {
+            var project = Model.Instances.OfType<IIfcProject>().First();
+
+            return project.UnitsInContext;
+        }
+
+
+        private class QuantityEqualityComparer : IEqualityComparer<IIfcPhysicalQuantity>
+        {
+            public bool Equals(IIfcPhysicalQuantity x, IIfcPhysicalQuantity y)
+            {
+                return x?.Name == y?.Name;
+            }
+
+            public int GetHashCode([DisallowNull] IIfcPhysicalQuantity obj)
+            {
+                return (obj.Name, obj.Description).GetHashCode();
+            }
+        }
+
+        private class PropertyEqualityComparer<T> : IEqualityComparer<T> where T: IIfcProperty
+        {
+            public bool Equals(T x, T y)
+            {
+                return x?.Name == y?.Name;
+            }
+
+            public int GetHashCode([DisallowNull] T obj)
+            {
+                return (obj.Name, obj.Description).GetHashCode();
+            }
+        }
     }
 }

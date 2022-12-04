@@ -48,7 +48,8 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
             List<IdsValidationResult> results = VerifyIdsFile(idsFile);
             results.Should().NotBeEmpty("Expect at least one result");
-            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().BeEmpty("");
+            results.Where((IdsValidationResult r) => r.Successful.Any()).Should().NotBeEmpty();
+            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().BeEmpty();
         }
 
         

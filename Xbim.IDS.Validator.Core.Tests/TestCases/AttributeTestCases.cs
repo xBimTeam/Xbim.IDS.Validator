@@ -1,9 +1,4 @@
 ﻿using FluentAssertions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.TestCases
@@ -73,8 +68,8 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/attribute/pass-globalids_are_treated_as_strings_and_not_expanded.ids")]
         
         // TODO: Fix Long-Int cast issue in XIDS
-        //[InlineData(@"TestCases/attribute/pass-integers_follow_the_same_rules_as_numbers.ids")]
-        //[InlineData(@"TestCases/attribute/pass-integers_follow_the_same_rules_as_numbers_2_2.ids")]
+        [InlineData(@"TestCases/attribute/pass-integers_follow_the_same_rules_as_numbers.ids")]
+        [InlineData(@"TestCases/attribute/pass-integers_follow_the_same_rules_as_numbers_2_2.ids")]
         [InlineData(@"TestCases/attribute/pass-name_restrictions_will_match_any_result_1_3.ids")]
         [InlineData(@"TestCases/attribute/pass-name_restrictions_will_match_any_result_2_3.ids")]
         //[InlineData(@"TestCases/attribute/pass-name_restrictions_will_match_any_result_3_3.ids")]
@@ -109,8 +104,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
             List<IdsValidationResult> results = VerifyIdsFile(idsFile);
             results.Should().NotBeEmpty("Expect at least one result");
-            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().BeEmpty("");
-            
+            results.Where((IdsValidationResult r) => r.Successful.Any()).Should().NotBeEmpty();
+            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().BeEmpty();
+
         }
     }
 }
