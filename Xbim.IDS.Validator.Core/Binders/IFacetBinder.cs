@@ -9,5 +9,7 @@ namespace Xbim.IDS.Validator.Core.Binders
     {
         Expression BindFilterExpression(Expression baseExpression, T facet);
         void ValidateEntity(IPersistEntity item, FacetGroup requirement, ILogger logger, IdsValidationResult result, T facet);
+
+        ValidationContext<T> CreateValidationContext(FacetGroup requirement, T facet);
     }
 }

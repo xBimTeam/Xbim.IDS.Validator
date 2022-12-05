@@ -3,6 +3,7 @@ using System.Collections;
 using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.Common.Metadata;
+using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4.MeasureResource;
@@ -146,31 +147,6 @@ namespace Xbim.IDS.Validator.Core.Binders
             return expression;
         }
 
-
-        // Validation
-
-        protected void ValidateMeasure(IfcPropertyFacet clause, IdsValidationResult result, IIfcValue propValue, string? expectedMeasure)
-        {
-            if (propValue is null)
-            {
-                return;
-            }
-
-            if (string.IsNullOrEmpty(expectedMeasure)) return;
-
-            var measure = Model.Metadata.ExpressType(propValue).Name;
-            if (measure.Equals(expectedMeasure, StringComparison.InvariantCultureIgnoreCase))
-            {
-                result.Messages.Add(ValidationMessage.Success(clause, fn => fn.Measure!, measure, "Measure matches", propValue));
-            }
-            else
-            {
-                result.Messages.Add(ValidationMessage.Failure(clause, fn => fn.Measure!, measure, "Invalid Measure", propValue));
-            }
-        }
-
-
-
         protected object? ApplyWorkarounds([MaybeNull] object? value)
         {
             // Workaround for a bug in XIDS Satisfied test where we don't coerce numeric types correctly
@@ -302,5 +278,19 @@ namespace Xbim.IDS.Validator.Core.Binders
             return true;
         }
 
+        /// <summary>
+        /// Creates a context we use to track shared validation info for results
+        /// </summary>
+        /// <param name="requirement"></param>
+        /// <param name="facet"></param>
+        /// <returns></returns>
+        public ValidationContext<T> CreateValidationContext(FacetGroup requirement, T facet)
+        {
+            // Set the Requirement expectation - Required, Optional, Prohibit so we negate Success/Failure
+
+            var required = requirement.IsRequired(facet);
+            var expectation = required == true ? Expectation.Required : required == false ? Expectation.Prohibited : Expectation.Optional;
+            return new ValidationContext<T>(facet, expectation);
+        }
     }
 }

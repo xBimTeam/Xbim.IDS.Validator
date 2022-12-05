@@ -3,7 +3,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Xbim.Common;
 using Xbim.Common.Metadata;
-using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4.MeasureResource;
@@ -77,6 +76,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             {
                 throw new ArgumentNullException(nameof(af));
             }
+            var ctx = CreateValidationContext(requirement, af);
 
             var candidates = GetAttributes(item, af);
 
@@ -88,11 +88,11 @@ namespace Xbim.IDS.Validator.Core.Binders
                 // Name meets requirement if it has a value and is Required. Treat unknown logical as no value
                 if (isPopulated)
                 {
-                    result.Messages.Add(ValidationMessage.Success(af, fn => fn.AttributeName!, attrName, "Was populated", item));
+                    result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.AttributeName!, attrName, "Was populated", item));
                 }
                 else
                 {
-                    result.Messages.Add(ValidationMessage.Failure(af, fn => fn.AttributeName!, attrName, "No attribute matched", item));
+                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.AttributeName!, attrName, "No attribute matched", item));
                 }
 
                 attrvalue = HandleBoolConventions(attrvalue);
@@ -105,9 +105,9 @@ namespace Xbim.IDS.Validator.Core.Binders
                 {
                     attrvalue = ApplyWorkarounds(attrvalue);
                     if (af.AttributeValue.IsSatisfiedBy(attrvalue, logger))
-                        result.Messages.Add(ValidationMessage.Success(af, fn => fn.AttributeValue!, attrvalue, "Was populated", item));
+                        result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.AttributeValue!, attrvalue, "Was populated", item));
                     else
-                        result.Messages.Add(ValidationMessage.Failure(af, fn => fn.AttributeValue!, attrvalue, "No attribute value matched", item));
+                        result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No attribute value matched", item));
                 }
 
             }

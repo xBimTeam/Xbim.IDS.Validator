@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
-using System.Linq;
 using System.Linq.Expressions;
 using Xbim.Common;
-using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4.ProductExtension;
@@ -57,6 +55,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             {
                 throw new ArgumentNullException(nameof(facet));
             }
+            var ctx = CreateValidationContext(requirement, facet);
 
             var candidates = GetMaterials(item, facet);
 
@@ -70,17 +69,17 @@ namespace Xbim.IDS.Validator.Core.Binders
                     // Name meets requirement if it has a value and is Required.
                     if (isPopulated)
                     {
-                        result.Messages.Add(ValidationMessage.Success(facet, fn => fn.Value!, materialName, "Material found", material));
+                        result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.Value!, materialName, "Material found", material));
                     }
                     else
                     {
-                        result.Messages.Add(ValidationMessage.Failure(facet, fn => fn.Value!, materialName, "No matching material found", material));
+                        result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Value!, materialName, "No matching material found", material));
                     }
                 }
             }
             else
             {
-                result.Messages.Add(ValidationMessage.Failure(facet, fn => fn.Value!, null, "No materials matching", item));
+                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Value!, null, "No materials matching", item));
             }
         }
 
