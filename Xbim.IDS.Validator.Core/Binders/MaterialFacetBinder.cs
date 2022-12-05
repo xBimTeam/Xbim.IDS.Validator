@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using System.Linq;
 using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.IDS.Validator.Core.Extensions;
@@ -87,21 +88,61 @@ namespace Xbim.IDS.Validator.Core.Binders
         {
             if(item is IIfcObjectDefinition obj)
             {
+                var materials =  GetMaterials(materialFacet, obj);
 
-                
-                IEnumerable<IIfcMaterial> materials = obj.HasAssociations.OfType<IIfcRelAssociatesMaterial>().Select(r => r.RelatingMaterial).OfType<IIfcMaterial>().Where(m => materialFacet?.Value?.IsSatisfiedBy(m.Name, true) == true);
-                IEnumerable<IIfcMaterial> materials2 = obj.HasAssociations.OfType<IIfcRelAssociatesMaterial>().Select(r => r.RelatingMaterial).OfType<IIfcMaterialList>().SelectMany(l => l.Materials.Where(m => materialFacet?.Value?.IsSatisfiedBy(m.Name, true) == true));
-                IEnumerable<IIfcMaterial> materials3 = obj.HasAssociations.OfType<IIfcRelAssociatesMaterial>().Select(r => r.RelatingMaterial).OfType<IIfcMaterialLayerSetUsage>().SelectMany(ls => ls.ForLayerSet.MaterialLayers.Select(ml => ml.Material).Where(m => materialFacet?.Value?.IsSatisfiedBy(m.Name, true) == true));
-
-                materials = materials.Union(materials2).Union(materials3);
-
-
+                if (obj is IIfcObject o && o.IsTypedBy!.Any())
+                {
+                    materials = materials.Union(GetMaterials(o.IsTypedBy.First().RelatingType, materialFacet));
+                }
                 return materials;
             }
             else
             {
                 return Enumerable.Empty<IIfcMaterial>();
             }
+        }
+
+        private IEnumerable<IIfcMaterial> GetMaterials(MaterialFacet materialFacet, IIfcObjectDefinition obj)
+        {
+            if (obj.Material is IIfcMaterial material && MaterialMatches(material, materialFacet)) return new[] { material };
+            if (obj.Material is IIfcMaterialList list) return list.Materials.Where(m => MaterialMatches(m, materialFacet));
+            
+            if (obj.Material is IIfcMaterialLayerSet layerSet) return 
+                    layerSet.MaterialLayers.Select(ml => ml.Material).Where(m => MaterialMatches(m, materialFacet))
+                    .Union(layerSet.MaterialLayers.Where(ml => MaterialMatches(ml, materialFacet)).Select(l => l.Material));
+            if (obj.Material is IIfcMaterialLayerSetUsage layerusage) return layerusage.ForLayerSet.MaterialLayers.Select(ml => ml.Material).Where(m => MaterialMatches(m, materialFacet));
+            
+            if (obj.Material is IIfcMaterialProfile profile && MaterialMatches(profile.Material, materialFacet)) return new[] { profile.Material };
+            if (obj.Material is IIfcMaterialProfileSet profileSet) return
+                    profileSet.MaterialProfiles.Where(m => MaterialMatches(m, materialFacet)).Select(mc => mc.Material)
+                    .Union(profileSet.MaterialProfiles.Select(mc => mc.Material).Where(m => MaterialMatches(m, materialFacet)));
+            
+            if (obj.Material is IIfcMaterialConstituent constituent && MaterialMatches(constituent, materialFacet)) return new[] { constituent.Material };
+            if (obj.Material is IIfcMaterialConstituentSet constituentSet) return 
+                    constituentSet.MaterialConstituents.Where(m => MaterialMatches(m, materialFacet)).Select(mc => mc.Material)
+                    .Union(constituentSet.MaterialConstituents.Select(mc => mc.Material).Where(m => MaterialMatches(m, materialFacet)));
+
+            return Enumerable.Empty<IIfcMaterial>();
+        }
+
+        private bool MaterialMatches(IIfcMaterial material, MaterialFacet facet)
+        {
+            return facet.Value?.IsSatisfiedBy(material.Name.Value, true) == true || facet.Value?.IsSatisfiedBy(material.Category?.Value, true) == true;
+        }
+
+        private bool MaterialMatches(IIfcMaterialConstituent constituent, MaterialFacet facet)
+        {
+            return facet.Value?.IsSatisfiedBy(constituent.Name?.Value, true) == true || facet.Value?.IsSatisfiedBy(constituent.Category?.Value, true) == true;
+        }
+
+        private bool MaterialMatches(IIfcMaterialLayer layer, MaterialFacet facet)
+        {
+            return facet.Value?.IsSatisfiedBy(layer.Name?.Value, true) == true || facet.Value?.IsSatisfiedBy(layer.Category?.Value, true) == true;
+        }
+
+        private bool MaterialMatches(IIfcMaterialProfile profile, MaterialFacet facet)
+        {
+            return facet.Value?.IsSatisfiedBy(profile.Name?.Value, true) == true || facet.Value?.IsSatisfiedBy(profile.Category?.Value, true) == true;
         }
 
         private Expression BindEqualMaterialFilter(Expression expression, MaterialFacet materialFacet)
