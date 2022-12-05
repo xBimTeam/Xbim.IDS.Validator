@@ -86,7 +86,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 var attrvalue = pair.Value;
                 bool isPopulated = IsValueRelevant(attrvalue);
                 // Name meets requirement if it has a value and is Required. Treat unknown logical as no value
-                if (af.AttributeName.SatisfiesRequirement(requirement, attrName, logger) && (requirement.IsRequired() == isPopulated))
+                if (isPopulated)
                 {
                     result.Messages.Add(ValidationMessage.Success(af, fn => fn.AttributeName!, attrName, "Was populated", item));
                 }
@@ -104,7 +104,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 if (af.AttributeValue != null)
                 {
                     attrvalue = ApplyWorkarounds(attrvalue);
-                    if (af.AttributeValue.SatisfiesRequirement(requirement, attrvalue, logger))
+                    if (af.AttributeValue.IsSatisfiedBy(attrvalue, logger))
                         result.Messages.Add(ValidationMessage.Success(af, fn => fn.AttributeValue!, attrvalue, "Was populated", item));
                     else
                         result.Messages.Add(ValidationMessage.Failure(af, fn => fn.AttributeValue!, attrvalue, "No attribute value matched", item));

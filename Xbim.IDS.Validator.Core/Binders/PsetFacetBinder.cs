@@ -67,12 +67,13 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         public override void ValidateEntity(IPersistEntity item, FacetGroup requirement, ILogger logger, IdsValidationResult result, IfcPropertyFacet pf)
         {
-
+            
             var psets = GetPropertySetsMatching(item.EntityLabel, pf.PropertySetName, logger);
             if (psets.Any())
             {
                 foreach (var pset in psets)
                 {
+                    result.Messages.Add(ValidationMessage.Success(pf, fn => fn.PropertySetName!, pset.Name, "Pset Matched", pset));
                     var props = GetPropertiesMatching<IIfcPropertySingleValue>(item.EntityLabel, pset.Name, pf.PropertyName);
                     var quants = GetQuantitiesMatching(item.EntityLabel, pset.Name, pf.PropertyName);
                     if (props.Any() || quants.Any())
@@ -80,37 +81,37 @@ namespace Xbim.IDS.Validator.Core.Binders
                         foreach (var prop in props)
                         {
                             var propValue = prop.NominalValue;
-                            ValidateMeasure(pf, result, propValue, pf.Measure);
                             object? value = UnwrapValue(propValue);
                             bool isPopulated = IsValueRelevant(value);
-                            if (requirement.IsRequired() == isPopulated)
+                            if (isPopulated)
                             {
-                                result.Messages.Add(ValidationMessage.Success(pf, fn => fn.PropertyName!, value, "Property value matched", prop));
+                                result.Messages.Add(ValidationMessage.Success(pf, fn => fn.PropertyName!, prop.Name, "Property provided", prop));
                             }
                             else
                             {
-                                result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyName!, null, "No property value matching", prop));
+                                result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyName!, prop.Name, "No property matching", prop));
                             }
+                            ValidateMeasure(pf, result, propValue, pf.Measure);
 
-                            ValidatePropertyValue(requirement, logger, result, pf, value);
+                            ValidatePropertyValue(requirement, logger, result, pf, value, propValue);
                         }
                         foreach (var quant in quants)
                         {
                             var propValue = UnwrapQuantity(quant);
-                            ValidateMeasure(pf, result, propValue, pf.Measure);
                             object? value = UnwrapValue(propValue);
                             bool isPopulated = IsValueRelevant(value);
 
-                            if (requirement.IsRequired() == isPopulated)
+                            if (isPopulated)
                             {
-                                result.Messages.Add(ValidationMessage.Success(pf, fn => fn.PropertyName!, value, "Quantity matched", quant));
+                                result.Messages.Add(ValidationMessage.Success(pf, fn => fn.PropertyName!, quant.Name, "Quantity provided", quant));
                             }
                             else
                             {
-                                result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyName!, null, "No quantity value matching", quant));
+                                result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyName!, quant.Name, "No quantity matching", quant));
                             }
+                            ValidateMeasure(pf, result, propValue, pf.Measure);
 
-                            ValidatePropertyValue(requirement, logger, result, pf, value);
+                            ValidatePropertyValue(requirement, logger, result, pf, value, propValue);
                         }
                     }
                     else
@@ -379,19 +380,19 @@ namespace Xbim.IDS.Validator.Core.Binders
 
 
 
-        private bool ValidatePropertyValue(FacetGroup requirement, ILogger logger, IdsValidationResult result, IfcPropertyFacet pf, object? value)
+        private bool ValidatePropertyValue(FacetGroup requirement, ILogger logger, IdsValidationResult result, IfcPropertyFacet pf, object value, IIfcValue ifcValue)
         {
             if (pf.PropertyValue != null)
             {
                 value = ApplyWorkarounds(value);
-                if (pf.PropertyValue.SatisfiesRequirement(requirement, value, logger))
+                if (pf.PropertyValue.IsSatisfiedBy(value, logger))
                 {
-                    result.Messages.Add(ValidationMessage.Success(pf, fn => fn.PropertyValue!, value, "Value matches"));
+                    result.Messages.Add(ValidationMessage.Success(pf, fn => fn.PropertyValue!, value, "Value matches", ifcValue));
                     return true;
                 }
                 else
                 {
-                    result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyValue!, value, "Invalid Value"));
+                    result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyValue!, value, "Invalid Value", ifcValue));
                     return false;
                 }
             }

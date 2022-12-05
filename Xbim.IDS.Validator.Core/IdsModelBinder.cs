@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.IDS.Validator.Core.Binders;
+using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core
@@ -76,6 +77,8 @@ namespace Xbim.IDS.Validator.Core
                 ValidationStatus = ValidationStatus.Inconclusive,
                 Entity = item
             };
+            // Set the Requirement expectation - Required, Optional, Prohibit so we negate Success/Failure
+            ValidationMessage.SetExpectation(requirement.IsRequired(facet));
             switch (facet)
             {
                 case IfcTypeFacet f:
@@ -95,10 +98,10 @@ namespace Xbim.IDS.Validator.Core
                     attrFacetBinder.ValidateEntity(item, requirement, logger, result, af);
                     break;
 
-                //case MaterialFacet mf:
+                case MaterialFacet mf:
 
-                //    materialFacetBinder.ValidateEntity(item, requirement, logger, result, mf);
-                //    break;
+                    materialFacetBinder.ValidateEntity(item, requirement, logger, result, mf);
+                    break;
 
 
                 default:

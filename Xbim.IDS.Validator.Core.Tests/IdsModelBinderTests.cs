@@ -67,7 +67,7 @@ namespace Xbim.IDS.Validator.Core.Tests
                             int pad = 0;
                             if (result.ValidationStatus == ValidationStatus.Inconclusive) { level = LogLevel.Warning; pad = 4; }
                             if (result.ValidationStatus == ValidationStatus.Failed) { level = LogLevel.Error; pad = 6; }
-                            logger.Log(level, "{pad}           [{i}] {result}: Checking {short} : {req}", "".PadLeft(pad, ' '), idx++, result.ValidationStatus, facet.Short(), facet.ToString());
+                            logger.Log(level, "{pad}           [{i}] {result}: Checking {short} : {req}", "".PadLeft(pad, ' '), idx++, result.ValidationStatus.ToString().ToUpperInvariant(), facet.Short(), facet.ToString());
                             foreach(var message in result.Messages)
                             {
                                 logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());

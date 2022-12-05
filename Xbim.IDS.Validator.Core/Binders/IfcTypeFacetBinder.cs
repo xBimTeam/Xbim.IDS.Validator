@@ -80,7 +80,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             var actual = entityType?.Name.ToUpperInvariant();
 
-            if (f?.IfcType?.SatisfiesRequirement(requirement, actual, logger) == true)
+            if (f?.IfcType?.IsSatisfiedBy(actual, logger) == true)
             {
                 result.Messages.Add(ValidationMessage.Success(f, fn => fn.IfcType!, actual, "Correct IFC Type", item));
             }
@@ -91,7 +91,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             if (f?.PredefinedType?.HasAnyAcceptedValue() == true)
             {
                 var preDefValue = GetPredefinedType(item);
-                if (f!.PredefinedType.SatisfiesRequirement(requirement, preDefValue, logger) == true)
+                if (f!.PredefinedType.IsSatisfiedBy(preDefValue, logger) == true)
                 {
                     result.Messages.Add(ValidationMessage.Success(f, fn => fn.PredefinedType!, actual, "Correct Predefined Type", item));
                 }

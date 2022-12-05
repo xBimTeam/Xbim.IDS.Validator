@@ -1,7 +1,5 @@
-﻿using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using Xbim.Common;
-using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core
@@ -23,47 +21,75 @@ namespace Xbim.IDS.Validator.Core
 
     public class ValidationMessage
     {
+        static Expectation ExpectationMode { get; set; } = Expectation.Required;   // Default to Reequired, not Prohibited
+
+        public static void SetExpectation(bool? isRequired)
+        {
+            ExpectationMode = isRequired == true ? Expectation.Required : isRequired == false ? Expectation.Prohibited : Expectation.Optional;
+        }
+
+        // Gets the status based on current Expectation mode - i.e. Failure to match in Prohibited model = Success
+        private static ValidationStatus GetStatus(bool? success)
+        {
+            switch (ExpectationMode)
+            {
+                case Expectation.Required:
+                    return success == true ? ValidationStatus.Success : success == false ? ValidationStatus.Failed : ValidationStatus.Inconclusive;
+
+                case Expectation.Prohibited:
+                    return success == true ? ValidationStatus.Failed : success == false ? ValidationStatus.Success : ValidationStatus.Inconclusive;
+
+                case Expectation.Optional:
+                default:
+                    return ValidationStatus.Inconclusive;
+
+            }
+           
+            
+        }
 
         public override string ToString()
         {
             if(Status == ValidationStatus.Failed)
             {
-                return $"[{Status}] {Clause?.GetType().Name}.{ValidatedField} : {Reason}. Expected '{Clause?.Short()}' but found '{ActualResult}' at {EntityLabel}";
+                return $"[{Status}] {Expectation} {Clause?.GetType().Name}.{ValidatedField} : {Reason}. Constrained to \"{ExpectedResult}\" but found \"{ActualResult}\" at {Entity}";
             }
             else
             {
-                return $"[{Status}] {Clause?.GetType().Name}.{ValidatedField} : {Reason} '{ActualResult}' at {EntityLabel}";
+                return $"[{Status}] {Expectation} {Clause?.GetType().Name}.{ValidatedField} : {Reason} Constraint \"{ExpectedResult}\" with \"{ActualResult}\" at {Entity}";
             }
         }
 
-        public static ValidationMessage Success<T>([NotNull] T clause, [NotNull] Expression<Func<T, object>> memberField, object? actualResult, string? reason = default, IPersistEntity? entity = null) where T: IFacet
+        public static ValidationMessage Success<T>([NotNull] T clause, [NotNull] Expression<Func<T, object>> memberField, object? actualResult, string? reason = default, IPersist? entity = null) where T: IFacet
         {
             // decode the field we're validating from the expression
             var member = (memberField.Body as MemberExpression)?.Member?.Name;
+            var expected = memberField.Compile().Invoke(clause).ToString();
             return new ValidationMessage
             {
-                Status = ValidationStatus.Success,
+                Status = GetStatus(true),
                 Clause = clause,
-                //Expectation = requirement.IsRequired() ? Expectation.Required : requirement.IsOptional() ? Expectation.Optional : Expectation.Prohibited,
                 ActualResult = actualResult,
                 Reason = reason,
-                ExpectedResult = clause.ToString(),
+                ExpectedResult = expected,
+                Expectation = ExpectationMode,
                 ValidatedField = member,
                 EntityAffected = entity
             };
         }
 
-        public static ValidationMessage Failure<T>(T clause, Expression<Func<T, object>> memberField, object? actualResult, string? reason = default, IPersistEntity? entity = null) where T: IFacet
+        public static ValidationMessage Failure<T>(T clause, Expression<Func<T, object>> memberField, object? actualResult, string? reason = default, IPersist? entity = null) where T: IFacet
         {
             var member = (memberField.Body as MemberExpression)?.Member?.Name;
+            var expected = memberField.Compile().Invoke(clause).ToString();
             return new ValidationMessage
             {
-                Status = ValidationStatus.Failed,
+                Status = GetStatus(false),
                 Clause = clause,
-                //Expectation = requirement.IsRequired() ? Expectation.Required : requirement.IsOptional() ? Expectation.Optional : Expectation.Prohibited,
                 ActualResult = actualResult,
                 Reason = reason,
-                ExpectedResult = clause.ToString(),
+                ExpectedResult = expected,
+                Expectation = ExpectationMode,
                 ValidatedField = member,
                 EntityAffected = entity
             };
@@ -83,7 +109,9 @@ namespace Xbim.IDS.Validator.Core
 
         }
 
-        public string EntityLabel => EntityAffected != null ? $"#{EntityAffected.EntityLabel}={EntityAffected.GetType().Name}" : "n/a";
+        //public string EntityLabel => EntityAffected != null ? $"#{EntityAffected.EntityLabel}={EntityAffected.GetType().Name}" : "n/a";
+
+        public string Entity => EntityAffected != null ? EntityAffected!.ToString() : "n/a";
 
         public ValidationStatus Status { get; set; }
         public string? Reason { get; set; }
@@ -93,8 +121,8 @@ namespace Xbim.IDS.Validator.Core
 
         public IFacet? Clause { get; set; }
         public string? ValidatedField { get; set; }
-        public IPersistEntity? EntityAffected { get; set; }
-
+        public IPersist? EntityAffected { get; set; }
+     
     }
 
     public enum ValidationStatus

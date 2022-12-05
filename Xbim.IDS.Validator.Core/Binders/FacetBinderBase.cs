@@ -161,11 +161,11 @@ namespace Xbim.IDS.Validator.Core.Binders
             var measure = Model.Metadata.ExpressType(propValue).Name;
             if (measure.Equals(expectedMeasure, StringComparison.InvariantCultureIgnoreCase))
             {
-                result.Messages.Add(ValidationMessage.Success(clause, fn => fn.Measure!, measure, "Measure matches"));
+                result.Messages.Add(ValidationMessage.Success(clause, fn => fn.Measure!, measure, "Measure matches", propValue));
             }
             else
             {
-                result.Messages.Add(ValidationMessage.Failure(clause, fn => fn.Measure!, measure, "Invalid Measure"));
+                result.Messages.Add(ValidationMessage.Failure(clause, fn => fn.Measure!, measure, "Invalid Measure", propValue));
             }
         }
 
