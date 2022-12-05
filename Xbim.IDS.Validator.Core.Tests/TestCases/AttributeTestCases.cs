@@ -43,7 +43,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         public void EntityTestFailures(string idsFile)
         {
             List<IdsValidationResult> results = VerifyIdsFile(idsFile);
-            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().NotBeEmpty("");
+            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().NotBeEmpty();
         }
 
         [InlineData(@"TestCases/attribute/pass-a_required_facet_checks_all_parameters_as_normal.ids")]
@@ -89,7 +89,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
             List<IdsValidationResult> results = VerifyIdsFile(idsFile);
             results.Should().NotBeEmpty("Expect at least one result");
-            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().BeEmpty("");
+            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().BeEmpty();
         }
 
         [InlineData(@"TestCases/attribute/pass-an_optional_facet_always_passes_regardless_of_outcome_1_2.ids")]

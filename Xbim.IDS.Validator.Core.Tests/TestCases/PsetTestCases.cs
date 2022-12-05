@@ -126,7 +126,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         public void EntityTestFailures(string idsFile)
         {
             List<IdsValidationResult> results = VerifyIdsFile(idsFile);
-            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().NotBeEmpty("");
+            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().NotBeEmpty();
         }
 
         [InlineData(@"TestCases/property/fail-predefined_properties_are_supported_but_discouraged_2_2.ids")]
@@ -134,7 +134,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         public void FailuresToImplement(string idsFile)
         {
             List<IdsValidationResult> results = VerifyIdsFile(idsFile);
-            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().NotBeEmpty("");
+            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().NotBeEmpty();
         }
     }
 }

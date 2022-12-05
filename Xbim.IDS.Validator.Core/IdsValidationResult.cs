@@ -160,7 +160,7 @@ namespace Xbim.IDS.Validator.Core
             }
 
             // decode the field we're validating from the expression
-            return memberField!.Compile().Invoke(Clause).ToString() ?? "";
+            return memberField!.Compile().Invoke(Clause)?.ToString() ?? "";
         }
 
         public string GetMember(Expression<Func<T, object>> memberField)

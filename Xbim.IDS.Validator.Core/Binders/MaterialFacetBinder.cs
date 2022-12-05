@@ -126,21 +126,25 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         private bool MaterialMatches(IIfcMaterial material, MaterialFacet facet)
         {
+            if (facet.Value == null) return true;
             return facet.Value?.IsSatisfiedBy(material.Name.Value, true) == true || facet.Value?.IsSatisfiedBy(material.Category?.Value, true) == true;
         }
 
         private bool MaterialMatches(IIfcMaterialConstituent constituent, MaterialFacet facet)
         {
+            if (facet.Value == null) return true;
             return facet.Value?.IsSatisfiedBy(constituent.Name?.Value, true) == true || facet.Value?.IsSatisfiedBy(constituent.Category?.Value, true) == true;
         }
 
         private bool MaterialMatches(IIfcMaterialLayer layer, MaterialFacet facet)
         {
+            if (facet.Value == null) return true;
             return facet.Value?.IsSatisfiedBy(layer.Name?.Value, true) == true || facet.Value?.IsSatisfiedBy(layer.Category?.Value, true) == true;
         }
 
         private bool MaterialMatches(IIfcMaterialProfile profile, MaterialFacet facet)
         {
+            if (facet.Value == null) return true;
             return facet.Value?.IsSatisfiedBy(profile.Name?.Value, true) == true || facet.Value?.IsSatisfiedBy(profile.Category?.Value, true) == true;
         }
 

@@ -27,7 +27,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         public void EntityTestFailures(string idsFile)
         {
             List<IdsValidationResult> results = VerifyIdsFile(idsFile);
-            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().NotBeEmpty("");
+            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().NotBeEmpty();
         }
 
         [InlineData("TestCases/entity/pass-a_matching_entity_should_pass.ids")]

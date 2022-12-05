@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Xbim.Essentials" Version="5.1.364-develop" />
-    <PackageReference Include="Xbim.InformationSpecifications" Version="0.3.27" />
+    <PackageReference Include="Xbim.InformationSpecifications" Version="0.3.28" />
     <PackageReference Include="Xbim.IO.Esent" Version="5.1.364-develop" />
   </ItemGroup>
 
