@@ -3,6 +3,7 @@ using System.Data;
 using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.Common.Metadata;
+using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4.Kernel;
@@ -42,7 +43,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             if (!psetFacet.IsValid())
             {
-                // IsValid checks against a know list of all IFC Attributes
+                // IsValid checks against a known list of all IFC Attributes
                 throw new InvalidOperationException($"IFC Property Facet '{psetFacet?.PropertySetName}'.{psetFacet?.PropertyName} is not valid");
             }
 
@@ -64,6 +65,69 @@ namespace Xbim.IDS.Validator.Core.Binders
             return expression;
         }
 
+        public override void ValidateEntity(IPersistEntity item, FacetGroup requirement, ILogger logger, IdsValidationResult result, IfcPropertyFacet pf)
+        {
+
+            var psets = GetPropertySetsMatching(item.EntityLabel, pf.PropertySetName, logger);
+            if (psets.Any())
+            {
+                foreach (var pset in psets)
+                {
+                    var props = GetPropertiesMatching<IIfcPropertySingleValue>(item.EntityLabel, pset.Name, pf.PropertyName);
+                    var quants = GetQuantitiesMatching(item.EntityLabel, pset.Name, pf.PropertyName);
+                    if (props.Any() || quants.Any())
+                    {
+                        foreach (var prop in props)
+                        {
+                            var propValue = prop.NominalValue;
+                            ValidateMeasure(pf, result, propValue, pf.Measure);
+                            object? value = UnwrapValue(propValue);
+                            bool isPopulated = IsValueRelevant(value);
+                            if (requirement.IsRequired() == isPopulated)
+                            {
+                                result.Messages.Add(ValidationMessage.Success(pf, fn => fn.PropertyName!, value, "Property value matched", prop));
+                            }
+                            else
+                            {
+                                result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyName!, null, "No property value matching", prop));
+                            }
+
+                            ValidatePropertyValue(requirement, logger, result, pf, value);
+                        }
+                        foreach (var quant in quants)
+                        {
+                            var propValue = UnwrapQuantity(quant);
+                            ValidateMeasure(pf, result, propValue, pf.Measure);
+                            object? value = UnwrapValue(propValue);
+                            bool isPopulated = IsValueRelevant(value);
+
+                            if (requirement.IsRequired() == isPopulated)
+                            {
+                                result.Messages.Add(ValidationMessage.Success(pf, fn => fn.PropertyName!, value, "Quantity matched", quant));
+                            }
+                            else
+                            {
+                                result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyName!, null, "No quantity value matching", quant));
+                            }
+
+                            ValidatePropertyValue(requirement, logger, result, pf, value);
+                        }
+                    }
+                    else
+                    {
+                        result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyName!, null, "No properties matching", pset));
+                    }
+                }
+            }
+
+            else
+            {
+                result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertySetName!, null, "No Psets matching", item));
+            }
+
+
+        }
+
 
         private Expression BindEqualPsetFilter(Expression expression, IfcPropertyFacet psetFacet)
         {
@@ -73,8 +137,6 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             // Get underlying collection type
             var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
-
-            //var constraints = constraint.AcceptedValues;
 
             // call .Cast<EntityType>()
             expression = Expression.Call(null, ExpressionHelperMethods.EnumerableCastGeneric.MakeGenericMethod(collectionType), expression);
@@ -96,88 +158,11 @@ namespace Xbim.IDS.Validator.Core.Binders
             // var psetRelDefines = model.Instances.OfType<IIfcRelDefinesByProperties>();
             // var entities = IfcExtensions.GetIfcPropertySingleValues(psetRelDefines, psetName, propName, propValue);
 
-
             var propsMethod = ExpressionHelperMethods.EnumerableIfcPropertySinglePropsValue;
 
             return Expression.Call(null, propsMethod, new[] { expression, psetNameExpr, propNameExpr, propValExpr });
 
-            /*
-
-
-
-            // IEnumerable.Where<TEntity>(...)
-            var whereMethod = ExpressionHelperMethods.EnumerableWhereGeneric.MakeGenericMethod(collectionType);
-
-            // build lambda param 'ent => ...'
-            ParameterExpression ifcTypeParam = Expression.Parameter(collectionType, "ent");
-            
-            // build 'ent.AttributeName'
-            Expression nameProperty = Expression.Property(ifcTypeParam, ifcAttributePropInfo);
-
-            var propType = ifcAttributePropInfo.PropertyType;
-            var isNullWrapped = TypeHelper.IsNullable(propType);
-            var underlyingType = isNullWrapped ? Nullable.GetUnderlyingType(propType) : propType;
-
-            Expression querybody = Expression.Empty();
-
-            bool applyOr = false;
-            foreach (var ifcAttributeValue in constraints)
-            {
-                Expression rightExpr;
-
-                switch (ifcAttributeValue)
-                {
-                    case ExactConstraint e:
-
-                        string exactValue = e.Value;
-                        // Get the Constant
-                        rightExpr = BuildAttributeValueConstant(isNullWrapped, underlyingType, exactValue);
-                        nameProperty = SetAttributeProperty(nameProperty, underlyingType);
-                        // Binding Equals(x,y)
-                        rightExpr = Expression.Equal(nameProperty, rightExpr);
-                        break;
-
-                    case PatternConstraint p:
-                        // Build a query that builds an expression that delegates to XIDS's IsSatisfied regex method.
-                        // model.Instances.OfType<IIfcWall>().Where(ent => patternconstraint.IsSatisfiedBy(w.Name.ToString(), <AttributeValue>, true, null));
-                        //                                                 instance,         methodIn new[]{rightExpr, constraintExpr,   case, logger }
-                        var isSatisfiedMethod = ExpressionHelperMethods.IdsValidationIsSatisifiedMethod;
-                        // Get Property: entity.<attribute>
-                        rightExpr = BuildAttributeValueRegexPredicate(nameProperty, isNullWrapped, underlyingType, p);
-                        var constraintExpr = Expression.Constant(constraint, typeof(ValueConstraint));
-                        var caseInsensitive = Expression.Constant(true, typeof(bool));
-                        var loggerExpr = Expression.Constant(null, typeof(ILogger));
-                        var instanceExpr = Expression.Constant(p, typeof(PatternConstraint));
-                        rightExpr = Expression.Call(instanceExpr, isSatisfiedMethod, new[] { rightExpr, constraintExpr, caseInsensitive, loggerExpr });
-
-                        break;
-                    case StructureConstraint s:
-                    case RangeConstraint r:
-                        throw new NotSupportedException(ifcAttributeValue.GetType().Name);
-
-                    default:
-                        throw new NotImplementedException(ifcAttributeValue.GetType().Name);
-                }
-
-                // Or the expressions on subsequent iterations.
-                if (applyOr)
-                {
-                    querybody = Expression.Or(querybody, rightExpr);
-                }
-                else
-                {
-                    querybody = rightExpr;
-                    applyOr = true;
-                }
-            }
-
-            // Build Lambda expression for filter predicate (Func<T,bool>)
-            var filterExpression = Expression.Lambda(querybody, ifcTypeParam);
-
-            // Bind Lambda to Where method
-            return Expression.Call(null, whereMethod, new[] { expression, filterExpression });
-            */
-            //return expression;
+          
         }
 
         // For Selections on instances we don't need to use expressions. When filtering we will
@@ -372,12 +357,6 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             else if (entity is IIfcObject obj)
             {
-                //var part1 = obj.IsDefinedBy.ToList();
-                //var part2 = part1.Where(t => t.RelatingPropertyDefinition is IIfcPropertySetDefinition ps && psetConstraint.IsSatisfiedBy(ps.Name.ToString(), true, logger)).ToList();
-                //var part2s = part1.Where(t => t.RelatingPropertyDefinition is IIfcElementQuantity ps && psetConstraint.IsSatisfiedBy(ps.Name.ToString(), true, logger)).ToList();
-                //var part3 = part2.Select(p => (IIfcPropertySetDefinition)p.RelatingPropertyDefinition).ToList();
-
-
 
                 var entityProperties = obj.IsDefinedBy
                     .Where(t => t.RelatingPropertyDefinition is IIfcPropertySetDefinition ps && psetConstraint.IsSatisfiedBy(ps.Name.ToString(), true, logger))
@@ -390,10 +369,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                     entityProperties = entityProperties.Concat(GetPropertySetsMatching(obj.IsTypedBy.First().RelatingType.EntityLabel, psetConstraint, logger));
                 }
 
-
                 return entityProperties;
-
-
             }
             else
             {
@@ -401,12 +377,28 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
         }
 
-        public IIfcUnitAssignment GetUnits()
-        {
-            var project = Model.Instances.OfType<IIfcProject>().First();
 
-            return project.UnitsInContext;
+
+        private bool ValidatePropertyValue(FacetGroup requirement, ILogger logger, IdsValidationResult result, IfcPropertyFacet pf, object? value)
+        {
+            if (pf.PropertyValue != null)
+            {
+                value = ApplyWorkarounds(value);
+                if (pf.PropertyValue.SatisfiesRequirement(requirement, value, logger))
+                {
+                    result.Messages.Add(ValidationMessage.Success(pf, fn => fn.PropertyValue!, value, "Value matches"));
+                    return true;
+                }
+                else
+                {
+                    result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyValue!, value, "Invalid Value"));
+                    return false;
+                }
+            }
+            return true;
         }
+
+
 
 
         private class QuantityEqualityComparer : IEqualityComparer<IIfcPhysicalQuantity>

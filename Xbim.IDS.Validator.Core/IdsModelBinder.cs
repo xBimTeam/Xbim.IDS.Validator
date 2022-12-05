@@ -1,21 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.IDS.Validator.Core.Binders;
-using Xbim.IDS.Validator.Core.Extensions;
-using Xbim.IDS.Validator.Core.Helpers;
-using Xbim.Ifc4.Interfaces;
-using Xbim.Ifc4.MeasureResource;
 using Xbim.InformationSpecifications;
-using Xbim.IO.Xml.BsConf;
-
 
 namespace Xbim.IDS.Validator.Core
 {
     /// <summary>
-    /// Binds an IDS to an <see cref="IModel"/>
+    /// Binds an IDS Specification to an <see cref="IModel"/> to filter applicable entities and test against the requirements
     /// </summary>
     public class IdsModelBinder
     {
@@ -25,6 +17,7 @@ namespace Xbim.IDS.Validator.Core
         private PsetFacetBinder psetFacetBinder;
         private AttributeFacetBinder attrFacetBinder;
         private IfcTypeFacetBinder ifcTypeFacetBinder;
+        private MaterialFacetBinder materialFacetBinder;
 
         public IdsModelBinder(IModel model)
         {
@@ -33,9 +26,8 @@ namespace Xbim.IDS.Validator.Core
             psetFacetBinder = new PsetFacetBinder(model);
             attrFacetBinder = new AttributeFacetBinder(model);
             ifcTypeFacetBinder = new IfcTypeFacetBinder(model);
+            materialFacetBinder = new MaterialFacetBinder(model);
         }
-
-        
 
         /// <summary>
         /// Returns all entities in the model that apply to a specification
@@ -88,20 +80,25 @@ namespace Xbim.IDS.Validator.Core
             {
                 case IfcTypeFacet f:
                     
-                    ValidateIfcType(item, requirement, logger, result, f);
+                    ifcTypeFacetBinder.ValidateEntity(item, requirement, logger, result, f);
                     break;
                     
 
                 case IfcPropertyFacet pf:
                     
-                    ValidateProperty(item, requirement, logger, result, pf);
+                    psetFacetBinder.ValidateEntity(item, requirement, logger, result, pf);
                     break;
                     
 
                 case AttributeFacet af:
                     
-                    ValidateAttribute(item, requirement, logger, result, af);
+                    attrFacetBinder.ValidateEntity(item, requirement, logger, result, af);
                     break;
+
+                //case MaterialFacet mf:
+
+                //    materialFacetBinder.ValidateEntity(item, requirement, logger, result, mf);
+                //    break;
 
 
                 default:
@@ -120,308 +117,6 @@ namespace Xbim.IDS.Validator.Core
             return result;
         }
 
-        private void ValidateAttribute(IPersistEntity item, FacetGroup requirement, ILogger? logger, IdsValidationResult result, AttributeFacet af)
-        {
-            if (af is null)
-            {
-                throw new ArgumentNullException(nameof(af));
-            }
-
-            var candidates = attrFacetBinder.GetAttributes(item, af);
-
-            foreach (var pair in candidates)
-            {
-                var attrName = pair.Key;
-                var attrvalue = pair.Value;
-                bool isPopulated = IsValueRelevant(attrvalue);
-                // Name meets requirement if it has a value and is Required. Treat unknown logical as no value
-                if (af.AttributeName.SatisfiesRequirement(requirement, attrName, logger) && (requirement.IsRequired() == isPopulated))
-                {
-                    result.Messages.Add(ValidationMessage.Success(af, fn => fn.AttributeName!, attrName, "Was populated", item));
-                }
-                else
-                {
-                    result.Messages.Add(ValidationMessage.Failure(af, fn => fn.AttributeName!, attrName, "No attribute matched", item));
-                }
-
-                attrvalue = HandleBoolConventions(attrvalue);
-                // Unpack Ifc Values
-                if (attrvalue is IIfcValue v)
-                {
-                    attrvalue = v.Value;
-                }
-                if (af.AttributeValue != null)
-                {
-                    attrvalue = ApplyWorkarounds(attrvalue);
-                    if (af.AttributeValue.SatisfiesRequirement(requirement, attrvalue, logger))
-                        result.Messages.Add(ValidationMessage.Success(af, fn => fn.AttributeValue!, attrvalue, "Was populated", item));
-                    else
-                        result.Messages.Add(ValidationMessage.Failure(af, fn => fn.AttributeValue!, attrvalue, "No attribute value matched", item));
-                }
-
-            }
-        }
-
-        private void ValidateProperty(IPersistEntity item, FacetGroup requirement, ILogger? logger, IdsValidationResult result, IfcPropertyFacet pf)
-        {
-           
-            var psets = psetFacetBinder.GetPropertySetsMatching(item.EntityLabel, pf.PropertySetName, logger);
-            if (psets.Any())
-            {
-                foreach (var pset in psets)
-                {
-                    var props = psetFacetBinder.GetPropertiesMatching<IIfcPropertySingleValue>(item.EntityLabel, pset.Name, pf.PropertyName);
-                    var quants = psetFacetBinder.GetQuantitiesMatching(item.EntityLabel, pset.Name, pf.PropertyName);
-                    if (props.Any() || quants.Any())
-                    {
-                        foreach (var prop in props)
-                        {
-                            var propValue = prop.NominalValue;
-                            ValidateMeasure(pf, result, propValue, pf.Measure);
-                            object? value = UnwrapValue(propValue);
-                            bool isPopulated = IsValueRelevant(value);
-                            if (requirement.IsRequired() == isPopulated)
-                            {
-                                result.Messages.Add(ValidationMessage.Success(pf, fn => fn.PropertyName!, value, "Property value matched", prop));
-                            }
-                            else
-                            {
-                                result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyName!, null, "No property value matching", prop));
-                            }
-
-                            ValidatePropertyValue(requirement, logger, result, pf, value);
-                        }
-                        foreach (var quant in quants)
-                        {
-                            var propValue = UnwrapQuantity(quant);
-                            ValidateMeasure(pf, result, propValue, pf.Measure);
-                            object? value = UnwrapValue(propValue);
-                            bool isPopulated = IsValueRelevant(value);
-
-                            if (requirement.IsRequired() == isPopulated)
-                            {
-                                result.Messages.Add(ValidationMessage.Success(pf, fn => fn.PropertyName!, value, "Quantity matched", quant));
-                            }
-                            else
-                            {
-                                result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyName!, null, "No quantity value matching", quant));
-                            }
-
-                            ValidatePropertyValue(requirement, logger, result, pf, value);
-                        }
-                    }
-                    else
-                    {
-                        result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyName!, null, "No properties matching", pset));
-                    }
-                }
-            }
-
-            else
-            {
-                result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertySetName!, null, "No Psets matching", item));
-            }
-
-            
-        }
-
-        private void ValidateMeasure(IfcPropertyFacet clause, IdsValidationResult result, IIfcValue propValue, string? expectedMeasure)
-        {
-            if (propValue is null)
-            {
-                return;
-            }
-
-            if (string.IsNullOrEmpty(expectedMeasure)) return;
-
-            var measure = model.Metadata.ExpressType(propValue).Name;
-            if (measure.Equals(expectedMeasure, StringComparison.InvariantCultureIgnoreCase))
-            {
-                result.Messages.Add(ValidationMessage.Success(clause, fn => fn.Measure!, measure, "Measure matches"));
-            }
-            else
-            {
-                result.Messages.Add(ValidationMessage.Failure(clause, fn => fn.Measure!, measure, "Invalid Measure"));
-            }
-        }
-
-        private bool ValidatePropertyValue(FacetGroup requirement, ILogger? logger, IdsValidationResult result, IfcPropertyFacet pf, object? value)
-        {
-            if (pf.PropertyValue != null)
-            {
-                value = ApplyWorkarounds(value);
-                if (pf.PropertyValue.SatisfiesRequirement(requirement, value, logger))
-                {
-                    result.Messages.Add(ValidationMessage.Success(pf, fn => fn.PropertyValue!, value, "Value matches"));
-                    return true;
-                }
-                else
-                {
-                    result.Messages.Add(ValidationMessage.Failure(pf, fn => fn.PropertyValue!, value, "Invalid Value"));
-                    return false;
-                }
-            }
-            return true;
-
-         
-        }
-
-        private void ValidateIfcType(IPersistEntity item, FacetGroup requirement, ILogger? logger,  IdsValidationResult result, IfcTypeFacet f)
-        {
-  
-            var entityType = model.Metadata.ExpressType(item);
-            if (entityType == null)
-            {
-                result.Messages.Add(ValidationMessage.Failure(f, fn => fn.IfcType!, null, "Invalid IFC Type", item));
-            }
-            var actual = entityType?.Name.ToUpperInvariant();
-
-            if (f?.IfcType?.SatisfiesRequirement(requirement, actual, logger) == true)
-            {
-                result.Messages.Add(ValidationMessage.Success(f, fn => fn.IfcType!, actual, "Correct IFC Type", item));
-            }
-            else
-            {
-                result.Messages.Add(ValidationMessage.Failure(f!, fn => fn.IfcType!, actual, "IFC Type incorrect", item));
-            }
-            if (f?.PredefinedType?.HasAnyAcceptedValue() == true)
-            {
-                var preDefValue = ifcTypeFacetBinder.GetPredefinedType(item);
-                if (f!.PredefinedType.SatisfiesRequirement(requirement, preDefValue, logger) == true)
-                {
-                    result.Messages.Add(ValidationMessage.Success(f, fn => fn.PredefinedType!, actual, "Correct Predefined Type", item));
-                }
-                else
-                {
-                    result.Messages.Add(ValidationMessage.Failure(f, fn => fn.PredefinedType!, preDefValue, "Predefined Type incorrect", item));
-                }
-            }
-        }
-
-        
-        private object? ApplyWorkarounds([MaybeNull]object? value)
-        {
-            // Workaround for a bug in XIDS Satisfied test where we don't coerce numeric types correctly
-            if (value is long l)
-                return Convert.ToDouble(l);
-
-
-            if (value is int i)
-                return Convert.ToDouble(i);
-
-            return value;
-        }
-
-        private IIfcValue? UnwrapQuantity(IIfcPhysicalQuantity quantity)
-        {
-            if (quantity is IIfcQuantityCount c)
-                return c.CountValue;
-            if (quantity is IIfcQuantityArea area)
-                return area.AreaValue;
-            else if (quantity is IIfcQuantityLength l)
-                return l.LengthValue;
-            else if (quantity is IIfcQuantityVolume v)
-                return v.VolumeValue;
-            if (quantity is IIfcQuantityWeight w)
-                return w.WeightValue;
-            if (quantity is IIfcQuantityTime t)
-                return t.TimeValue;
-            if (quantity is IIfcPhysicalComplexQuantity comp)
-                return default;
-
-
-            throw new NotImplementedException(quantity.GetType().Name);
-        }
-
-        private object UnwrapValue(IIfcValue? value)
-        {
-            object result = HandleBoolConventions(value);
-            if(result is IIfcMeasureValue)
-            {
-                result = HandleUnitConversion(value);
-            }
-            if (result is IIfcValue v)
-            {
-                result = v.Value;
-            }
-
-            return result;
-        }
-
-        private IIfcValue HandleUnitConversion(IIfcValue value)
-        {
-            var units = psetFacetBinder.GetUnits() as IfcUnitAssignment;
-
-            if (units == null) return value;
-
-            // TODO: handle 2x3
-            if (value is IfcCountMeasure c)
-                return c;
-            if (value is IfcAreaMeasure area)
-            {
-                var unit = units.AreaUnit;
-                if(unit is IIfcSIUnit si)
-                {
-                    return new IfcAreaMeasure(area * si.Power);
-                }
-                return area;
-            }
-            else if (value is IfcLengthMeasure l)
-            {
-                var unit = units.LengthUnit;
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcLengthMeasure(l * si.Power);
-                }
-                return l;
-            }
-            else if (value is IfcVolumeMeasure v)
-            {
-                var unit = units.VolumeUnit;
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcMassMeasure(v * si.Power);
-                }
-                return v;
-            }
-
-            //if (value is IfcMassMeasure w)
-            //{
-            //    var unit = units.GetUnitFor(w);
-            //    if (unit is IIfcSIUnit si)
-            //    {
-            //        return new IfcMassMeasure(v * si.Power);
-            //    }
-            //    return w;
-            //}
-
-            if (value is IfcTimeMeasure t)
-                return t;
-            else
-                return value;
-                //throw new NotImplementedException(value.GetType().Name);
-        }
-
-        private static object HandleBoolConventions(object attrvalue)
-        {
-            if (attrvalue is IExpressBooleanType ifcbool)
-            {
-                // IDS Specs expect bools to be upper case
-                attrvalue = ifcbool.Value.ToString().ToUpperInvariant();
-            }
-
-            return attrvalue;
-        }
-
-        private static bool IsValueRelevant(object? value)
-        {
-            if (value == null) return false;
-            if (value is IfcSimpleValue sv && string.IsNullOrEmpty(sv.Value?.ToString())) return false;
-            if (value is string str && string.IsNullOrEmpty(str)) return false;
-            if (value is IList list && list.Count == 0) return false;
-
-            return true;
-        }
 
         /// <summary>
         /// Binds an <see cref="IFacet"/> to an Expression bound to filter on IModel.Instances
@@ -441,7 +136,6 @@ namespace Xbim.IDS.Validator.Core
                     return attrFacetBinder.BindFilterExpression(baseExpression, af);
 
                 case IfcPropertyFacet pf:
-
                     return psetFacetBinder.BindFilterExpression(baseExpression, pf);
 
                 case IfcClassificationFacet af:
@@ -461,8 +155,7 @@ namespace Xbim.IDS.Validator.Core
                     return baseExpression;
 
                 case MaterialFacet mf:
-                    // TODO: 
-                    return baseExpression;
+                    return materialFacetBinder.BindFilterExpression(baseExpression, mf);
 
                 default:
                     throw new NotImplementedException($"Facet not implemented: '{facet.GetType().Name}'");

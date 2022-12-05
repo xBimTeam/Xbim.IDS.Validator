@@ -1,4 +1,5 @@
 ﻿using Xbim.Ifc4.Interfaces;
+using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Extensions
 {
@@ -18,25 +19,29 @@ namespace Xbim.IDS.Validator.Core.Extensions
                     .SelectMany(r => r.RelatedObjects);
         }
 
+        /// <summary>
+        /// Selects all objects using a material
+        /// </summary>
+        /// <param name="relAssociates"></param>
+        /// <param name="materialName"></param>
+        /// <returns></returns>
+        public static IEnumerable<IIfcObjectDefinition> GetIfcObjectsUsingMaterials(this IEnumerable<IIfcRelAssociatesMaterial> relAssociates, MaterialFacet materialFacet)
+        {
+            if (materialFacet is null)
+            {
+                throw new ArgumentNullException(nameof(materialFacet));
+            }
+
+            return relAssociates.Where((r => 
+            (
+                (r.RelatingMaterial is IIfcMaterialList l && l.Materials.Any(m => materialFacet?.Value?.IsSatisfiedBy(m.Name, true) == true)) || 
+                (r.RelatingMaterial is IIfcMaterial m && materialFacet?.Value?.IsSatisfiedBy(m.Name, true) == true) ||
+                (r.RelatingMaterial is IIfcMaterialLayerSetUsage ls && ls.ForLayerSet.MaterialLayers.Any(mls =>  materialFacet?.Value?.IsSatisfiedBy(mls.Material.Name, true) == true))
+            )))
+                    .SelectMany(r => r.RelatedObjects).OfType<IIfcObjectDefinition>();
+        }
 
 
-        ///// <summary>
-        ///// Gets all <see cref="IIfcObjectDefinition"/>s defined by the propertyset, name and value
-        ///// </summary>
-        ///// <param name="relDefines"></param>
-        ///// <param name="psetName"></param>
-        ///// <param name="propName"></param>
-        ///// <param name="propValue"></param>
-        ///// <returns></returns>
-        //public static IEnumerable<IIfcObjectDefinition> GetIfcPropertySingleValues(this IEnumerable<IIfcRelDefinesByProperties> relDefines,
-        //    string psetName, string propName, string propValue)
-        //{
-        //    return relDefines.RelDefinesFilter(psetName, propName)
-        //        .Where(p => ((IIfcPropertySet)p.RelatingPropertyDefinition).HasProperties.OfType<IIfcPropertySingleValue>()
-        //            .Any(ps=> string.Equals(ps.NominalValue.ToString(), propValue, StringComparison.InvariantCultureIgnoreCase)))
-        //        .SelectMany(r => r.RelatedObjects);
-
-        //}
 
         private static IEnumerable<IIfcRelDefinesByProperties> RelDefinesFilter(this IEnumerable<IIfcRelDefinesByProperties> relDefines,
             string psetName, string propName, string? propValue)
@@ -59,23 +64,5 @@ namespace Xbim.IDS.Validator.Core.Extensions
             }
         }
 
-
-        //public static IEnumerable<IIfcPropertySingleValue> GetIfcPropertySingleValues(this IEnumerable<IIfcRelDefinesByProperties> relDefines,
-        //    string psetName, string propName)
-        //{
-        //    return relDefines
-        //            //.Where(r => r.RelatedObjects.Any(o => o.EntityLabel == entityLabel))
-        //            .Where(r => r.RelatingPropertyDefinition is IIfcPropertySet ps && ps.Name == psetName)
-        //            .SelectMany(p => ((IIfcPropertySet)p.RelatingPropertyDefinition)
-        //                .HasProperties.Where(ps => ps.Name == propName)
-        //                .OfType<IIfcPropertySingleValue>());
-        //}
-
-        //public static IEnumerable<IIfcPropertySingleValue> GetIfcPropertySingleValues(this IEnumerable<IIfcRelDefinesByProperties> relDefines,
-        //    string psetName, string propName, string propValue)
-        //{
-        //    return relDefines.GetIfcPropertySingleValues(psetName, propName)
-        //        .Where(p => p.NominalValue.Equals(propValue));
-        //}
     }
 }

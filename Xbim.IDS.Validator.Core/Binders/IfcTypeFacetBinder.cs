@@ -1,6 +1,8 @@
-﻿using System.Linq.Expressions;
+﻿using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.Common.Metadata;
+using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 
@@ -66,6 +68,38 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             return expression;
 
+        }
+
+        public override void ValidateEntity(IPersistEntity item, FacetGroup requirement, ILogger logger, IdsValidationResult result, IfcTypeFacet f)
+        {
+
+            var entityType = Model.Metadata.ExpressType(item);
+            if (entityType == null)
+            {
+                result.Messages.Add(ValidationMessage.Failure(f, fn => fn.IfcType!, null, "Invalid IFC Type", item));
+            }
+            var actual = entityType?.Name.ToUpperInvariant();
+
+            if (f?.IfcType?.SatisfiesRequirement(requirement, actual, logger) == true)
+            {
+                result.Messages.Add(ValidationMessage.Success(f, fn => fn.IfcType!, actual, "Correct IFC Type", item));
+            }
+            else
+            {
+                result.Messages.Add(ValidationMessage.Failure(f!, fn => fn.IfcType!, actual, "IFC Type incorrect", item));
+            }
+            if (f?.PredefinedType?.HasAnyAcceptedValue() == true)
+            {
+                var preDefValue = GetPredefinedType(item);
+                if (f!.PredefinedType.SatisfiesRequirement(requirement, preDefValue, logger) == true)
+                {
+                    result.Messages.Add(ValidationMessage.Success(f, fn => fn.PredefinedType!, actual, "Correct Predefined Type", item));
+                }
+                else
+                {
+                    result.Messages.Add(ValidationMessage.Failure(f, fn => fn.PredefinedType!, preDefValue, "Predefined Type incorrect", item));
+                }
+            }
         }
 
         private IEnumerable<ExpressType> GetExpressTypes(IfcTypeFacet ifcFacet)
