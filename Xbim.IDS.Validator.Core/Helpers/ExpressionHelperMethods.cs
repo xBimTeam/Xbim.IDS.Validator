@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 using Xbim.Common;
@@ -14,11 +13,11 @@ namespace Xbim.IDS.Validator.Core.Helpers
 
     internal class ExpressionHelperMethods
     {
-        //private static MethodInfo _enumerableOfTypeMethod = GenericMethodOf(_ => Enumerable.OfType<int>(default(IEnumerable)));
-        //private static MethodInfo _queryableOfTypeMethod = GenericMethodOf(_ => Queryable.OfType<int>(default(IQueryable)));
+
         private static MethodInfo _entityCollectionofTypeMethod = typeof(IReadOnlyEntityCollection).GetMethod(nameof(IReadOnlyEntityCollection.OfType), new Type[] { typeof(string), typeof(bool) });
         private static MethodInfo _enumerableIfcPropertySinglePropsValueMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcPropertySingleValues), new Type[] { typeof(IEnumerable<IIfcRelDefinesByProperties>), typeof(string), typeof(string), typeof(string) });
         private static MethodInfo _enumerableIfcMaterialSelectorMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcObjectsUsingMaterials), new Type[] { typeof(IEnumerable<IIfcRelAssociatesMaterial>), typeof(MaterialFacet) });
+        private static MethodInfo _enumerableIfcAssociatesClassificationMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcObjectsAssociatedWithClassification), new Type[] { typeof(IEnumerable<IIfcRelAssociatesClassification>), typeof(IfcClassificationFacet) });
 
         private static MethodInfo _idsValidationIsSatisifiedMethod = typeof(IValueConstraintComponent).GetMethod(nameof(IValueConstraintComponent.IsSatisfiedBy), new Type[] { typeof(object), typeof(ValueConstraint), typeof(bool), typeof(ILogger) });
 
@@ -28,16 +27,6 @@ namespace Xbim.IDS.Validator.Core.Helpers
 
         private static MethodInfo _enumerableConcatMethod = GenericMethodOf(_ => Enumerable.Concat<int>(default(IEnumerable<int>), default(IEnumerable<int>)));
 
-
-        //	public static MethodInfo EnumerableOfType
-        //	{
-        //		get { return _enumerableOfTypeMethod; }
-        //	}
-        //
-        //	public static MethodInfo QueryableOfType
-        //	{
-        //		get { return _queryableOfTypeMethod; }
-        //	}
 
         public static MethodInfo EnumerableWhereGeneric
         {
@@ -66,6 +55,12 @@ namespace Xbim.IDS.Validator.Core.Helpers
             get { return _enumerableIfcMaterialSelectorMethod; }
         }
 
+        public static MethodInfo EnumerableIfcClassificationSelector
+        {
+            get { return _enumerableIfcAssociatesClassificationMethod; }
+        }
+
+        
 
         public static MethodInfo EnumerableCastGeneric
         {

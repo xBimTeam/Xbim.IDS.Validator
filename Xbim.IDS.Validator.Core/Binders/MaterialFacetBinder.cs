@@ -45,7 +45,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             var expressType = Model.Metadata.ExpressType(collectionType);
             ValidateExpressType(expressType);
 
-            expression = BindEqualMaterialFilter(expression, facet);
+            expression = BindMaterialFilter(expression, facet);
             return expression;
         }
 
@@ -148,7 +148,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             return facet.Value?.IsSatisfiedBy(profile.Name?.Value, true) == true || facet.Value?.IsSatisfiedBy(profile.Category?.Value, true) == true;
         }
 
-        private Expression BindEqualMaterialFilter(Expression expression, MaterialFacet materialFacet)
+        private Expression BindMaterialFilter(Expression expression, MaterialFacet materialFacet)
         {
             if (materialFacet is null)
             {

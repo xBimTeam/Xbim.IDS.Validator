@@ -1,4 +1,5 @@
-﻿using Xbim.Ifc4.Interfaces;
+﻿using Xbim.Ifc2x3.ExternalReferenceResource;
+using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Extensions
@@ -32,15 +33,50 @@ namespace Xbim.IDS.Validator.Core.Extensions
                 throw new ArgumentNullException(nameof(materialFacet));
             }
 
-            return relAssociates.Where((r => 
+            return relAssociates.Where((r =>
             (
-                (r.RelatingMaterial is IIfcMaterialList l && l.Materials.Any(m => materialFacet?.Value?.IsSatisfiedBy(m.Name, true) == true)) || 
+                // TODO: Update all possible materials. see Binder
+                (r.RelatingMaterial is IIfcMaterialList l && l.Materials.Any(m => materialFacet?.Value?.IsSatisfiedBy(m.Name, true) == true)) ||
                 (r.RelatingMaterial is IIfcMaterial m && materialFacet?.Value?.IsSatisfiedBy(m.Name, true) == true) ||
-                (r.RelatingMaterial is IIfcMaterialLayerSetUsage ls && ls.ForLayerSet.MaterialLayers.Any(mls =>  materialFacet?.Value?.IsSatisfiedBy(mls.Material.Name, true) == true))
+                (r.RelatingMaterial is IIfcMaterialLayerSetUsage ls && ls.ForLayerSet.MaterialLayers.Any(mls => materialFacet?.Value?.IsSatisfiedBy(mls.Material.Name, true) == true))
             )))
                     .SelectMany(r => r.RelatedObjects).OfType<IIfcObjectDefinition>();
         }
 
+
+        /// <summary>
+        /// Selects all objects using a material
+        /// </summary>
+        /// <param name="relAssociates"></param>
+        /// <param name="materialName"></param>
+        /// <returns></returns>
+        public static IEnumerable<IIfcObjectDefinition> GetIfcObjectsAssociatedWithClassification(this IEnumerable<IIfcRelAssociatesClassification> relAssociates, IfcClassificationFacet facet)
+        {
+            if (facet is null)
+            {
+                throw new ArgumentNullException(nameof(facet));
+            }
+
+            return relAssociates.Where(r => r.RelatingClassification is IIfcClassificationReference cr &&
+                MatchesIdentification(cr, facet) &&
+                cr.ReferencedSource is IIfcClassification cl && MatchesSystem(cl, facet))
+
+                .SelectMany(r => r.RelatedObjects).OfType<IIfcObjectDefinition>();
+
+        }
+        private static bool MatchesIdentification(IIfcClassificationReference reference, IfcClassificationFacet facet)
+        {
+            if (facet.Identification == null) return true;
+
+            return facet.Identification?.IsSatisfiedBy(reference.Identification?.Value, true) == true;
+        }
+
+        private static bool MatchesSystem(IIfcClassification classification, IfcClassificationFacet facet)
+        {
+            if (facet.ClassificationSystem == null) return true;
+
+            return facet.ClassificationSystem?.IsSatisfiedBy(classification.Name.Value, true) == true;
+        }
 
 
         private static IEnumerable<IIfcRelDefinesByProperties> RelDefinesFilter(this IEnumerable<IIfcRelDefinesByProperties> relDefines,
@@ -57,8 +93,8 @@ namespace Xbim.IDS.Validator.Core.Extensions
                 return relDefines
                     .Where(r => r.RelatingPropertyDefinition is IIfcPropertySet ps && string.Equals(ps.Name, psetName, StringComparison.InvariantCultureIgnoreCase))
                     .Where(r => ((IIfcPropertySet)r.RelatingPropertyDefinition)
-                        .HasProperties.OfType<IIfcPropertySingleValue>().Where(ps => 
-                        string.Equals(ps.Name, propName, StringComparison.InvariantCultureIgnoreCase) && 
+                        .HasProperties.OfType<IIfcPropertySingleValue>().Where(ps =>
+                        string.Equals(ps.Name, propName, StringComparison.InvariantCultureIgnoreCase) &&
                         string.Equals(ps.NominalValue.ToString(), propValue, StringComparison.InvariantCultureIgnoreCase)
                         ).Any());
             }

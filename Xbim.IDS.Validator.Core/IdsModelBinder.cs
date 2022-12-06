@@ -18,6 +18,7 @@ namespace Xbim.IDS.Validator.Core
         private AttributeFacetBinder attrFacetBinder;
         private IfcTypeFacetBinder ifcTypeFacetBinder;
         private MaterialFacetBinder materialFacetBinder;
+        private IfcClassificationFacetBinder classificationFacetBinder;
 
         public IdsModelBinder(IModel model)
         {
@@ -27,6 +28,7 @@ namespace Xbim.IDS.Validator.Core
             attrFacetBinder = new AttributeFacetBinder(model);
             ifcTypeFacetBinder = new IfcTypeFacetBinder(model);
             materialFacetBinder = new MaterialFacetBinder(model);
+            classificationFacetBinder = new IfcClassificationFacetBinder(model);
         }
 
         /// <summary>
@@ -141,9 +143,8 @@ namespace Xbim.IDS.Validator.Core
                 case IfcPropertyFacet pf:
                     return psetFacetBinder.BindFilterExpression(baseExpression, pf);
 
-                case IfcClassificationFacet af:
-                    // TODO: 
-                    return baseExpression;
+                case IfcClassificationFacet cf:
+                    return classificationFacetBinder.BindFilterExpression(baseExpression, cf);
 
                 case DocumentFacet df:
                     // TODO: 
