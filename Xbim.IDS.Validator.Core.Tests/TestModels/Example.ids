@@ -71,7 +71,7 @@
         <ids:classification>
           <ids:value>
             <xs:restriction base="xs:string">
-              <xs:pattern value="[0-9]\_[0-9]" />
+              <xs:pattern value="[0-9]_[0-9]" />
             </xs:restriction>
           </ids:value>
           <ids:system>

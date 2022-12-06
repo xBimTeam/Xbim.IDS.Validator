@@ -1,5 +1,4 @@
-﻿using Xbim.Ifc2x3.ExternalReferenceResource;
-using Xbim.Ifc4.Interfaces;
+﻿using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Extensions
@@ -16,12 +15,13 @@ namespace Xbim.IDS.Validator.Core.Extensions
         public static IEnumerable<IIfcObjectDefinition> GetIfcPropertySingleValues(this IEnumerable<IIfcRelDefinesByProperties> relDefines,
             string psetName, string propName, string? propValue)
         {
+            // TODO: Update to Facet filter
             return relDefines.RelDefinesFilter(psetName, propName, propValue)
                     .SelectMany(r => r.RelatedObjects);
         }
 
         /// <summary>
-        /// Selects all objects using a material
+        /// Selects all objects using a matching material
         /// </summary>
         /// <param name="relAssociates"></param>
         /// <param name="materialName"></param>
@@ -33,42 +33,136 @@ namespace Xbim.IDS.Validator.Core.Extensions
                 throw new ArgumentNullException(nameof(materialFacet));
             }
 
-            return relAssociates.Where((r =>
-            (
-                // TODO: Update all possible materials. see Binder
-                (r.RelatingMaterial is IIfcMaterialList l && l.Materials.Any(m => materialFacet?.Value?.IsSatisfiedBy(m.Name, true) == true)) ||
-                (r.RelatingMaterial is IIfcMaterial m && materialFacet?.Value?.IsSatisfiedBy(m.Name, true) == true) ||
-                (r.RelatingMaterial is IIfcMaterialLayerSetUsage ls && ls.ForLayerSet.MaterialLayers.Any(mls => materialFacet?.Value?.IsSatisfiedBy(mls.Material.Name, true) == true))
-            )))
+            return relAssociates.FilterByFacet(materialFacet)
                     .SelectMany(r => r.RelatedObjects).OfType<IIfcObjectDefinition>();
         }
 
 
         /// <summary>
-        /// Selects all objects using a material
+        /// Selects all objects using a matching classification
         /// </summary>
         /// <param name="relAssociates"></param>
         /// <param name="materialName"></param>
         /// <returns></returns>
-        public static IEnumerable<IIfcObjectDefinition> GetIfcObjectsAssociatedWithClassification(this IEnumerable<IIfcRelAssociatesClassification> relAssociates, IfcClassificationFacet facet)
+        public static IEnumerable<IIfcObjectDefinition> GetIfcObjectsUsingClassification(this IEnumerable<IIfcRelAssociatesClassification> relAssociates, IfcClassificationFacet facet)
         {
             if (facet is null)
             {
                 throw new ArgumentNullException(nameof(facet));
             }
 
-            return relAssociates.Where(r => r.RelatingClassification is IIfcClassificationReference cr &&
-                MatchesIdentification(cr, facet) &&
-                cr.ReferencedSource is IIfcClassification cl && MatchesSystem(cl, facet))
-
+            return relAssociates.FilterByFacet(facet)
                 .SelectMany(r => r.RelatedObjects).OfType<IIfcObjectDefinition>();
 
         }
-        private static bool MatchesIdentification(IIfcClassificationReference reference, IfcClassificationFacet facet)
+
+        /// <summary>
+        /// Gets Materials associated to an entity that match the requirement
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="materialFacet"></param>
+        /// <returns></returns>
+        public static IEnumerable<IIfcMaterial> GetMaterialsForEntity(IIfcObjectDefinition obj, MaterialFacet materialFacet)
+        {
+            if (obj.Material is IIfcMaterial material && MatchesMaterial(material, materialFacet)) return new[] { material };
+            if (obj.Material is IIfcMaterialList list) return list.Materials.Where(m => MatchesMaterial(m, materialFacet));
+
+            if (obj.Material is IIfcMaterialLayerSet layerSet) return
+                    layerSet.MaterialLayers.Select(ml => ml.Material).Where(m => MatchesMaterial(m, materialFacet))
+                    .Union(layerSet.MaterialLayers.Where(ml => MatchesMaterial(ml, materialFacet)).Select(l => l.Material));
+            if (obj.Material is IIfcMaterialLayerSetUsage layerusage) return layerusage.ForLayerSet.MaterialLayers.Select(ml => ml.Material).Where(m => MatchesMaterial(m, materialFacet));
+
+            if (obj.Material is IIfcMaterialProfile profile && MatchesMaterial(profile.Material, materialFacet)) return new[] { profile.Material };
+            if (obj.Material is IIfcMaterialProfileSet profileSet) return
+                    profileSet.MaterialProfiles.Where(m => MatchesMaterial(m, materialFacet)).Select(mc => mc.Material)
+                    .Union(profileSet.MaterialProfiles.Select(mc => mc.Material).Where(m => MatchesMaterial(m, materialFacet)));
+
+            if (obj.Material is IIfcMaterialConstituent constituent && MatchesMaterial(constituent, materialFacet)) return new[] { constituent.Material };
+            if (obj.Material is IIfcMaterialConstituentSet constituentSet) return
+                    constituentSet.MaterialConstituents.Where(m => MatchesMaterial(m, materialFacet)).Select(mc => mc.Material)
+                    .Union(constituentSet.MaterialConstituents.Select(mc => mc.Material).Where(m => MatchesMaterial(m, materialFacet)));
+
+            return Enumerable.Empty<IIfcMaterial>();
+        }
+
+
+
+        /// <summary>
+        /// Selects all classificationReferences matching criteria
+        /// </summary>
+        /// <param name="relAssociates"></param>
+        /// <param name="materialName"></param>
+        /// <returns></returns>
+        public static IEnumerable<IIfcClassificationSelect> GetClassificationReferences(this IEnumerable<IIfcRelAssociatesClassification> relAssociates, IfcClassificationFacet facet)
+        {
+            if (facet is null)
+            {
+                throw new ArgumentNullException(nameof(facet));
+            }
+            return relAssociates.FilterByFacet(facet)
+                .Select(r=> r.RelatingClassification).OfType<IIfcClassificationSelect>();
+
+        }
+
+        private static IEnumerable<IIfcRelAssociatesMaterial> FilterByFacet(this IEnumerable<IIfcRelAssociatesMaterial> relAssociates, MaterialFacet facet)
+        {
+            // Note, keep in sync with GetMaterialsForEntity() above [or find a way to share the predicate]
+            return relAssociates.Where(r =>
+            
+                // All permutations, where we match on Material.[Name|Category] and also equivalents on LayerSets, ProfileSets and ConsituentSets
+                r.RelatingMaterial is IIfcMaterial m && MatchesMaterial(m, facet) ||
+                r.RelatingMaterial is IIfcMaterialList l && l.Materials.Any(m => MatchesMaterial(m, facet)) ||
+                r.RelatingMaterial is IIfcMaterialLayerSet layer && layer.MaterialLayers.Any(m => MatchesMaterial(m, facet)) ||
+                r.RelatingMaterial is IIfcMaterialLayerSetUsage ls && ls.ForLayerSet.MaterialLayers
+                    .Any(ml => MatchesMaterial(ml, facet) || MatchesMaterial(ml.Material, facet)) ||
+                r.RelatingMaterial is IIfcMaterialProfile profile && MatchesMaterial(profile.Material, facet) ||
+                r.RelatingMaterial is IIfcMaterialProfileSet profileSet && profileSet.MaterialProfiles
+                    .Any(p => MatchesMaterial(p, facet) || MatchesMaterial(p.Material, facet)) ||
+                r.RelatingMaterial is IIfcMaterialConstituent constituent && MatchesMaterial(constituent.Material, facet) ||
+                r.RelatingMaterial is IIfcMaterialConstituentSet constituentSet && constituentSet.MaterialConstituents
+                    .Any(c => MatchesMaterial(c, facet) || MatchesMaterial(c.Material, facet))
+            );
+        }
+
+        private static IEnumerable<IIfcRelAssociatesClassification> FilterByFacet(this IEnumerable<IIfcRelAssociatesClassification> relAssociates, IfcClassificationFacet facet)
+        {
+            return relAssociates.Where(r =>
+                (
+                r.RelatingClassification is IIfcClassificationReference cr && HasMatchingIdentificationAncestor(cr, facet) &&
+                cr.HasMatchingSytemAncestor(facet)
+                ) 
+                ||
+                (   // Linked straight to a Classification. E.g. Project
+                r.RelatingClassification is IIfcClassification cl2 && MatchesSystem(cl2, facet) && facet.Identification?.HasAnyAcceptedValue() != true
+                )
+            );
+        }
+
+        private static bool HasMatchingSytemAncestor(this IIfcClassificationReference reference, IfcClassificationFacet facet, HashSet<long>? ancestry = null)
+        {
+            if(ancestry == null)
+            {
+                ancestry = new HashSet<long>();
+            }
+            ancestry.Add(reference.EntityLabel);
+            // Recursively walk up the Classification hierarchy to top. Maintain ancestry to shortcut if we hit a loop
+            return reference.ReferencedSource is IIfcClassification cl && MatchesSystem(cl, facet) ||
+                reference.ReferencedSource is IIfcClassificationReference parent && !ancestry.Contains(parent.EntityLabel) && parent.HasMatchingSytemAncestor(facet, ancestry);
+        }
+
+
+        internal static bool HasMatchingIdentificationAncestor(this IIfcClassificationReference reference, IfcClassificationFacet facet, HashSet<long>? ancestry = null)
         {
             if (facet.Identification == null) return true;
+            if (ancestry == null)
+            {
+                ancestry = new HashSet<long>();
+            }
+            ancestry.Add(reference.EntityLabel);
 
-            return facet.Identification?.IsSatisfiedBy(reference.Identification?.Value, true) == true;
+            return (facet.Identification?.IsSatisfiedBy(reference.Identification?.Value, true) == true) ||
+                // recurse up the ClassificationReference hierarchy. EF_20_25_30 => EF_20_25 => EF_20 
+                reference.ReferencedSource is IIfcClassificationReference parent && !ancestry.Contains(parent.EntityLabel) && parent.HasMatchingIdentificationAncestor(facet, ancestry);
         }
 
         private static bool MatchesSystem(IIfcClassification classification, IfcClassificationFacet facet)
@@ -77,6 +171,32 @@ namespace Xbim.IDS.Validator.Core.Extensions
 
             return facet.ClassificationSystem?.IsSatisfiedBy(classification.Name.Value, true) == true;
         }
+
+
+        private static bool MatchesMaterial(IIfcMaterial material, MaterialFacet facet)
+        {
+            if (facet.Value == null) return true;
+            return facet.Value?.IsSatisfiedBy(material.Name.Value, true) == true || facet.Value?.IsSatisfiedBy(material.Category?.Value, true) == true;
+        }
+
+        private static bool MatchesMaterial(IIfcMaterialConstituent constituent, MaterialFacet facet)
+        {
+            if (facet.Value == null) return true;
+            return facet.Value?.IsSatisfiedBy(constituent.Name?.Value, true) == true || facet.Value?.IsSatisfiedBy(constituent.Category?.Value, true) == true;
+        }
+
+        private static bool MatchesMaterial(IIfcMaterialLayer layer, MaterialFacet facet)
+        {
+            if (facet.Value == null) return true;
+            return facet.Value?.IsSatisfiedBy(layer.Name?.Value, true) == true || facet.Value?.IsSatisfiedBy(layer.Category?.Value, true) == true;
+        }
+
+        private static bool MatchesMaterial(IIfcMaterialProfile profile, MaterialFacet facet)
+        {
+            if (facet.Value == null) return true;
+            return facet.Value?.IsSatisfiedBy(profile.Name?.Value, true) == true || facet.Value?.IsSatisfiedBy(profile.Category?.Value, true) == true;
+        }
+
 
 
         private static IEnumerable<IIfcRelDefinesByProperties> RelDefinesFilter(this IEnumerable<IIfcRelDefinesByProperties> relDefines,

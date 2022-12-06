@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 using Xbim.Common;
+using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4.ProductExtension;
@@ -87,7 +88,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         {
             if(item is IIfcObjectDefinition obj)
             {
-                var materials =  GetMaterials(materialFacet, obj);
+                var materials = IfcExtensions.GetMaterialsForEntity(obj, materialFacet);
 
                 if (obj is IIfcObject o && o.IsTypedBy!.Any())
                 {
@@ -101,53 +102,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
         }
 
-        private IEnumerable<IIfcMaterial> GetMaterials(MaterialFacet materialFacet, IIfcObjectDefinition obj)
-        {
-            if (obj.Material is IIfcMaterial material && MaterialMatches(material, materialFacet)) return new[] { material };
-            if (obj.Material is IIfcMaterialList list) return list.Materials.Where(m => MaterialMatches(m, materialFacet));
-            
-            if (obj.Material is IIfcMaterialLayerSet layerSet) return 
-                    layerSet.MaterialLayers.Select(ml => ml.Material).Where(m => MaterialMatches(m, materialFacet))
-                    .Union(layerSet.MaterialLayers.Where(ml => MaterialMatches(ml, materialFacet)).Select(l => l.Material));
-            if (obj.Material is IIfcMaterialLayerSetUsage layerusage) return layerusage.ForLayerSet.MaterialLayers.Select(ml => ml.Material).Where(m => MaterialMatches(m, materialFacet));
-            
-            if (obj.Material is IIfcMaterialProfile profile && MaterialMatches(profile.Material, materialFacet)) return new[] { profile.Material };
-            if (obj.Material is IIfcMaterialProfileSet profileSet) return
-                    profileSet.MaterialProfiles.Where(m => MaterialMatches(m, materialFacet)).Select(mc => mc.Material)
-                    .Union(profileSet.MaterialProfiles.Select(mc => mc.Material).Where(m => MaterialMatches(m, materialFacet)));
-            
-            if (obj.Material is IIfcMaterialConstituent constituent && MaterialMatches(constituent, materialFacet)) return new[] { constituent.Material };
-            if (obj.Material is IIfcMaterialConstituentSet constituentSet) return 
-                    constituentSet.MaterialConstituents.Where(m => MaterialMatches(m, materialFacet)).Select(mc => mc.Material)
-                    .Union(constituentSet.MaterialConstituents.Select(mc => mc.Material).Where(m => MaterialMatches(m, materialFacet)));
-
-            return Enumerable.Empty<IIfcMaterial>();
-        }
-
-        private bool MaterialMatches(IIfcMaterial material, MaterialFacet facet)
-        {
-            if (facet.Value == null) return true;
-            return facet.Value?.IsSatisfiedBy(material.Name.Value, true) == true || facet.Value?.IsSatisfiedBy(material.Category?.Value, true) == true;
-        }
-
-        private bool MaterialMatches(IIfcMaterialConstituent constituent, MaterialFacet facet)
-        {
-            if (facet.Value == null) return true;
-            return facet.Value?.IsSatisfiedBy(constituent.Name?.Value, true) == true || facet.Value?.IsSatisfiedBy(constituent.Category?.Value, true) == true;
-        }
-
-        private bool MaterialMatches(IIfcMaterialLayer layer, MaterialFacet facet)
-        {
-            if (facet.Value == null) return true;
-            return facet.Value?.IsSatisfiedBy(layer.Name?.Value, true) == true || facet.Value?.IsSatisfiedBy(layer.Category?.Value, true) == true;
-        }
-
-        private bool MaterialMatches(IIfcMaterialProfile profile, MaterialFacet facet)
-        {
-            if (facet.Value == null) return true;
-            return facet.Value?.IsSatisfiedBy(profile.Name?.Value, true) == true || facet.Value?.IsSatisfiedBy(profile.Category?.Value, true) == true;
-        }
-
+       
         private Expression BindMaterialFilter(Expression expression, MaterialFacet materialFacet)
         {
             if (materialFacet is null)

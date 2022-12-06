@@ -11,11 +11,14 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         protected static IModel model;
         protected IfcQuery query;
 
-        private readonly ITestOutputHelper output;
+        private readonly ITestOutputHelper output; 
+        protected readonly ILogger logger;
+
 
         public BaseModelTester(ITestOutputHelper output)
         {
             this.output = output;
+            logger = GetXunitLogger();
             query = new IfcQuery();
         }
 

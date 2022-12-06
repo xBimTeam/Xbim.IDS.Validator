@@ -72,12 +72,9 @@ namespace Xbim.IDS.Validator.Core
         /// <returns></returns>
         public IdsValidationResult ValidateRequirement(IPersistEntity item, FacetGroup requirement, IFacet facet, ILogger? logger)
         {
+
+            var result = new IdsValidationResult(item, requirement);
             
-            var result = new IdsValidationResult()
-            {
-                ValidationStatus = ValidationStatus.Inconclusive,
-                Entity = item
-            };
             
 
             switch (facet)
@@ -103,6 +100,11 @@ namespace Xbim.IDS.Validator.Core
                 case MaterialFacet mf:
 
                     materialFacetBinder.ValidateEntity(item, requirement, logger, result, mf);
+                    break;
+
+                case IfcClassificationFacet cf:
+
+                    classificationFacetBinder.ValidateEntity(item, requirement, logger, result, cf);
                     break;
 
 

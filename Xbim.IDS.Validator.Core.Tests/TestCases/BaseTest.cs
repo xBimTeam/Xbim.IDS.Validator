@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xbim.Common;
 using Xbim.Ifc;
+using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 using Xunit.Abstractions;
 
@@ -35,10 +36,30 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             return logger;
         }
 
-        protected List<IdsValidationResult> VerifyIdsFile(string idsFile)
+        protected List<IdsValidationResult> VerifyIdsFile(string idsFile, bool spotfix = false)
         {
             string ifcFile = Path.ChangeExtension(idsFile, "ifc");
             IfcStore model = IfcStore.Open(ifcFile);
+            if (spotfix)
+            {
+                // These models appear invalid for the test case by containing an additional wall. rather than fix the IFC, we spotfix
+                // So we can continue to add the standard test files without manually fixing in future.
+                // e.g. classification/pass-occurrences_override_the_type_classification_per_system_1_3.ifc
+                var rogue = model.Instances[4];
+                if (rogue is IIfcWall w && w.GlobalId == "3Agm079vPIYBL4JExVrhD5")
+                {
+                    using(var tran = model.BeginTransaction("Patch"))
+                    {
+                        model.Delete(rogue);
+                        tran.Commit();
+                    }
+                }
+                else
+                {
+                    // Maybe the test files got fixed?
+                    logger.LogWarning("Spotfix failed. Check if this code can be removed");
+                }
+            }
             Xids ids = Xids.LoadBuildingSmartIDS(idsFile, logger);
             IdsModelBinder modelBinder = new IdsModelBinder(model);
             List<IdsValidationResult> results = new List<IdsValidationResult>();
@@ -46,7 +67,12 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             {
                 logger.LogInformation("{specName}", spec.Name);
                 IEnumerable<IPersistEntity> applicable = modelBinder.SelectApplicableEntities(spec);
-                foreach (IFacet facet in spec.Requirement!.Facets)
+                if(spec.Requirement?.Facets == null)
+                {
+                    logger.LogWarning("Failed to find Requirements {specName}", spec.Name);
+                    continue;
+                }
+                foreach (IFacet facet in spec.Requirement?.Facets)
                 {
                     foreach (IPersistEntity entity in applicable)
                     {

@@ -6,6 +6,13 @@ namespace Xbim.IDS.Validator.Core
 {
     public class IdsValidationResult
     {
+        public IdsValidationResult(IPersistEntity? entity, FacetGroup? requirement, string? fileName = "")
+        {
+            FileName = fileName;
+            ValidationStatus = ValidationStatus.Inconclusive;
+            Entity = entity;
+            Requirement = requirement;
+        }
 
         public string? FileName { get; set; }
         public ValidationStatus ValidationStatus { get; internal set; }

@@ -17,7 +17,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
         private static MethodInfo _entityCollectionofTypeMethod = typeof(IReadOnlyEntityCollection).GetMethod(nameof(IReadOnlyEntityCollection.OfType), new Type[] { typeof(string), typeof(bool) });
         private static MethodInfo _enumerableIfcPropertySinglePropsValueMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcPropertySingleValues), new Type[] { typeof(IEnumerable<IIfcRelDefinesByProperties>), typeof(string), typeof(string), typeof(string) });
         private static MethodInfo _enumerableIfcMaterialSelectorMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcObjectsUsingMaterials), new Type[] { typeof(IEnumerable<IIfcRelAssociatesMaterial>), typeof(MaterialFacet) });
-        private static MethodInfo _enumerableIfcAssociatesClassificationMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcObjectsAssociatedWithClassification), new Type[] { typeof(IEnumerable<IIfcRelAssociatesClassification>), typeof(IfcClassificationFacet) });
+        private static MethodInfo _enumerableIfcAssociatesClassificationMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcObjectsUsingClassification), new Type[] { typeof(IEnumerable<IIfcRelAssociatesClassification>), typeof(IfcClassificationFacet) });
 
         private static MethodInfo _idsValidationIsSatisifiedMethod = typeof(IValueConstraintComponent).GetMethod(nameof(IValueConstraintComponent.IsSatisfiedBy), new Type[] { typeof(object), typeof(ValueConstraint), typeof(bool), typeof(ILogger) });
 
