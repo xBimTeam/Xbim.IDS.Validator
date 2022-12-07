@@ -69,9 +69,12 @@
           </ids:name>
         </ids:entity>
         <ids:classification>
+          <system>
+            <simpleValue>Uniclass</simpleValue>
+          </system>
           <ids:value>
             <xs:restriction base="xs:string">
-              <xs:pattern value="[0-9]_[0-9]" />
+              <xs:pattern value="EF_25_30_97.*" />
             </xs:restriction>
           </ids:value>
           <ids:system>

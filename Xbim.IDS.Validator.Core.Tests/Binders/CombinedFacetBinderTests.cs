@@ -46,6 +46,48 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         }
 
+        [InlineData("IfcFurniture", "Uniclass", "Pr_40_50_12", 4)]
+        [InlineData("IfcFurnitureType", "Uniclass", "Pr_40_50_12", 3)]
+        [InlineData("IfcProject", "Uniclass", "", 1)]
+        [InlineData("IfcMaterial", "Uniclass", "", 0)]
+        [InlineData("IfcWindowType", "Uniclass", "", 1)]
+        
+        // TODO: Fix Filtering on Type inherited
+        //[InlineData("IfcWindow", "Uniclass", "", 4)]
+        // TODO: handle invalid types
+        //[InlineData("IfcProperty", "Uniclass", "", 0)]
+        [Theory]
+        public void Can_Query_By_Ifc_And_Classifications(string ifcType, string system, string ident, int expectedCount)
+        {
+
+            
+            IfcTypeFacet ifcFacet = new IfcTypeFacet
+            {
+                IfcType = new ValueConstraint(ifcType),
+            };
+
+            IfcClassificationFacet classFacet = new IfcClassificationFacet
+            {
+                ClassificationSystem = system,
+                Identification = new ValueConstraint(ident)
+            };
+            var ifcbinder = new IfcTypeFacetBinder(model);
+
+            var classbinder = new IfcClassificationFacetBinder(model);
+
+            // Act
+            var expression = ifcbinder.BindFilterExpression(query.InstancesExpression, ifcFacet);
+            expression = classbinder.BindFilterExpression(expression, classFacet);
+
+            // Assert
+
+            var result = query.Execute(expression, model);
+            result.Should().HaveCount(expectedCount);
+
+        }
+
+        //TODO: Tests for Materials, Psets, Docs etc
+
 
     }
 

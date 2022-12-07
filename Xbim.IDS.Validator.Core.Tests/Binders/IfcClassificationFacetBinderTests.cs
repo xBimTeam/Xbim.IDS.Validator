@@ -18,10 +18,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         /// </summary>
         IfcClassificationFacetBinder Binder { get; }
 
-        [InlineData("Uniformat", "E2020200", 7)]
-        [InlineData("Uniformat", "E2020.*", 7, ConstraintType.Exact, ConstraintType.Pattern)]
-        [InlineData("", "E2020200", 7)]
-        [InlineData("Uniformat", "", 8)]
+        [InlineData("Uniclass", "Pr_40_50_12", 7)]
+        [InlineData("Uniclass", "Pr_40_50.*", 7, ConstraintType.Exact, ConstraintType.Pattern)]
+        [InlineData("", "Pr_40_50_12", 7)]
+        [InlineData("Uniclass", "", 9)]
         [Theory]
         public void Can_Query_By_Classifications(string system, string identifier, int expectedCount, ConstraintType sysConType = ConstraintType.Exact, ConstraintType idConType = ConstraintType.Exact)
         {
@@ -60,9 +60,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         }
 
 
-        [InlineData("Uniformat", "E2020200")]
-        [InlineData(null, "E2020200")]
-        [InlineData("Uniformat", null)]
+        [InlineData("Uniclass", "Pr_40_50_12")]
+        [InlineData(null, "Pr_40_50_12")]
+        [InlineData("Uniclass", null)]
         [InlineData(null, null)]
         [Theory]
         public void CanGetClassificationsReferencesForEntity(string system, string identifier)
@@ -106,7 +106,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 IncludeSubClasses = false
             };
 
-            facet.ClassificationSystem = new ValueConstraint("Uniformat");
+            facet.ClassificationSystem = new ValueConstraint("Uniclass");
             
 #pragma warning disable CS0618 // Type or member is obsolete
             var group = new FacetGroup();

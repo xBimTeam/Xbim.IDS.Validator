@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
+using System.Reflection;
 using Xbim.Common;
 using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
@@ -41,12 +42,56 @@ namespace Xbim.IDS.Validator.Core.Binders
                 expression = BindIfcExpressType(expression, Model.Metadata.ExpressType(nameof(IfcRelAssociatesClassification).ToUpperInvariant()));
             }
 
-            // Get underlying collection type
-            var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
-            var expressType = Model.Metadata.ExpressType(collectionType);
-            ValidateExpressType(expressType);
+            // Handle expressions where already bound to entities.
+            else if (TypeHelper.IsCollection(expression.Type, out Type elementType))
+            {
+                if(elementType.IsAssignableTo(typeof(IIfcObjectDefinition)))
+                {
+                    // Objects and Types classified by HasAssociations
+                    return BindSelectManyClassifications(ref expression, elementType, typeof(IIfcRelAssociates), nameof(IIfcObjectDefinition.HasAssociations));
+                }
+                else if (elementType.IsAssignableTo(typeof(IIfcMaterialDefinition)))
+                {
+                    // Materials special-cased by HasExternalReferences
+                    return BindSelectManyClassifications(ref expression, elementType, typeof(IIfcExternalReferenceRelationship), nameof(IIfcMaterialDefinition.HasExternalReferences));
+                }
+                else
+                {
+                    // TODO: Should return expression Where(f=> false)?
+                    //return expression;
+                    throw new NotSupportedException("Cannot filter Classifications on " + elementType.Name);
+                }
+
+            }
 
             expression = BindClassificationFilter(expression, facet);
+            return expression;
+        }
+
+        private static Expression BindSelectManyClassifications(ref Expression expression, Type elementType, Type selectReturnType, string propertyName)
+        {
+            // var x = Model.Instances.OfType("IFCFURNITURE", true).Cast<IIfcFurniture>().SelectMany(o => o.HasAssociations).OfType<IIfcRelAssociatesClassification>();
+            // We're uilding this expression
+            //  IEnumerable<IIfcObjectDefinition>   .SelectMany(o => o.HasAssociations).OfType<IfcRelAssociatesClassification>()
+
+            var selectManyMethod = ExpressionHelperMethods.EnumerableSelectManyGeneric.MakeGenericMethod(elementType, selectReturnType);
+
+            // build lambda for Selector: ent => 
+            ParameterExpression selectManyParam = Expression.Parameter(elementType, "ent");
+
+            // build 'ent.HasAssociations'
+            PropertyInfo? associatesPropInfo = elementType.GetProperty(propertyName);
+            var propertyExpression = Expression.Property(selectManyParam, associatesPropInfo);
+
+            // build (ent=> ent.HasAssociations) Lambda
+            var selectManyLambda = Expression.Lambda(propertyExpression, selectManyParam);
+
+            // Select<T>() method
+            expression = Expression.Call(null, selectManyMethod, expression, selectManyLambda);
+
+            // call .OfType<EntityType>()
+            expression = Expression.Call(null, ExpressionHelperMethods.EnumerableOfTypeGeneric.MakeGenericMethod(typeof(IIfcRelAssociatesClassification)), expression);
+
             return expression;
         }
 

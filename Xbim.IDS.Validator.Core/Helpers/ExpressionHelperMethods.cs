@@ -24,7 +24,9 @@ namespace Xbim.IDS.Validator.Core.Helpers
 
         private static MethodInfo _enumerableWhereMethod = GenericMethodOf(_ => Enumerable.Where<int>(default(IEnumerable<int>), default(Func<int, bool>)));
         private static MethodInfo _enumerableCastMethod = GenericMethodOf(_ => Enumerable.Cast<int>(default(IEnumerable<int>)));
-
+        private static MethodInfo _enumerableOfTypeMethod = GenericMethodOf(_ => Enumerable.OfType<int>(default(IEnumerable<int>)));
+        private static MethodInfo _enumerableSelectMethod = GenericMethodOf(_ => Enumerable.Select<int, int>(default(IEnumerable<int>), i => i));
+        private static MethodInfo _enumerableSelectManyMethod = GenericMethodOf(_ => Enumerable.SelectMany<int, int>(default(IEnumerable<int>), default(Func<int, IEnumerable<int>>)));
         private static MethodInfo _enumerableConcatMethod = GenericMethodOf(_ => Enumerable.Concat<int>(default(IEnumerable<int>), default(IEnumerable<int>)));
 
 
@@ -65,6 +67,21 @@ namespace Xbim.IDS.Validator.Core.Helpers
         public static MethodInfo EnumerableCastGeneric
         {
             get { return _enumerableCastMethod; }
+        }
+
+        public static MethodInfo EnumerableOfTypeGeneric
+        {
+            get { return _enumerableOfTypeMethod; }
+        }
+
+        public static MethodInfo EnumerableSelectGeneric
+        {
+            get { return _enumerableSelectMethod; }
+        }
+
+        public static MethodInfo EnumerableSelectManyGeneric
+        {
+            get { return _enumerableSelectManyMethod; }
         }
 
         public static MethodInfo EnumerableConcatGeneric
