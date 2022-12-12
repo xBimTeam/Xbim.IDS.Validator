@@ -11,26 +11,28 @@ namespace Xbim.IDS.Validator.Core.Tests
 {
     public class IdsModelBinderTests
     {
-        static IModel model;
+        
         private readonly ITestOutputHelper output;
 
         public IdsModelBinderTests(ITestOutputHelper output)
         {
             this.output = output;
         }
-        static IdsModelBinderTests()
-        {
-            model = BuildModel();
-        }
 
 
-        [Fact]
-        public void Can_Bind_Specification_to_model()
+        //[InlineData(@"TestModels\Example.ids", @"TestModels\SampleHouse4.ifc")]
+        //[InlineData(@"TestModels\Example.ids", @"\\Mac\Home\Downloads\villa_tugenhat.ifc\villa_tugenhat_v1.ifc")]
+        [InlineData(@"TestModels\BasicRequirements.ids", @"\\Mac\Home\Downloads\villa_tugenhat.ifc\villa_tugenhat_v1.ifc")]
+        [InlineData(@"TestModels\BasicRequirements.ids", @"TestModels\SampleHouse4.ifc")]
+        [Theory]
+
+        public void Can_Bind_Specification_to_model(string idcFile, string ifcFile)
         {
+            var model = BuildModel(ifcFile);
             var modelBinder = new IdsModelBinder(model);
             var logger = GetXunitLogger();
 
-            var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(@"TestModels\Example.ids", logger);
+            var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idcFile, logger);
             
 
             foreach(var group in idsSpec.SpecificationsGroups)
@@ -83,10 +85,9 @@ namespace Xbim.IDS.Validator.Core.Tests
 
         
 
-        private static IModel BuildModel()
+        private static IModel BuildModel(string ifcFile)
         {
-            var filename = @"TestModels\SampleHouse4.ifc";
-            return IfcStore.Open(filename);
+            return IfcStore.Open(ifcFile);
         }
 
         internal ILogger<IdsModelBinderTests> GetXunitLogger()

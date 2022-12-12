@@ -123,6 +123,28 @@ namespace Xbim.IDS.Validator.Core.Binders
             return expression;
         }
 
+
+        /// <summary>
+        /// Amends an expression to return no results
+        /// </summary>
+        /// <remarks>Used when a criteria may be invalid and so expression cannot be express.
+        /// E.g. Find all PropertySets with Classification 
+        /// </remarks>
+        /// <param name="expression">The expression to bind to</param>
+        /// <param name="elementType">The type of the underlying expression's Enumerable</param>
+        /// <returns></returns>
+        protected static Expression BindNotFound(Expression expression, Type elementType)
+        {
+            var whereMethod = ExpressionHelperMethods.EnumerableWhereGeneric.MakeGenericMethod(elementType);
+            // build lambda param 'ent => ...'
+            ParameterExpression entParam = Expression.Parameter(elementType, "ent");
+
+            //  Func (ent => false)
+            var filterExpression = Expression.Lambda(Expression.Constant(false), entParam);
+
+            return Expression.Call(null, whereMethod, new[] { expression, filterExpression });
+        }
+
         private IEnumerable<ExpressType> GetExpressTypes(string[] ifcTypes)
         {
             foreach(var type in ifcTypes)

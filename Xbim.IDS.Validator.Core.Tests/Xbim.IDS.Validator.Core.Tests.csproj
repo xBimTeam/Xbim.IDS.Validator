@@ -36,6 +36,9 @@
        <DependentUpon>%(Filename).ids</DependentUpon>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+     <None Update="TestModels\BasicRequirements.ids">
+       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+     </None>
     <None Update="TestModels\Example.ids">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

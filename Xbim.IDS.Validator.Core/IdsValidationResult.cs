@@ -4,25 +4,45 @@ using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core
 {
+
+    /// <summary>
+    /// Represents the resultof validating a specific entity against an IDS requirement
+    /// </summary>
     public class IdsValidationResult
     {
-        public IdsValidationResult(IPersistEntity? entity, FacetGroup? requirement, string? fileName = "")
+        public IdsValidationResult(IPersistEntity? entity, FacetGroup? requirement)
         {
-            FileName = fileName;
+       
             ValidationStatus = ValidationStatus.Inconclusive;
             Entity = entity;
             Requirement = requirement;
         }
 
-        public string? FileName { get; set; }
+        /// <summary>
+        /// The validation status of an individual entity for a requirement
+        /// </summary>
         public ValidationStatus ValidationStatus { get; internal set; }
+        /// <summary>
+        /// A model <see cref="IPersistEntity"/> being tested against defined requirements
+        /// </summary>
         public IPersistEntity? Entity { get; internal set; }
 
+        /// <summary>
+        /// The set of messages raised by the validation process against this entity
+        /// </summary>
         public IList<ValidationMessage> Messages { get; } = new List<ValidationMessage>();
 
+        /// <summary>
+        /// The set of all success messages for this entity
+        /// </summary>
         public IEnumerable<string?> Successful { get => Messages.Where(m => m.Status == ValidationStatus.Success).Select(m => m.ToString()); } 
+        /// <summary>
+        /// The set of all failure messages for this entity
+        /// </summary>
         public IEnumerable<string?> Failures { get => Messages.Where(m => m.Status == ValidationStatus.Failed).Select(m=> m.ToString()); }
-
+        /// <summary>
+        /// The requirement the entity is tested against
+        /// </summary>
         public FacetGroup? Requirement { get; set; }
     }
 

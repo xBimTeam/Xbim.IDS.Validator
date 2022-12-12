@@ -80,7 +80,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 #pragma warning restore CS0618 // Type or member is obsolete
             group.Facets.Add(facet);
 
-            var validationResult = new IdsValidationResult(instance, group, "test.ifc");
+            var validationResult = new IdsValidationResult(instance, group);
 
             Binder.ValidateEntity(instance, group, logger, validationResult, facet);
 
@@ -113,7 +113,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 #pragma warning restore CS0618 // Type or member is obsolete
             group.Facets.Add(facet);
 
-            var validationResult = new IdsValidationResult(project, group, "test.ifc");
+            var validationResult = new IdsValidationResult(project, group);
 
             Binder.ValidateEntity(project, group, logger, validationResult, facet);
 

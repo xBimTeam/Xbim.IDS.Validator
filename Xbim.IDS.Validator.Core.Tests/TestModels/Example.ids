@@ -114,7 +114,7 @@
         </ids:property>
       </ids:requirements>
     </ids:specification>
-    <ids:specification ifcVersion="IFC4" name="All Doors -&gt; Should have u-rating &amp; Firerating" minOccurs="0">
+    <ids:specification ifcVersion="IFC4" name="All Doors -&gt; Should have u-rating &amp; Firerating" minOccurs="1">
       <ids:applicability>
         <ids:entity>
           <ids:name>
