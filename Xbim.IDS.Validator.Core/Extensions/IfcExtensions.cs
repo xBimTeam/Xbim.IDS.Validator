@@ -1,10 +1,13 @@
-﻿using Xbim.Ifc4.Interfaces;
+﻿using System.Linq;
+using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Extensions
 {
     internal static class IfcExtensions
     {
+      
+
         /// <summary>
         /// Gets all <see cref="IIfcObjectDefinition"/>s defined by the propertyset and name
         /// </summary>
@@ -12,11 +15,11 @@ namespace Xbim.IDS.Validator.Core.Extensions
         /// <param name="psetName"></param>
         /// <param name="propName"></param>
         /// <returns></returns>
-        public static IEnumerable<IIfcObjectDefinition> GetIfcPropertySingleValues(this IEnumerable<IIfcRelDefinesByProperties> relDefines,
-            string psetName, string propName, string? propValue)
+        public static IEnumerable<IIfcObjectDefinition> GetIfcObjectsWithProperties(this IEnumerable<IIfcRelDefinesByProperties> relDefines,
+            IfcPropertyFacet facet)
         {
             // TODO: Update to Facet filter
-            return relDefines.RelDefinesFilter(psetName, propName, propValue)
+            return relDefines.FilterByFacet(facet)
                     .SelectMany(r => r.RelatedObjects);
         }
 
@@ -103,6 +106,29 @@ namespace Xbim.IDS.Validator.Core.Extensions
                 .Select(r=> r.RelatingClassification).OfType<IIfcClassificationSelect>();
 
         }
+
+
+        public static IEnumerable<IIfcObjectDefinition> WhereAssociatedWithClassification(this IEnumerable<IIfcObjectDefinition> ent, IfcClassificationFacet facet)
+        {
+            return ent.Where(e => e.HasAssociations.OfType<IIfcRelAssociatesClassification>().FilterByFacet(facet).Any());
+
+        }
+
+        public static IEnumerable<IIfcObjectDefinition> WhereAssociatedWithMaterial(this IEnumerable<IIfcObjectDefinition> ent, MaterialFacet facet)
+        {
+            return ent.Where(e => e.HasAssociations.OfType<IIfcRelAssociatesMaterial>().FilterByFacet(facet).Any());
+        }
+
+        public static IEnumerable<IIfcObject> WhereAssociatedWithProperty(this IEnumerable<IIfcObject> ent, IfcPropertyFacet facet)
+        {
+            return ent.Where(e => e.IsDefinedBy.OfType<IIfcRelDefinesByProperties>().FilterByFacet(facet).Any());
+        }
+
+        public static IEnumerable<IIfcTypeObject> WhereAssociatedWithProperty(this IEnumerable<IIfcTypeObject> ent, IfcPropertyFacet facet)
+        {
+            return ent.Where(e => e.HasPropertySets.OfType<IIfcPropertySet>().FilterByFacet(facet).Any());
+        }
+
 
         private static IEnumerable<IIfcRelAssociatesMaterial> FilterByFacet(this IEnumerable<IIfcRelAssociatesMaterial> relAssociates, MaterialFacet facet)
         {
@@ -199,7 +225,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
 
 
 
-        private static IEnumerable<IIfcRelDefinesByProperties> RelDefinesFilter(this IEnumerable<IIfcRelDefinesByProperties> relDefines,
+        private static IEnumerable<IIfcRelDefinesByProperties> FilterByFacet(this IEnumerable<IIfcRelDefinesByProperties> relDefines,
             string psetName, string propName, string? propValue)
         {
             if (propValue == null)
@@ -220,5 +246,98 @@ namespace Xbim.IDS.Validator.Core.Extensions
             }
         }
 
+        private static IEnumerable<IIfcRelDefinesByProperties> FilterByFacet(this IEnumerable<IIfcRelDefinesByProperties> relDefines,
+            IfcPropertyFacet facet)
+        {
+
+            if (facet is null)
+            {
+                throw new ArgumentNullException(nameof(facet));
+            }
+
+            // Try Psets first
+            // TODO: non PropertySingleValues
+            var psets = relDefines
+                .Where(r => r.RelatingPropertyDefinition is IIfcPropertySet ps && facet!.PropertySetName?.IsSatisfiedBy(ps.Name?.Value, true) == true)
+                .Where(r => ((IIfcPropertySet)r.RelatingPropertyDefinition)
+                    .HasProperties.OfType<IIfcPropertySingleValue>().Where(ps =>
+                    facet!.PropertyName?.IsSatisfiedBy(ps.Name.Value, true) == true &&
+                    (facet.PropertyValue?.HasAnyAcceptedValue() != true || facet!.PropertyValue?.IsSatisfiedBy(ps.NominalValue.Value, true) == true )
+                    ).Any());
+
+            // Append Quantities
+            var quants = relDefines
+                .Where(r => r.RelatingPropertyDefinition is IIfcElementQuantity eq && facet!.PropertySetName?.IsSatisfiedBy(eq.Name?.Value, true) == true)
+                .Where(r => ((IIfcElementQuantity)r.RelatingPropertyDefinition)
+                .Quantities.
+                    Where(q =>
+                    facet!.PropertyName?.IsSatisfiedBy(q.Name.Value, true) == true &&
+                    (facet.PropertyValue?.HasAnyAcceptedValue() != true || 
+                        PhysicalQuantitySatisifies(facet.PropertyValue, q))
+                    ).Any());
+
+            return psets.Concat(quants);
+
+        }
+
+
+        private static IEnumerable<IIfcPropertySet> FilterByFacet(this IEnumerable<IIfcPropertySet> relDefines,
+           IfcPropertyFacet facet)
+        {
+
+            if (facet is null)
+            {
+                throw new ArgumentNullException(nameof(facet));
+            }
+
+            // Try Psets first
+            // TODO: non PropertySingleValues
+            var psets = relDefines
+                .Where(ps => facet!.PropertySetName?.IsSatisfiedBy(ps.Name?.Value, true) == true)
+                .Where(ps => ps
+                    .HasProperties.OfType<IIfcPropertySingleValue>().Where(ps =>
+                    facet!.PropertyName?.IsSatisfiedBy(ps.Name.Value, true) == true &&
+                    (facet.PropertyValue?.HasAnyAcceptedValue() != true || facet!.PropertyValue?.IsSatisfiedBy(ps.NominalValue.Value, true) == true)
+                    ).Any());
+
+            // Append Quantities
+            var quants = relDefines
+                .Where(r => facet!.PropertySetName?.IsSatisfiedBy(r.Name?.Value, true) == true)
+                .Where(ps => ps is IIfcElementQuantity eq && eq.Quantities.
+                    Where(q =>
+                    facet!.PropertyName?.IsSatisfiedBy(q.Name.Value, true) == true &&
+                    (facet.PropertyValue?.HasAnyAcceptedValue() != true ||
+                        PhysicalQuantitySatisifies(facet.PropertyValue, q))
+                    ).Any());
+
+            return psets.Concat(quants);
+
+        }
+
+        private static bool PhysicalQuantitySatisifies(ValueConstraint propertyValue, IIfcPhysicalQuantity q)
+        {
+            return propertyValue.IsSatisfiedBy(q.UnwrapQuantity()?.Value) == true;
+        }
+
+        public static IIfcValue? UnwrapQuantity(this IIfcPhysicalQuantity quantity)
+        {
+            if (quantity is IIfcQuantityCount c)
+                return c.CountValue;
+            if (quantity is IIfcQuantityArea area)
+                return area.AreaValue;
+            else if (quantity is IIfcQuantityLength l)
+                return l.LengthValue;
+            else if (quantity is IIfcQuantityVolume v)
+                return v.VolumeValue;
+            if (quantity is IIfcQuantityWeight w)
+                return w.WeightValue;
+            if (quantity is IIfcQuantityTime t)
+                return t.TimeValue;
+            if (quantity is IIfcPhysicalComplexQuantity comp)
+                return default;
+
+
+            throw new NotImplementedException(quantity.GetType().Name);
+        }
     }
 }

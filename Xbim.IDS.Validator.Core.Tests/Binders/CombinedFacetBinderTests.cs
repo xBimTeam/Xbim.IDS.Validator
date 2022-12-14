@@ -36,8 +36,43 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             var attrbinder = new AttributeFacetBinder(model);
 
             // Act
-            var expression = ifcbinder.BindFilterExpression(query.InstancesExpression, ifcFacet);
-            expression = attrbinder.BindFilterExpression(expression, attrFacet);
+            var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
+            expression = attrbinder.BindWhereExpression(expression, attrFacet);
+
+            // Assert
+
+            var result = query.Execute(expression, model);
+            result.Should().HaveCount(expectedCount);
+
+        }
+
+        [Fact]
+        public void Can_Query_By_Ifc_Enum_And_Attribute()
+        {
+            // Find all doors and windows where the Tag is 1-30 characters long
+            // we're really testing that the concat of the two types casts to something other than IfcRoot
+            int expectedCount = 7;
+            IfcTypeFacet ifcFacet = new IfcTypeFacet
+            {
+                IfcType = new ValueConstraint(NetTypeName.String),
+            };
+            
+            ifcFacet.IfcType.AddAccepted(new ExactConstraint("IFCDOOR"));
+            ifcFacet.IfcType.AddAccepted(new ExactConstraint("IFCWINDOW"));
+            AttributeFacet attrFacet = new AttributeFacet
+            {
+                AttributeName = "Tag",
+                AttributeValue = new ValueConstraint(NetTypeName.String)
+            };
+            attrFacet.AttributeValue.AddAccepted(new StructureConstraint() { MinLength = 1, MaxLength = 10 });
+
+            var ifcbinder = new IfcTypeFacetBinder(model);
+
+            var attrbinder = new AttributeFacetBinder(model);
+
+            // Act
+            var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
+            expression = attrbinder.BindWhereExpression(expression, attrFacet);
 
             // Assert
 
@@ -78,8 +113,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             var classbinder = new IfcClassificationFacetBinder(model);
 
             // Act
-            var expression = ifcbinder.BindFilterExpression(query.InstancesExpression, ifcFacet);
-            expression = classbinder.BindFilterExpression(expression, classFacet);
+            var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
+            expression = classbinder.BindWhereExpression(expression, classFacet);
 
             // Assert
 
@@ -114,8 +149,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             var classbinder = new IfcClassificationFacetBinder(model);
 
             // Act
-            var expression = ifcbinder.BindFilterExpression(query.InstancesExpression, ifcFacet);
-            expression = classbinder.BindFilterExpression(expression, classFacet);
+            var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
+            expression = classbinder.BindWhereExpression(expression, classFacet);
 
             // Assert
 
@@ -126,6 +161,74 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         //TODO: Tests for Materials, Psets, Docs etc
 
 
+
+        [InlineData("IfcWall", "Brick, Common", 3)]
+        [InlineData("IfcSlab", "Vapor Retarder", 1)]
+        [InlineData("IfcWall", "Vapor Retarder", 0)]
+        [InlineData("IfcActor", "Vapor Retarder", 0)]
+        [Theory]
+        public void Can_Query_By_Ifc_And_Materials(string ifcType, string material, int expectedCount)
+        {
+            IfcTypeFacet ifcFacet = new IfcTypeFacet
+            {
+                IfcType = new ValueConstraint(ifcType),
+            };
+
+            MaterialFacet materialFacet = new MaterialFacet
+            {
+                Value = new ValueConstraint(NetTypeName.String),
+            };
+            materialFacet.Value = material;
+            var ifcbinder = new IfcTypeFacetBinder(model);
+
+            var materialbinder = new MaterialFacetBinder(model);
+
+            // Act
+            var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
+            expression = materialbinder.BindWhereExpression(expression, materialFacet);
+
+            // Assert
+
+            var result = query.Execute(expression, model);
+            result.Should().HaveCount(expectedCount);
+
+        }
+
+
+        [InlineData("IfcWindowType", "Dimensions", "Frame Depth", 65, 1)]
+        [InlineData("IfcWindow", "BaseQuantities", "Width", 1810, 4)]
+        [Theory]
+        public void Can_Query_By_Ifc_And_Properties(string ifcType, string psetName, string propName, object value,  int expectedCount)
+        {
+            IfcTypeFacet ifcFacet = new IfcTypeFacet
+            {
+                IfcType = new ValueConstraint(ifcType),
+            };
+
+            IfcPropertyFacet propertyFacet = new IfcPropertyFacet
+            {
+                PropertySetName = new ValueConstraint(NetTypeName.String),
+                PropertyName = new ValueConstraint(NetTypeName.String),
+                PropertyValue = new ValueConstraint(),
+            };
+            propertyFacet.PropertySetName.AddAccepted( new ExactConstraint(psetName));
+            propertyFacet.PropertyName.AddAccepted(new ExactConstraint(propName));
+            if(value != null)
+            propertyFacet.PropertyValue.AddAccepted(new ExactConstraint(value?.ToString()));
+            var ifcbinder = new IfcTypeFacetBinder(model);
+
+            var psetbinder = new PsetFacetBinder(model);
+
+            // Act
+            var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
+            expression = psetbinder.BindWhereExpression(expression, propertyFacet);
+
+            // Assert
+
+            var result = query.Execute(expression, model);
+            result.Should().HaveCount(expectedCount);
+
+        }
     }
 
 }

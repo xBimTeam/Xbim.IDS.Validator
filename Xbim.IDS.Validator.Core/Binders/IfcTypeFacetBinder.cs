@@ -23,7 +23,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="InvalidOperationException"></exception>
-        public override Expression BindFilterExpression(Expression baseExpression, IfcTypeFacet ifcFacet)
+        public override Expression BindSelectionExpression(Expression baseExpression, IfcTypeFacet ifcFacet)
         {
             if (baseExpression is null)
             {
@@ -40,10 +40,16 @@ namespace Xbim.IDS.Validator.Core.Binders
                 throw new InvalidOperationException("IfcTypeFacet is not valid");
             }
 
+
+
             var expressTypes = GetExpressTypes(ifcFacet);
             ValidateExpressTypes(expressTypes);
 
             var expression = baseExpression;
+            if (expression.Type.IsInterface && !expression.Type.IsAssignableTo(typeof(IEntityCollection)))
+            {
+                throw new NotSupportedException("Expected an unfiltered set of Instances");
+            }
             bool doConcat = false;
             foreach (var expressType in expressTypes)
             {
@@ -67,6 +73,14 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             return expression;
 
+        }
+
+        public override Expression BindWhereExpression(Expression baseExpression, IfcTypeFacet facet)
+        {
+            // A real edge case, since we always try to start with a Ifc Type. 
+            // e.g. Select all items with materials 'wood', where IfcType is IfcDoor - we should filter the entities from first predicate
+            // But we reverse the predicate upstream as it's likely more efficient that way anyway
+            throw new NotImplementedException();
         }
 
         public override void ValidateEntity(IPersistEntity item, FacetGroup requirement, ILogger logger, IdsValidationResult result, IfcTypeFacet f)
@@ -101,12 +115,15 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
         }
 
+
         private IEnumerable<ExpressType> GetExpressTypes(IfcTypeFacet ifcFacet)
         {
             if (ifcFacet?.IfcType?.AcceptedValues?.Any() == false)
             {
                 yield break;
             }
+
+            // TODO: Use IsSatisifedBy approach
             foreach (var ifcTypeConstraint in ifcFacet!.IfcType!.AcceptedValues ?? default)
             {
                 switch (ifcTypeConstraint)
@@ -147,7 +164,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             var ifcAttributePropInfo = propertyMeta.PropertyInfo;
             var ifcAttributeValues = GetPredefinedTypes(ifcFacet);
 
-            return AttributeFacetBinder.BindEqualsAttributeFilter(expression, ifcAttributePropInfo, ifcFacet!.PredefinedType); ;
+            return AttributeFacetBinder.BindAttributeSelection(expression, ifcAttributePropInfo, ifcFacet!.PredefinedType); ;
 
         }
 
@@ -189,5 +206,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             return value;
         }
+
+        
     }
 }

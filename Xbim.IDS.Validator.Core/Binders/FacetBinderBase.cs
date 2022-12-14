@@ -34,12 +34,15 @@ namespace Xbim.IDS.Validator.Core.Binders
         public IModel Model { get; }
 
         /// <summary>
-        /// Applies a Filter predicate to the supplied <paramref name="baseExpression"/> from the <paramref name="facet"/>
+        /// Applies a Selection and Filter predicate to the supplied <paramref name="baseExpression"/> from the <paramref name="facet"/>
         /// </summary>
         /// <param name="baseExpression"></param>
         /// <param name="facet"></param>
         /// <returns></returns>
-        public abstract Expression BindFilterExpression(Expression baseExpression, T facet);
+
+        public abstract Expression BindSelectionExpression(Expression baseExpression, T facet);
+
+        public abstract Expression BindWhereExpression(Expression baseExpression, T facet);
 
         /// <summary>
         /// Validates an entity against the requirements in this Facet
@@ -60,12 +63,12 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
         }
 
-        protected static void ValidateExpressType(ExpressType expressType)
+        protected static void ValidateExpressType(ExpressType expressType, string? type = default)
         {
             // Exclude invalid schema items (including un-rooted entity types like IfcLabel)
             if (expressType == null || expressType.Properties.Count == 0)
             {
-                throw new InvalidOperationException($"Invalid IFC Type '{expressType?.Name}'");
+                throw new InvalidOperationException($"Invalid IFC Type '{type ?? expressType?.Name}'");
             }
         }
 
@@ -161,12 +164,37 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <returns>The concatenated IEnumerable</returns>
         protected Expression BindConcat(Expression expression, Expression right)
         {
-            // TODO: check is IfcRoot Element
 
-            expression = Expression.Call(null, ExpressionHelperMethods.EnumerableCastGeneric.MakeGenericMethod(typeof(IIfcRoot)), expression);
+            // e.g. Concat an IfcObjectDefinition + IfcTypeObject => IfcObject
+            Type highestCommonType = GetCommonAncestor(expression, right);
+            expression = Expression.Call(null, ExpressionHelperMethods.EnumerableCastGeneric.MakeGenericMethod(highestCommonType), expression);
 
-            expression = Expression.Call(null, ExpressionHelperMethods.EnumerableConcatGeneric.MakeGenericMethod(typeof(IIfcRoot)), expression, right);
+            expression = Expression.Call(null, ExpressionHelperMethods.EnumerableConcatGeneric.MakeGenericMethod(highestCommonType), expression, right);
             return expression;
+        }
+
+        private Type GetCommonAncestor(Expression left, Expression right)
+        {
+            var leftType = TypeHelper.GetImplementedIEnumerableType(left.Type);
+            var rightType = TypeHelper.GetImplementedIEnumerableType(right.Type);
+
+            var ancestors = new HashSet<ExpressType>();
+            var express = Model.Metadata.ExpressType(leftType);
+            while(express != null)
+            {
+                ancestors.Add(express);
+                express = express.SuperType;
+            }
+            express = Model.Metadata.ExpressType(rightType);
+            while (express != null)
+            {
+                if(ancestors.Contains(express))
+                {
+                    return express.Type;
+                }
+                express = express.SuperType;
+            }
+            return typeof(IIfcRoot);
         }
 
         protected object? ApplyWorkarounds([MaybeNull] object? value)
@@ -184,23 +212,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         protected IIfcValue? UnwrapQuantity(IIfcPhysicalQuantity quantity)
         {
-            if (quantity is IIfcQuantityCount c)
-                return c.CountValue;
-            if (quantity is IIfcQuantityArea area)
-                return area.AreaValue;
-            else if (quantity is IIfcQuantityLength l)
-                return l.LengthValue;
-            else if (quantity is IIfcQuantityVolume v)
-                return v.VolumeValue;
-            if (quantity is IIfcQuantityWeight w)
-                return w.WeightValue;
-            if (quantity is IIfcQuantityTime t)
-                return t.TimeValue;
-            if (quantity is IIfcPhysicalComplexQuantity comp)
-                return default;
-
-
-            throw new NotImplementedException(quantity.GetType().Name);
+            return quantity.UnwrapQuantity();
         }
 
         protected object UnwrapValue(IIfcValue? value)
@@ -314,5 +326,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             var expectation = required == true ? Expectation.Required : required == false ? Expectation.Prohibited : Expectation.Optional;
             return new ValidationContext<T>(facet, expectation);
         }
+
+        
     }
 }

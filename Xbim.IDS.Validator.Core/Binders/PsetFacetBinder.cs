@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Data;
 using System.Linq.Expressions;
+using System.Reflection;
 using Xbim.Common;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
@@ -27,7 +28,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="InvalidOperationException"></exception>
-        public override Expression BindFilterExpression(Expression baseExpression, IfcPropertyFacet psetFacet)
+        public override Expression BindSelectionExpression(Expression baseExpression, IfcPropertyFacet psetFacet)
         {
             if (baseExpression is null)
             {
@@ -48,10 +49,41 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             var expression = baseExpression;
             // When an Ifc Type has not yet been specified, we start with the RelDefinesByProperties
-            // TODO: Types
+            
             if (expression.Type.IsInterface && expression.Type.IsAssignableTo(typeof(IEntityCollection)))
             {
                 expression = BindIfcExpressType(expression, Model.Metadata.ExpressType(typeof(IfcRelDefinesByProperties)));
+                expression = BindPropertySelection(expression, psetFacet);
+                return expression;
+            }
+
+            throw new NotSupportedException("Selection of Psets must be the first expression in the graph");
+        }
+
+        public override Expression BindWhereExpression(Expression baseExpression, IfcPropertyFacet facet)
+        {
+            if (baseExpression is null)
+            {
+                throw new ArgumentNullException(nameof(baseExpression));
+            }
+
+            if (facet is null)
+            {
+                throw new ArgumentNullException(nameof(facet));
+            }
+
+            if (!facet.IsValid())
+            {
+                // IsValid checks against a known list of all IFC Attributes
+                throw new InvalidOperationException($"IFC Property Facet '{facet?.PropertySetName}'.{facet?.PropertyName} is not valid");
+            }
+
+
+            var expression = baseExpression;
+            
+            if (expression.Type.IsInterface && expression.Type.IsAssignableTo(typeof(IEntityCollection)))
+            {
+                throw new NotSupportedException("Expected a selection expression before applying filters");
             }
 
             // Get underlying collection type
@@ -59,7 +91,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             var expressType = Model.Metadata.ExpressType(collectionType);
             ValidateExpressType(expressType);
 
-            expression = BindEqualPsetFilter(expression, psetFacet);
+            expression = BindPropertyFilter(expression, facet);
             return expression;
         }
 
@@ -128,7 +160,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
 
-        private Expression BindEqualPsetFilter(Expression expression, IfcPropertyFacet psetFacet)
+        private Expression BindPropertySelection(Expression expression, IfcPropertyFacet psetFacet)
         {
             if (psetFacet is null)
             {
@@ -146,23 +178,51 @@ namespace Xbim.IDS.Validator.Core.Binders
                 return expression;
             }
 
-            var psetName = psetFacet.PropertySetName.SingleValue();
-            var propName = psetFacet.PropertyName.SingleValue();
-            var propValue = psetFacet.PropertyValue.SingleValue();
-
-            var psetNameExpr = Expression.Constant(psetName, typeof(string));
-            var propNameExpr = Expression.Constant(propName, typeof(string));
-            var propValExpr = Expression.Constant(propValue, typeof(string));
+            var facetExpr = Expression.Constant(psetFacet, typeof(IfcPropertyFacet));
             // Expression we're building
             // var psetRelDefines = model.Instances.OfType<IIfcRelDefinesByProperties>();
-            // var entities = IfcExtensions.GetIfcPropertySingleValues(psetRelDefines, psetName, propName, propValue);
+            // var entities = IfcExtensions.GetIfcObjectsWithProperties(psetRelDefines, facet);
 
-            var propsMethod = ExpressionHelperMethods.EnumerableIfcPropertySinglePropsValue;
+            var propsMethod = ExpressionHelperMethods.EnumerableIfcObjectsWithProperties;
 
-            return Expression.Call(null, propsMethod, new[] { expression, psetNameExpr, propNameExpr, propValExpr });
+            return Expression.Call(null, propsMethod, new[] { expression, facetExpr });
 
           
         }
+
+
+        private Expression BindPropertyFilter(Expression expression, IfcPropertyFacet facet)
+        {
+            if (facet is null)
+            {
+                throw new ArgumentNullException(nameof(facet));
+            }
+            // Get underlying collection type
+            var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
+
+          
+            MethodInfo propsMethod;
+            if(collectionType.IsAssignableTo(typeof(IIfcObject)))
+            {
+                propsMethod = ExpressionHelperMethods.EnumerableObjectWhereAssociatedWithProperty;
+
+            } else if (collectionType.IsAssignableTo(typeof(IIfcTypeObject)))
+            {
+                propsMethod = ExpressionHelperMethods.EnumerableTypeWhereAssociatedWithProperty;
+            }
+            else
+            {
+                // TODO: log
+                // Not applicable
+                return BindNotFound(expression, collectionType);
+            }
+            ConstantExpression psetFacetExpr = Expression.Constant(facet, typeof(IfcPropertyFacet));
+
+            return Expression.Call(null, propsMethod, new[] { expression, psetFacetExpr });
+
+
+        }
+
 
         // For Selections on instances we don't need to use expressions. When filtering we will
         /// <summary>
@@ -417,7 +477,6 @@ namespace Xbim.IDS.Validator.Core.Binders
                 result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Measure!, measure, "Invalid Measure", propValue));
             }
         }
-
 
 
 

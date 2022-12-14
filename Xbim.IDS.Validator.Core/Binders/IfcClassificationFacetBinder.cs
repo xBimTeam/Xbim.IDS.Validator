@@ -16,7 +16,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         {
         }
 
-        public override Expression BindFilterExpression(Expression baseExpression, IfcClassificationFacet facet)
+        public override Expression BindSelectionExpression(Expression baseExpression, IfcClassificationFacet facet)
         {
             if (baseExpression is null)
             {
@@ -40,21 +40,57 @@ namespace Xbim.IDS.Validator.Core.Binders
             if (expression.Type.IsInterface && expression.Type.IsAssignableTo(typeof(IEntityCollection)))
             {
                 expression = BindIfcExpressType(expression, Model.Metadata.ExpressType(nameof(IfcRelAssociatesClassification).ToUpperInvariant()));
+                // Apply the Classification filter
+                expression = BindClassificationSelection(expression, facet);
+                return expression;
+            }
+
+            throw new NotSupportedException("Selection of Classifications must be the first expression in the graph");
+            
+        }
+
+        public override Expression BindWhereExpression(Expression baseExpression, IfcClassificationFacet facet)
+        {
+            if (baseExpression is null)
+            {
+                throw new ArgumentNullException(nameof(baseExpression));
+            }
+
+            if (facet is null)
+            {
+                throw new ArgumentNullException(nameof(facet));
+            }
+
+            if (!facet.IsValid())
+            {
+                throw new InvalidOperationException($"IFC Classification Facet '{facet?.ClassificationSystem}' is not valid");
+            }
+
+
+            var expression = baseExpression;
+
+            if (expression.Type.IsInterface && expression.Type.IsAssignableTo(typeof(IEntityCollection)))
+            {
+                throw new NotSupportedException("Expected a selection expression before applying filters");
             }
 
             // Handle expressions where already bound to entities.
-            else if (TypeHelper.IsCollection(expression.Type, out Type elementType))
+            if (TypeHelper.IsCollection(expression.Type, out Type elementType))
             {
-                if(elementType.IsAssignableTo(typeof(IIfcObjectDefinition)))
+                // Apply the Classification filter
+                if (elementType.IsAssignableTo(typeof(IIfcObjectDefinition)))
                 {
                     // Objects and Types classified by HasAssociations
-                    expression = BindSelectManyClassifications(ref expression, elementType, typeof(IIfcRelAssociates), nameof(IIfcObjectDefinition.HasAssociations));
+                    
+                    expression = BindClassificationFilter(expression, facet);
+                    return expression;
                 }
-                else if (elementType.IsAssignableTo(typeof(IIfcMaterialDefinition)))
-                {
-                    // Materials special-cased by HasExternalReferences
-                    expression =  BindSelectManyClassifications(ref expression, elementType, typeof(IIfcExternalReferenceRelationship), nameof(IIfcMaterialDefinition.HasExternalReferences));
-                }
+                // TODO:
+                //else if (elementType.IsAssignableTo(typeof(IIfcMaterialDefinition)))
+                //{
+                //    // Materials special-cased by HasExternalReferences
+                //    expression = BindSelectManyClassifications(ref expression, elementType, typeof(IIfcExternalReferenceRelationship), nameof(IIfcMaterialDefinition.HasExternalReferences));
+                //}
                 else
                 {
                     // Not supported, return nothing
@@ -66,18 +102,17 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             }
 
-            // Apply the Classification filter
-            expression = BindClassificationFilter(expression, facet);
-            return expression;
+            throw new NotSupportedException("Cannot filter classifications on this type " + elementType.Name);
+
         }
 
-       
+
 
         private static Expression BindSelectManyClassifications(ref Expression expression, Type elementType, Type selectReturnType, string propertyName)
         {
             
             // var x = Model.Instances.OfType("IFCFURNITURE", true).Cast<IIfcFurniture>().SelectMany(o => o.HasAssociations).OfType<IIfcRelAssociatesClassification>();
-            // We're uilding this expression
+            // We're building this expression
             //  IEnumerable<IIfcObjectDefinition>   .SelectMany(o => o.HasAssociations).OfType<IfcRelAssociatesClassification>()
 
             var selectManyMethod = ExpressionHelperMethods.EnumerableSelectManyGeneric.MakeGenericMethod(elementType, selectReturnType);
@@ -149,13 +184,13 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
         /// <summary>
-        /// Applies the classification filter to a set of IfcRelAssociatesClassifications
+        /// Selects the entities matching the classification filter from a set of IfcRelAssociatesClassifications
         /// </summary>
         /// <param name="expression"></param>
         /// <param name="facet"></param>
         /// <returns>The <see cref="Expression"/> with Classification filters applied</returns>
         /// <exception cref="ArgumentNullException"></exception>
-        private Expression BindClassificationFilter(Expression expression, IfcClassificationFacet facet)
+        private Expression BindClassificationSelection(Expression expression, IfcClassificationFacet facet)
         {
             if (facet is null)
             {
@@ -261,5 +296,39 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
 
+        /// <summary>
+        /// Selects the entities matching the classification filter from a set of ObjectsDefinitions
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <param name="facet"></param>
+        /// <returns>The <see cref="Expression"/> with Classification filters applied</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        private Expression BindClassificationFilter(Expression expression, IfcClassificationFacet facet)
+        {
+            if (facet is null)
+            {
+                throw new ArgumentNullException(nameof(facet));
+            }
+
+
+            if (facet?.ClassificationSystem?.AcceptedValues?.Any() == false && facet?.Identification?.AcceptedValues?.Any() == false)
+            {
+                return expression;
+            }
+
+
+            var classificationFacetExpr = Expression.Constant(facet, typeof(IfcClassificationFacet));
+
+            // Expression we're building:
+            // var entities = model.Instances.OfType<IfcObjectDefinition>();
+            // var filteredresult = entities.WhereIsAssociatedWithClassification(e, facet));
+            // or
+            // var filteredresult =  IfcExtensions.WhereIsAssociatedWithClassification(entities, facet);
+
+            var propsMethod = ExpressionHelperMethods.EnumerableWhereAssociatedWithClassification;
+
+            return Expression.Call(null, propsMethod, new[] { expression, classificationFacetExpr });
+
+        }
     }
 }

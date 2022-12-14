@@ -1,11 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xbim.Common;
-using Xbim.IDS.Validator.Core.Helpers;
+using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 

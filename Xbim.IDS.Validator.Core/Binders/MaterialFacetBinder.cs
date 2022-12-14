@@ -15,7 +15,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         {
         }
 
-        public override Expression BindFilterExpression(Expression baseExpression, MaterialFacet facet)
+        public override Expression BindSelectionExpression(Expression baseExpression, MaterialFacet facet)
         {
             if (baseExpression is null)
             {
@@ -39,15 +39,61 @@ namespace Xbim.IDS.Validator.Core.Binders
             if (expression.Type.IsInterface && expression.Type.IsAssignableTo(typeof(IEntityCollection)))
             {
                 expression = BindIfcExpressType(expression, Model.Metadata.ExpressType(nameof(IfcRelAssociatesMaterial).ToUpperInvariant()));
+                return BindMaterialSelection(expression, facet);
             }
 
-            // Get underlying collection type
-            var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
-            var expressType = Model.Metadata.ExpressType(collectionType);
-            ValidateExpressType(expressType);
+            throw new NotSupportedException("Selection of Materials must be the first expression in the graph");
+        }
 
-            expression = BindMaterialFilter(expression, facet);
-            return expression;
+
+        public override Expression BindWhereExpression(Expression baseExpression, MaterialFacet facet)
+        {
+            if (baseExpression is null)
+            {
+                throw new ArgumentNullException(nameof(baseExpression));
+            }
+
+            if (facet is null)
+            {
+                throw new ArgumentNullException(nameof(facet));
+            }
+
+            if (!facet.IsValid())
+            {
+                throw new InvalidOperationException($"IFC Material Facet '{facet?.Value}' is not valid");
+            }
+
+
+            var expression = baseExpression;
+
+            if (expression.Type.IsInterface && expression.Type.IsAssignableTo(typeof(IEntityCollection)))
+            {
+                throw new NotSupportedException("Expected a selection expression before applying filters");
+            }
+
+
+            if (TypeHelper.IsCollection(expression.Type, out Type elementType))
+            {
+                // Apply the Classification filter
+                if (elementType.IsAssignableTo(typeof(IIfcObjectDefinition)))
+                {
+                    // Objects and Types classified by HasAssociations
+
+                    expression = BindMaterialFilter(expression, facet);
+                    return expression;
+                }
+                else
+                {
+                    // Not supported, return nothing
+
+                    // TODO: log
+                    return BindNotFound(expression, elementType);
+
+                }
+
+            }
+
+            throw new NotSupportedException("Cannot filter materials on this type " + elementType.Name);
         }
 
         public override void ValidateEntity(IPersistEntity item, FacetGroup requirement, ILogger logger, IdsValidationResult result, MaterialFacet facet)
@@ -103,7 +149,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
        
-        private Expression BindMaterialFilter(Expression expression, MaterialFacet materialFacet)
+        private Expression BindMaterialSelection(Expression expression, MaterialFacet materialFacet)
         {
             if (materialFacet is null)
             {
@@ -130,7 +176,40 @@ namespace Xbim.IDS.Validator.Core.Binders
             var propsMethod = ExpressionHelperMethods.EnumerableIfcMaterialSelector;
 
             return Expression.Call(null, propsMethod, new[] { expression, materialFacetExpr });
+        }
 
+        /// <summary>
+        /// Selects the entities matching the material filter from a set of ObjectsDefinitions
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <param name="facet"></param>
+        /// <returns>The <see cref="Expression"/> with Classification filters applied</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        private Expression BindMaterialFilter(Expression expression, MaterialFacet facet)
+        {
+            if (facet is null)
+            {
+                throw new ArgumentNullException(nameof(facet));
+            }
+
+
+            if (facet?.Value?.AcceptedValues?.Any() == false)
+            {
+                return expression;
+            }
+
+
+            var materialFacetExpr = Expression.Constant(facet, typeof(MaterialFacet));
+
+            // Expression we're building:
+            // var entities = model.Instances.OfType<IfcObjectDefinition>();
+            // var filteredresult = entities.WhereAssociatedWithMaterial(e, facet));
+            // or
+            // var filteredresult =  IfcExtensions.WhereAssociatedWithMaterial(entities, facet);
+
+            var propsMethod = ExpressionHelperMethods.EnumerableWhereAssociatedWithMaterial;
+
+            return Expression.Call(null, propsMethod, new[] { expression, materialFacetExpr });
 
         }
     }

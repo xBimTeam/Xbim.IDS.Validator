@@ -20,6 +20,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
 
         [InlineData(nameof(IIfcFurniture.ObjectType), "Chair - Dining", 6)]
+        [InlineData(nameof(IIfcSite.CompositionType), "ELEMENT", 8)]
+        [InlineData(nameof(IIfcSite.RefElevation), "0", 1)]
         [Theory]
         public void Can_Query_By_Attributes(string attributeFieldName, string attributeValue, int expectedCount)
         {
@@ -32,7 +34,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
 
             // Act
-            var expression = Binder.BindFilterExpression(query.InstancesExpression, attrFacet);
+            var expression = Binder.BindSelectionExpression(query.InstancesExpression, attrFacet);
 
             // Assert
 
@@ -55,7 +57,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
 
             // Act
-            var expression = Binder.BindFilterExpression(query.InstancesExpression, attrFacet);
+            var expression = Binder.BindSelectionExpression(query.InstancesExpression, attrFacet);
 
             // Assert
 
@@ -85,9 +87,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             var ifcBinder = new IfcTypeFacetBinder(model);
 
 
-            var expression = ifcBinder.BindFilterExpression(query.InstancesExpression, ifcFacet);
+            var expression = ifcBinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
             // Act
-            var ex = Record.Exception(() => Binder.BindFilterExpression(expression, attrFacet));
+            var ex = Record.Exception(() => Binder.BindSelectionExpression(expression, attrFacet));
 
             ex.Should().NotBeNull();
             ex.Should().BeOfType<InvalidOperationException>();

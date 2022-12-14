@@ -13,13 +13,19 @@ namespace Xbim.IDS.Validator.Core.Helpers
 
     internal class ExpressionHelperMethods
     {
-
+        
         private static MethodInfo _entityCollectionofTypeMethod = typeof(IReadOnlyEntityCollection).GetMethod(nameof(IReadOnlyEntityCollection.OfType), new Type[] { typeof(string), typeof(bool) });
-        private static MethodInfo _enumerableIfcPropertySinglePropsValueMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcPropertySingleValues), new Type[] { typeof(IEnumerable<IIfcRelDefinesByProperties>), typeof(string), typeof(string), typeof(string) });
+        private static MethodInfo _enumerableIfcObjectsWithPropertiesMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcObjectsWithProperties), new Type[] { typeof(IEnumerable<IIfcRelDefinesByProperties>), typeof(IfcPropertyFacet)});
         private static MethodInfo _enumerableIfcMaterialSelectorMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcObjectsUsingMaterials), new Type[] { typeof(IEnumerable<IIfcRelAssociatesMaterial>), typeof(MaterialFacet) });
         private static MethodInfo _enumerableIfcAssociatesClassificationMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcObjectsUsingClassification), new Type[] { typeof(IEnumerable<IIfcRelAssociatesClassification>), typeof(IfcClassificationFacet) });
 
+        private static MethodInfo _enumerableWhereAssociatedWithClassificationMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.WhereAssociatedWithClassification), new Type[] { typeof(IEnumerable<IIfcObjectDefinition>), typeof(IfcClassificationFacet) });
+        private static MethodInfo _enumerableWhereAssociatedWithMaterialMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.WhereAssociatedWithMaterial), new Type[] { typeof(IEnumerable<IIfcObjectDefinition>), typeof(MaterialFacet) });
+        private static MethodInfo _enumerableWhereObjAssociatedWithPropertyMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.WhereAssociatedWithProperty), new Type[] { typeof(IEnumerable<IIfcObject>), typeof(IfcPropertyFacet) });
+        private static MethodInfo _enumerableWhereTypeAssociatedWithPropertyMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.WhereAssociatedWithProperty), new Type[] { typeof(IEnumerable<IIfcTypeObject>), typeof(IfcPropertyFacet) });
+
         private static MethodInfo _idsValidationIsSatisifiedMethod = typeof(IValueConstraintComponent).GetMethod(nameof(IValueConstraintComponent.IsSatisfiedBy), new Type[] { typeof(object), typeof(ValueConstraint), typeof(bool), typeof(ILogger) });
+        private static MethodInfo _idsSatisfiesConstraintMethod = typeof(ValueConstraintExtensions).GetMethod(nameof(ValueConstraintExtensions.SatisifesConstraint), new Type[] { typeof(ValueConstraint), typeof(object) });
 
 
         private static MethodInfo _enumerableWhereMethod = GenericMethodOf(_ => Enumerable.Where<int>(default(IEnumerable<int>), default(Func<int, bool>)));
@@ -45,11 +51,14 @@ namespace Xbim.IDS.Validator.Core.Helpers
             get { return _idsValidationIsSatisifiedMethod; }
         }
 
-
-
-        public static MethodInfo EnumerableIfcPropertySinglePropsValue
+        public static MethodInfo IdsSatisifiesConstraintMethod
         {
-            get { return _enumerableIfcPropertySinglePropsValueMethod; }
+            get { return _idsSatisfiesConstraintMethod; }
+        }
+        //
+        public static MethodInfo EnumerableIfcObjectsWithProperties
+        {
+            get { return _enumerableIfcObjectsWithPropertiesMethod; }
         }
 
         public static MethodInfo EnumerableIfcMaterialSelector
@@ -62,7 +71,25 @@ namespace Xbim.IDS.Validator.Core.Helpers
             get { return _enumerableIfcAssociatesClassificationMethod; }
         }
 
-        
+        public static MethodInfo EnumerableWhereAssociatedWithClassification
+        {
+            get { return _enumerableWhereAssociatedWithClassificationMethod; }
+        }
+
+        public static MethodInfo EnumerableWhereAssociatedWithMaterial
+        {
+            get { return _enumerableWhereAssociatedWithMaterialMethod; }
+        }
+
+        public static MethodInfo EnumerableObjectWhereAssociatedWithProperty
+        {
+            get { return _enumerableWhereObjAssociatedWithPropertyMethod; }
+        }
+
+        public static MethodInfo EnumerableTypeWhereAssociatedWithProperty
+        {
+            get { return _enumerableWhereTypeAssociatedWithPropertyMethod; }
+        }
 
         public static MethodInfo EnumerableCastGeneric
         {

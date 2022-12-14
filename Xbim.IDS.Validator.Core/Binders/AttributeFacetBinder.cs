@@ -5,8 +5,6 @@ using Xbim.Common;
 using Xbim.Common.Metadata;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
-using Xbim.Ifc4.MeasureResource;
-using Xbim.Ifc4.UtilityResource;
 using Xbim.InformationSpecifications;
 using Xbim.InformationSpecifications.Helpers;
 
@@ -28,7 +26,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="InvalidOperationException"></exception>
-        public override Expression BindFilterExpression(Expression baseExpression, AttributeFacet attrFacet)
+        public override Expression BindSelectionExpression(Expression baseExpression, AttributeFacet attrFacet)
         {
             if (baseExpression is null)
             {
@@ -46,28 +44,50 @@ namespace Xbim.IDS.Validator.Core.Binders
                 throw new InvalidOperationException($"Attribute Facet '{attrFacet?.AttributeName}' is not valid");
             }
 
-
             var expression = baseExpression;
-            // When an Ifc Type facet has not yet been specified, find correct root type(s) for this AttributeName
-            // using the lookup that XIDS provides
-            if (expression.Type.IsInterface && expression.Type.IsAssignableTo(typeof(IEntityCollection)))
+            
+            if(attrFacet.AttributeName.IsSingleExact(out var attributeName))
             {
-                
-                // TODO: Use correct IFC Schema based on Model
-                var rootTypes = SchemaInfo.SchemaIfc4.GetAttributeClasses(attrFacet.AttributeName.SingleValue(), onlyTopClasses: true);
+                // When an Ifc Type facet has not yet been specified, find correct root type(s) for this AttributeName
+                // using the lookup that XIDS provides
 
-                expression = base.BindIfcExpressTypes(expression, rootTypes);
+                if (expression.Type.IsInterface && expression.Type.IsAssignableTo(typeof(IEntityCollection)))
+                {
+                    string[] rootTypes;
+                    if (Model.SchemaVersion == Common.Step21.XbimSchemaVersion.Ifc2X3)
+                    {
+                        rootTypes = SchemaInfo.SchemaIfc2x3.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
+                    }
+                    else
+                    {
+                        rootTypes = SchemaInfo.SchemaIfc4.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
+                    }
+
+                    expression = base.BindIfcExpressTypes(expression, rootTypes);
+
+                    
+                }
+                var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
+                var expressType = Model.Metadata.ExpressType(collectionType);
+                ValidateExpressType(expressType, collectionType.Name);
+
+                expression = BindAttributeSelection(expression, expressType, (string)attributeName,
+                    attrFacet?.AttributeValue);
+                return expression;
 
             }
+            else
+            {
+                // Not sure why we'd want to pick attributes with a regex, range, or even an enum?
+                throw new NotSupportedException("Complex AttributeName constraints are not supported");
+            }
+            
+        }
 
-            // Get underlying collection type
-            var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
-            var expressType = Model.Metadata.ExpressType(collectionType);
-            ValidateExpressType(expressType);
-
-            expression = BindEqualsAttributeFilter(expression, expressType, attrFacet.AttributeName.SingleValue(), // TODO Check if we ever want to filter multiple Names
-                attrFacet?.AttributeValue);
-            return expression;
+        public override Expression BindWhereExpression(Expression baseExpression, AttributeFacet attrFacet)
+        {
+            // We can use use straight forward selection as we're not traversing any relationships
+            return BindSelectionExpression(baseExpression, attrFacet);
         }
 
         public override void ValidateEntity(IPersistEntity item, FacetGroup requirement, ILogger logger, IdsValidationResult result, AttributeFacet af)
@@ -113,9 +133,13 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
         }
 
-        public IDictionary<string,object> GetAttributes(IPersistEntity entity, AttributeFacet facet)
+
+        private IDictionary<string,object> GetAttributes(IPersistEntity entity, AttributeFacet facet)
         {
             var results = new Dictionary<string, object>();
+
+            if (facet.AttributeName?.AcceptedValues?.Any() != true)
+                return results;
 
             var expressType = Model.Metadata.ExpressType(entity);
             foreach(var constraint in facet.AttributeName.AcceptedValues)
@@ -159,23 +183,24 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
 
-        internal static Expression BindEqualsAttributeFilter(Expression expression, ExpressType expressType,
+        private static Expression BindAttributeSelection(Expression expression, ExpressType expressType,
             string ifcAttributeName, ValueConstraint constraint)
         {
 
-            var propertyMeta = expressType.Properties.First(p => p.Value.Name == ifcAttributeName).Value;
+            var propertyMeta = expressType.Properties.FirstOrDefault(p => p.Value.Name == ifcAttributeName).Value;
             if (propertyMeta == null)
             {
-                throw new InvalidOperationException($"Property '{ifcAttributeName} not found on '{expressType.Name}'");
+                throw new InvalidOperationException($"Property '{ifcAttributeName}' not found on '{expressType.Name}'");
             }
             if (propertyMeta.EnumerableType != null)
             {
                 throw new NotSupportedException("Cannot filter on collection properties");
             }
-            return BindEqualsAttributeFilter(expression, propertyMeta.PropertyInfo, constraint);
+            return BindAttributeSelection(expression, propertyMeta.PropertyInfo, constraint);
         }
 
-        internal static Expression BindEqualsAttributeFilter(Expression expression,
+
+        internal static Expression BindAttributeSelection(Expression expression,
             PropertyInfo ifcAttributePropInfo, ValueConstraint constraint)
         {
             // Get underlying collection type
@@ -191,7 +216,9 @@ namespace Xbim.IDS.Validator.Core.Binders
                 return expression;
             }
 
-            // IEnumerable.Where<TEntity>(...)
+            // Build IEnumerable<TEntity>().Where(t => Helpers.SatisfiesConstraint(constraint, t.[AttributeName], type))
+
+            // build IEnumerable.Where<TEntity>(...)
             var whereMethod = ExpressionHelperMethods.EnumerableWhereGeneric.MakeGenericMethod(collectionType);
 
             // build lambda param 'ent => ...'
@@ -199,164 +226,25 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             // build 'ent.AttributeName'
             Expression nameProperty = Expression.Property(ifcTypeParam, ifcAttributePropInfo);
+            var constraintExpr = Expression.Constant(constraint, typeof(ValueConstraint));
 
-            var propType = ifcAttributePropInfo.PropertyType;
-            var isNullWrapped = TypeHelper.IsNullable(propType);
-            var underlyingType = isNullWrapped ? Nullable.GetUnderlyingType(propType) : propType;
+            // build params, & unwrap Type
+            //var propType = ifcAttributePropInfo.PropertyType;
+            
+   
+            var valueExpr = Expression.Convert(nameProperty, typeof(object));
 
-            Expression querybody = Expression.Empty();
 
-            bool applyOr = false;
-            foreach (var ifcAttributeValue in constraints)
-            {
-                Expression rightExpr;
-
-                switch (ifcAttributeValue)
-                {
-                    case ExactConstraint e:
-
-                        string exactValue = e.Value;
-                        // Get the Constant
-                        rightExpr = BuildAttributeValueConstant(isNullWrapped, underlyingType, exactValue);
-                        nameProperty = SetAttributeProperty(nameProperty, underlyingType);
-                        // Binding Equals(x,y)
-                        rightExpr = Expression.Equal(nameProperty, rightExpr);
-                        break;
-
-                    case PatternConstraint p:
-                        // Build a query that builds an expression that delegates to XIDS's IsSatisfied regex method.
-                        // model.Instances.OfType<IIfcWall>().Where(ent => patternconstraint.IsSatisfiedBy(w.Name.ToString(), <AttributeValue>, true, null));
-                        //                                                 instance,         methodIn new[]{rightExpr, constraintExpr,   case, logger }
-                        var isSatisfiedMethod = ExpressionHelperMethods.IdsValidationIsSatisifiedMethod;
-                        // Get Property: entity.<attribute>
-                        rightExpr = BuildAttributeValueRegexPredicate(nameProperty, isNullWrapped, underlyingType, p);
-                        var constraintExpr = Expression.Constant(constraint, typeof(ValueConstraint));
-                        var caseInsensitive = Expression.Constant(true, typeof(bool));
-                        var loggerExpr = Expression.Constant(null, typeof(ILogger));
-                        var instanceExpr = Expression.Constant(p, typeof(PatternConstraint));
-                        rightExpr = Expression.Call(instanceExpr, isSatisfiedMethod, new[] { rightExpr, constraintExpr, caseInsensitive, loggerExpr });
-
-                        break;
-                    case StructureConstraint s:
-                    case RangeConstraint r:
-                        throw new NotSupportedException(ifcAttributeValue.GetType().Name);
-
-                    default:
-                        throw new NotImplementedException(ifcAttributeValue.GetType().Name);
-                }
-
-                // Or the expressions on subsequent iterations.
-                if (applyOr)
-                {
-                    querybody = Expression.Or(querybody, rightExpr);
-                }
-                else
-                {
-                    querybody = rightExpr;
-                    applyOr = true;
-                }
-            }
+            Expression querybody = Expression.Call(null, ExpressionHelperMethods.IdsSatisifiesConstraintMethod, constraintExpr, valueExpr );
 
             // Build Lambda expression for filter predicate (Func<T,bool>)
             var filterExpression = Expression.Lambda(querybody, ifcTypeParam);
 
             // Bind Lambda to Where method
             return Expression.Call(null, whereMethod, new[] { expression, filterExpression });
-
         }
 
-        private static Expression BuildAttributeValueRegexPredicate(Expression nameProperty, bool isNullWrapped, Type underlyingType, PatternConstraint p)
-        {
-            Expression queryValue;
-
-            if (TypeHelper.IsCollection(underlyingType))
-            {
-                throw new NotSupportedException("Collections not supported");
-            }
-            // Unpack simple objects for string comparisons
-
-            else if (underlyingType == typeof(string))
-            {
-                queryValue = nameProperty;
-            }
-            else if (underlyingType == typeof(IfcLabel) ||
-                underlyingType == typeof(IfcText) ||
-                underlyingType == typeof(IfcGloballyUniqueId) ||
-                // TODO: Other primitives
-                underlyingType.IsEnum
-                )
-            {
-                // Call ToString on these primitives. HACK to avoid handling Nullables but good enough for Regex. Should got to Value (object)
-                queryValue = Expression.Call(nameProperty, nameof(Object.ToString), typeArguments: null, arguments: null);
-            }
-            else
-            {
-                throw new NotImplementedException($"Filtering on Ifc type {underlyingType.Name} not implemented");
-            }
-
-
-            return queryValue;
-        }
-
-        private static Expression SetAttributeProperty(Expression nameProperty, Type underlyingType)
-        {
-            if (underlyingType!.IsEnum)
-            {
-                // HACK: Use ToString rather than convert Predefined to correct Enum type.
-                nameProperty = Expression.Call(nameProperty, nameof(Object.ToString), typeArguments: null, arguments: null);
-            }
-
-            return nameProperty;
-        }
-
-        private static Expression BuildAttributeValueConstant(bool isNullWrapped, Type underlyingType, string ifcAttributeValue)
-        {
-            Expression queryValue;
-            if (TypeHelper.IsCollection(underlyingType))
-            {
-                throw new NotSupportedException("Collections not supported");
-            }
-            // Wrap simple navigation objects to use built-in equality operators
-            else if (underlyingType == typeof(IfcLabel))
-            {
-                var val = new IfcLabel(ifcAttributeValue);
-                queryValue = Expression.Constant(val, typeof(IfcLabel));
-            }
-            else if (underlyingType == typeof(IfcText))
-            {
-                var val = new IfcText(ifcAttributeValue);
-                queryValue = Expression.Constant(val, typeof(IfcText));
-            }
-            else if (underlyingType == typeof(IfcGloballyUniqueId))
-            {
-                var val = new IfcGloballyUniqueId(ifcAttributeValue);
-                queryValue = Expression.Constant(val, typeof(IfcGloballyUniqueId));
-            }
-            // TODO: Other primitives
-            else if (underlyingType.IsEnum)
-            {
-                // And use ToString upstream
-                queryValue = Expression.Constant(ifcAttributeValue.ToUpperInvariant());
-            }
-            else if (underlyingType == typeof(string))
-            {
-                queryValue = Expression.Constant(ifcAttributeValue);
-            }
-            else
-            {
-                throw new NotImplementedException($"Filtering on Ifc type {underlyingType.Name} not implemented");
-            }
-            // Wrap when comparing to Nullable
-            if (isNullWrapped && !TypeHelper.IsNullable(queryValue.Type))
-            {
-                queryValue = Expression.Convert(queryValue, TypeHelper.ToNullable(queryValue.Type));
-            }
-
-            return queryValue;
-        }
-
-
-
+    
 
     }
 }

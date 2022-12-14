@@ -66,7 +66,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
 
             // Act
-            var ex = Record.Exception(() => Binder.BindFilterExpression(query.InstancesExpression, facet));
+            var ex = Record.Exception(() => Binder.BindSelectionExpression(query.InstancesExpression, facet));
 
             // Assert
 
@@ -103,7 +103,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             IfcTypeFacet facet = BuildIfcTypeFacetFromCsv(ifcType, predefinedType, ifcTypeConstraint, preDefConstraint: preConstraint);
 
             // Act
-            var expression = Binder.BindFilterExpression(query.InstancesExpression, facet);
+            var expression = Binder.BindSelectionExpression(query.InstancesExpression, facet);
 
             // Assert
 

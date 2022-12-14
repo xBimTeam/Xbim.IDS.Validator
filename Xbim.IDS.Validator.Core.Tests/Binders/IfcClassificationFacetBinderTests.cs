@@ -50,7 +50,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             }
 
             // Act
-            var expression = Binder.BindFilterExpression(query.InstancesExpression, facet);
+            var expression = Binder.BindSelectionExpression(query.InstancesExpression, facet);
 
             // Assert
 

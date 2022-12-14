@@ -47,16 +47,24 @@ namespace Xbim.IDS.Validator.Core
             var facets = spec.Applicability.Facets;
            
             var ifcFacet = facets.OfType<IfcTypeFacet>().FirstOrDefault();
+            Expression expression;
             if(ifcFacet == null)
             {
-                throw new InvalidOperationException("Expected a single IfcTypeFacet");
+                // If possible start with an IFCType to narrow the selection down
+                expression = BindSelection(ifcQuery.InstancesExpression, ifcFacet);
+                foreach (var facet in facets.Except(new[] { ifcFacet }))
+                {
+                    expression = BindFilters(expression, facet);
+                }
             }
-            //var expressType = facetBinder.GetExpressType(ifcFacet);
-            var expression = BindFilters(ifcQuery.InstancesExpression, ifcFacet);
-
-            foreach (var facet in facets.Except(new[] { ifcFacet }))
+            else
             {
-                expression = BindFilters(expression, facet);
+                var firstFacet = facets.First();
+                expression = BindSelection(ifcQuery.InstancesExpression, firstFacet);
+                foreach (var facet in facets.Except(new[] { firstFacet }))
+                {
+                    expression = BindFilters(expression, facet);
+                }
             }
 
             return ifcQuery.Execute(expression, model);
@@ -132,21 +140,21 @@ namespace Xbim.IDS.Validator.Core
         /// <param name="facet"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        private Expression BindFilters(Expression baseExpression, IFacet facet)
+        private Expression BindSelection(Expression baseExpression, IFacet facet)
         {
             switch (facet)
             {
                 case IfcTypeFacet f:
-                    return ifcTypeFacetBinder.BindFilterExpression(baseExpression, f);
+                    return ifcTypeFacetBinder.BindSelectionExpression(baseExpression, f);
 
                 case AttributeFacet af:
-                    return attrFacetBinder.BindFilterExpression(baseExpression, af);
+                    return attrFacetBinder.BindSelectionExpression(baseExpression, af);
 
                 case IfcPropertyFacet pf:
-                    return psetFacetBinder.BindFilterExpression(baseExpression, pf);
+                    return psetFacetBinder.BindSelectionExpression(baseExpression, pf);
 
                 case IfcClassificationFacet cf:
-                    return classificationFacetBinder.BindFilterExpression(baseExpression, cf);
+                    return classificationFacetBinder.BindSelectionExpression(baseExpression, cf);
 
                 case DocumentFacet df:
                     // TODO: 
@@ -161,7 +169,43 @@ namespace Xbim.IDS.Validator.Core
                     return baseExpression;
 
                 case MaterialFacet mf:
-                    return materialFacetBinder.BindFilterExpression(baseExpression, mf);
+                    return materialFacetBinder.BindSelectionExpression(baseExpression, mf);
+
+                default:
+                    throw new NotImplementedException($"Facet not implemented: '{facet.GetType().Name}'");
+            }
+        }
+
+        private Expression BindFilters(Expression baseExpression, IFacet facet)
+        {
+            switch (facet)
+            {
+                case IfcTypeFacet f:
+                    return ifcTypeFacetBinder.BindWhereExpression(baseExpression, f);
+
+                case AttributeFacet af:
+                    return attrFacetBinder.BindWhereExpression(baseExpression, af);
+
+                case IfcPropertyFacet pf:
+                    return psetFacetBinder.BindWhereExpression(baseExpression, pf);
+
+                case IfcClassificationFacet cf:
+                    return classificationFacetBinder.BindWhereExpression(baseExpression, cf);
+
+                case DocumentFacet df:
+                    // TODO: 
+                    return baseExpression;
+
+                case IfcRelationFacet rf:
+                    // TODO: 
+                    return baseExpression;
+
+                case PartOfFacet pf:
+                    // TODO: 
+                    return baseExpression;
+
+                case MaterialFacet mf:
+                    return materialFacetBinder.BindWhereExpression(baseExpression, mf);
 
                 default:
                     throw new NotImplementedException($"Facet not implemented: '{facet.GetType().Name}'");

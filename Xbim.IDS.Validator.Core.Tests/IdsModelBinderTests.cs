@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xbim.Common;
-using Xbim.IDS.Validator.Core.Helpers;
+using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
