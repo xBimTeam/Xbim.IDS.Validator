@@ -42,8 +42,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [Theory]
         public void EntityTestFailures(string idsFile)
         {
-            List<IdsValidationResult> results = VerifyIdsFile(idsFile);
-            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().NotBeEmpty();
+            var outcome = VerifyIdsFileNew(idsFile);
+
+            outcome.Status.Should().Be(ValidationStatus.Failed);
         }
 
         [InlineData(@"TestCases/attribute/pass-a_required_facet_checks_all_parameters_as_normal.ids")]
@@ -87,9 +88,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [Theory]
         public void EntityTestPass(string idsFile)
         {
-            List<IdsValidationResult> results = VerifyIdsFile(idsFile);
-            results.Should().NotBeEmpty("Expect at least one result");
-            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().BeEmpty();
+            var outcome = VerifyIdsFileNew(idsFile);
+
+            outcome.Status.Should().Be(ValidationStatus.Success);
         }
 
         [InlineData(@"TestCases/attribute/pass-an_optional_facet_always_passes_regardless_of_outcome_1_2.ids")]
@@ -102,10 +103,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [Theory(Skip = "To fix")]
         public void ToFix(string idsFile)
         {
-            List<IdsValidationResult> results = VerifyIdsFile(idsFile);
-            results.Should().NotBeEmpty("Expect at least one result");
-            results.Where((IdsValidationResult r) => r.Successful.Any()).Should().NotBeEmpty();
-            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().BeEmpty();
+            var outcome = VerifyIdsFileNew(idsFile);
+
+            outcome.Status.Should().Be(ValidationStatus.Success);
 
         }
     }

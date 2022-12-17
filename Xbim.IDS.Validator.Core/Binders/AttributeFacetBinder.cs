@@ -123,8 +123,8 @@ namespace Xbim.IDS.Validator.Core.Binders
                 }
                 if (af.AttributeValue != null)
                 {
-                    attrvalue = ApplyWorkarounds(attrvalue);
-                    if (af.AttributeValue.IsSatisfiedBy(attrvalue, logger))
+                    attrvalue = ApplyWorkarounds(attrvalue, af.AttributeValue);
+                    if (IsTypeAppropriateForConstraint(af.AttributeValue, attrvalue) && af.AttributeValue.IsSatisfiedBy(attrvalue, logger))
                         result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.AttributeValue!, attrvalue, "Was populated", item));
                     else
                         result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No attribute value matched", item));
@@ -132,7 +132,6 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             }
         }
-
 
         private IDictionary<string,object> GetAttributes(IPersistEntity entity, AttributeFacet facet)
         {

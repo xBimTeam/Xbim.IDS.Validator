@@ -31,9 +31,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         public void EntityTestPass(string idsFile, bool specialCase = false)
         {
 
-            List<IdsValidationResult> results = VerifyIdsFile(idsFile, specialCase);
-            results.Should().NotBeEmpty("Expect at least one result");
-            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().BeEmpty();
+            var outcome = VerifyIdsFileNew(idsFile, specialCase);
+
+            outcome.Status.Should().Be(ValidationStatus.Success);
         }
 
         [InlineData("TestCases/classification/fail-a_classification_facet_with_no_data_matches_any_classification_1_2.ids")]
@@ -46,8 +46,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [Theory]
         public void EntityTestFailures(string idsFile)
         {
-            List<IdsValidationResult> results = VerifyIdsFile(idsFile);
-            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().NotBeEmpty();
+            var outcome = VerifyIdsFileNew(idsFile);
+
+            outcome.Status.Should().Be(ValidationStatus.Failed);
         }
     }
 }

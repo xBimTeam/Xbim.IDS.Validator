@@ -40,7 +40,7 @@ namespace Xbim.IDS.Validator.Core.Tests
                 logger.LogInformation("opening '{group}'", group.Name);
                 foreach(var spec in group.Specifications)
                 {
-                    logger.LogInformation(" -- Spec {spec} : versions {ifcVersions}", spec.Name, spec.IfcVersion);
+                    logger.LogInformation(" -- Spec '{spec}' : versions {ifcVersions}", spec.Name, spec.IfcVersion);
                     var applicableIfc = spec.Applicability.Facets.OfType<IfcTypeFacet>().FirstOrDefault();
                     logger.LogInformation("    Applicable to : {entity} with PredefinedType {predefined}", applicableIfc.IfcType.SingleValue(), applicableIfc.PredefinedType?.SingleValue());
                     foreach(var applicableFacet in spec.Applicability.Facets)
@@ -61,20 +61,17 @@ namespace Xbim.IDS.Validator.Core.Tests
                         var i = item as IIfcRoot;
                         logger.LogInformation("        * {ID}: {Type} {Name} ", item.EntityLabel, item.GetType().Name, i?.Name);
                         
-                        idx = 1;
-                        foreach (var facet in spec.Requirement.Facets)
+                        var result = modelBinder.ValidateRequirement(item, spec.Requirement, logger);
+                        LogLevel level = LogLevel.Information;
+                        int pad = 0;
+                        if (result.ValidationStatus == ValidationStatus.Inconclusive) { level = LogLevel.Warning; pad = 4; }
+                        if (result.ValidationStatus == ValidationStatus.Failed) { level = LogLevel.Error; pad = 6; }
+                        logger.Log(level, "{pad}          {result}: Checking {short}", "".PadLeft(pad, ' '),  result.ValidationStatus.ToString().ToUpperInvariant(), spec.Requirement.Short());
+                        foreach(var message in result.Messages)
                         {
-                            var result = modelBinder.ValidateRequirement(item, spec.Requirement, facet, logger);
-                            LogLevel level = LogLevel.Information;
-                            int pad = 0;
-                            if (result.ValidationStatus == ValidationStatus.Inconclusive) { level = LogLevel.Warning; pad = 4; }
-                            if (result.ValidationStatus == ValidationStatus.Failed) { level = LogLevel.Error; pad = 6; }
-                            logger.Log(level, "{pad}           [{i}] {result}: Checking {short} : {req}", "".PadLeft(pad, ' '), idx++, result.ValidationStatus.ToString().ToUpperInvariant(), facet.Short(), facet.ToString());
-                            foreach(var message in result.Messages)
-                            {
-                                logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
-                            }
+                            logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
                         }
+                        
                     }
 
                    

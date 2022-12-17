@@ -48,7 +48,7 @@ namespace Xbim.IDS.Validator.Core
            
             var ifcFacet = facets.OfType<IfcTypeFacet>().FirstOrDefault();
             Expression expression;
-            if(ifcFacet == null)
+            if(ifcFacet != null)
             {
                 // If possible start with an IFCType to narrow the selection down
                 expression = BindSelection(ifcQuery.InstancesExpression, ifcFacet);
@@ -75,51 +75,54 @@ namespace Xbim.IDS.Validator.Core
         /// Validate an IFC entity meets its requirements against the defined Constraints
         /// </summary>
         /// <param name="item"></param>
-        /// <param name="facet"></param>
+        /// <param name="requirement"
         /// <param name="logger"></param>
         /// <returns></returns>
-        public IdsValidationResult ValidateRequirement(IPersistEntity item, FacetGroup requirement, IFacet facet, ILogger? logger)
+        public IdsValidationResult ValidateRequirement(IPersistEntity item, FacetGroup requirement, ILogger? logger)
         {
 
             var result = new IdsValidationResult(item, requirement);
-            
-            
 
-            switch (facet)
+
+            foreach (var facet in requirement.Facets)
             {
-                case IfcTypeFacet f:
-                    
-                    
-                    ifcTypeFacetBinder.ValidateEntity(item, requirement, logger, result, f);
-                    break;
-                    
 
-                case IfcPropertyFacet pf:
-                    
-                    psetFacetBinder.ValidateEntity(item, requirement, logger, result, pf);
-                    break;
-                    
-
-                case AttributeFacet af:
-                    
-                    attrFacetBinder.ValidateEntity(item, requirement, logger, result, af);
-                    break;
-
-                case MaterialFacet mf:
-
-                    materialFacetBinder.ValidateEntity(item, requirement, logger, result, mf);
-                    break;
-
-                case IfcClassificationFacet cf:
-
-                    classificationFacetBinder.ValidateEntity(item, requirement, logger, result, cf);
-                    break;
+                switch (facet)
+                {
+                    case IfcTypeFacet f:
 
 
-                default:
-                    logger.LogWarning("Skipping unimplemented validation {type}", facet.GetType().Name);
-                    break;
-                    //throw new NotImplementedException($"Validation of Facet not implemented: '{facet.GetType().Name}' - {facet.Short()}");
+                        ifcTypeFacetBinder.ValidateEntity(item, requirement, logger, result, f);
+                        break;
+
+
+                    case IfcPropertyFacet pf:
+
+                        psetFacetBinder.ValidateEntity(item, requirement, logger, result, pf);
+                        break;
+
+
+                    case AttributeFacet af:
+
+                        attrFacetBinder.ValidateEntity(item, requirement, logger, result, af);
+                        break;
+
+                    case MaterialFacet mf:
+
+                        materialFacetBinder.ValidateEntity(item, requirement, logger, result, mf);
+                        break;
+
+                    case IfcClassificationFacet cf:
+
+                        classificationFacetBinder.ValidateEntity(item, requirement, logger, result, cf);
+                        break;
+
+
+                    default:
+                        logger.LogWarning("Skipping unimplemented validation {type}", facet.GetType().Name);
+                        break;
+                        //throw new NotImplementedException($"Validation of Facet not implemented: '{facet.GetType().Name}' - {facet.Short()}");
+                }
             }
             if(result.Failures.Any())
             {

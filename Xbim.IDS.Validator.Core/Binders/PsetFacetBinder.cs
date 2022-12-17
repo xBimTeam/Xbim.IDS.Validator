@@ -442,8 +442,8 @@ namespace Xbim.IDS.Validator.Core.Binders
         {
             if (pf.PropertyValue != null)
             {
-                value = ApplyWorkarounds(value);
-                if (pf.PropertyValue.IsSatisfiedBy(value, logger))
+                value = ApplyWorkarounds(value, pf.PropertyValue);
+                if (IsTypeAppropriateForConstraint(pf.PropertyValue, value) &&  pf.PropertyValue.IsSatisfiedBy(value, logger))
                 {
                     result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, value, "Value matches", ifcValue));
                     return true;
@@ -458,7 +458,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
 
-        protected void ValidateMeasure(ValidationContext<IfcPropertyFacet> ctx, IdsValidationResult result, IIfcValue propValue, string? expectedMeasure)
+        protected void ValidateMeasure(ValidationContext<IfcPropertyFacet> ctx, IdsValidationResult result, IIfcValue propValue, string expectedMeasure)
         {
             if (propValue is null)
             {

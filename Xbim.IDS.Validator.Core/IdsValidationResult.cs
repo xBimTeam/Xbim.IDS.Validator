@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Diagnostics;
+using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.InformationSpecifications;
 
@@ -8,6 +9,8 @@ namespace Xbim.IDS.Validator.Core
     /// <summary>
     /// Represents the resultof validating a specific entity against an IDS requirement
     /// </summary>
+    /// 
+    [DebuggerDisplay("{ValidationStatus}: {Entity}. {Messages.Count} messages")]
     public class IdsValidationResult
     {
         public IdsValidationResult(IPersistEntity? entity, FacetGroup? requirement)

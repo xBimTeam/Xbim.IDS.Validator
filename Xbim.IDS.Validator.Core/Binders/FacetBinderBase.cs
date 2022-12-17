@@ -197,15 +197,35 @@ namespace Xbim.IDS.Validator.Core.Binders
             return typeof(IIfcRoot);
         }
 
-        protected object? ApplyWorkarounds([MaybeNull] object? value)
+        protected object? ApplyWorkarounds([MaybeNull] object? value, ValueConstraint constraint)
         {
             // Workaround for a bug in XIDS Satisfied test where we don't coerce numeric types correctly
-            if (value is long l)
-                return Convert.ToDouble(l);
+            switch(constraint.BaseType)
+            {
+                case NetTypeName.Integer:
+                    {
+                        if (value is double || value is float)
+                        {
+                            return Convert.ToInt32(value);
+                        }
+                        break;
+                    }
+
+                case NetTypeName.Double:
+                case NetTypeName.Undefined:
+                case NetTypeName.Floating:
+                    {
+                        if (value is long l)
+                            return Convert.ToDouble(l);
 
 
-            if (value is int i)
-                return Convert.ToDouble(i);
+                        if (value is int i)
+                            return Convert.ToDouble(i);
+                        break;
+                    }
+
+            }
+            
 
             return value;
         }
@@ -309,6 +329,16 @@ namespace Xbim.IDS.Validator.Core.Binders
             if (value is string str && string.IsNullOrEmpty(str)) return false;
             if (value is IList list && list.Count == 0) return false;
 
+            return true;
+        }
+
+        // We should nto attempt pattern matches on non strings
+        protected static bool IsTypeAppropriateForConstraint(ValueConstraint attributeValue, object? attrvalue)
+        {
+            if (attributeValue.AcceptedValues.Any(v => v is PatternConstraint))
+            {
+                return (attrvalue is string);
+            }
             return true;
         }
 

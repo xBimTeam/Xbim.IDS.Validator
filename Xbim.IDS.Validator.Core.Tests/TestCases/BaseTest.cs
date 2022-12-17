@@ -36,7 +36,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             return logger;
         }
 
-        protected List<IdsValidationResult> VerifyIdsFile(string idsFile, bool spotfix = false)
+        
+
+        protected ValidationOutcome VerifyIdsFileNew(string idsFile, bool spotfix = false)
         {
             string ifcFile = Path.ChangeExtension(idsFile, "ifc");
             IfcStore model = IfcStore.Open(ifcFile);
@@ -48,7 +50,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                 var rogue = model.Instances[4];
                 if (rogue is IIfcWall w && w.GlobalId == "3Agm079vPIYBL4JExVrhD5")
                 {
-                    using(var tran = model.BeginTransaction("Patch"))
+                    using (var tran = model.BeginTransaction("Patch"))
                     {
                         model.Delete(rogue);
                         tran.Commit();
@@ -60,27 +62,11 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                     logger.LogWarning("Spotfix failed. Check if this code can be removed");
                 }
             }
-            Xids ids = Xids.LoadBuildingSmartIDS(idsFile, logger);
             IdsModelBinder modelBinder = new IdsModelBinder(model);
-            List<IdsValidationResult> results = new List<IdsValidationResult>();
-            foreach (Specification spec in ids.AllSpecifications())
-            {
-                logger.LogInformation("{specName}", spec.Name);
-                IEnumerable<IPersistEntity> applicable = modelBinder.SelectApplicableEntities(spec);
-                if(spec.Requirement?.Facets == null)
-                {
-                    logger.LogWarning("Failed to find Requirements {specName}", spec.Name);
-                    continue;
-                }
-                foreach (IFacet facet in spec.Requirement?.Facets)
-                {
-                    foreach (IPersistEntity entity in applicable)
-                    {
-                        IdsValidationResult result = modelBinder.ValidateRequirement(entity, spec.Requirement, facet, logger);
-                        results.Add(result);
-                    }
-                }
-            }
+            var validator = new IdsModelValidator(modelBinder);
+            var outcome = validator.ValidateAgainstIds(idsFile, logger);
+
+            var results = outcome.ExecutedRequirements.SelectMany(e => e.ApplicableResults);
             foreach (IdsValidationResult res in results)
             {
                 LogLevel logLevel = LogLevel.Information;
@@ -102,7 +88,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                     logger.LogError("  {error}", fail);
                 }
             }
-            return results;
+            return outcome;
         }
     }
 }

@@ -3,6 +3,7 @@ using Xbim.Common;
 using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
+using Xbim.InformationSpecifications.Cardinality;
 
 namespace Xbim.IDS.Validator.Core
 {
@@ -40,12 +41,12 @@ namespace Xbim.IDS.Validator.Core
                     var requirementResult = new ValidationRequirement(spec);
                     outcome.ExecutedRequirements.Add(requirementResult);
 
-                    logger.LogInformation(" -- Spec {spec} : versions {ifcVersions}", spec.Name, spec.IfcVersion);
+                    logger.LogInformation(" -- {cardinality} Spec '{spec}' : versions {ifcVersions}", spec.Cardinality.Description, spec.Name, spec.IfcVersion);
                     var applicableIfc = spec.Applicability.Facets.OfType<IfcTypeFacet>().FirstOrDefault();
-                    if(applicableIfc == null) 
+                    if (applicableIfc == null)
                     {
                         logger.LogWarning("Spec {spec} has no Applicability facets", spec.Name);
-                        continue; 
+                        continue;
                     }
 
                     logger.LogInformation("    Applicable to : {entity} with PredefinedType {predefined}", applicableIfc.IfcType.SingleValue(), applicableIfc.PredefinedType?.SingleValue());
@@ -53,8 +54,8 @@ namespace Xbim.IDS.Validator.Core
                     {
                         logger.LogDebug("       - {facetType}: where {description} ", applicableFacet.GetType().Name, applicableFacet.Short());
                     }
-
-                    logger.LogInformation("    Requirements {reqCount}: {expectation}", spec.Requirement?.Facets.Count, spec.Requirement?.RequirementOptions?.FirstOrDefault().ToString() ?? "");
+                    var facetReqs = string.Join(',', spec.Requirement?.RequirementOptions?.Select(r => r.ToString() != null ? r.ToString() : "") ?? new[] { "" });
+                    logger.LogInformation("    Requirements {reqCount}: {expectation}", spec.Requirement?.Facets.Count, facetReqs);
                     int idx = 1;
                     if (spec.Requirement?.Facets == null)
                     {
@@ -64,39 +65,31 @@ namespace Xbim.IDS.Validator.Core
 
                     foreach (var reqFacet in spec.Requirement.Facets)
                     {
-                        logger.LogInformation("       [{i}] {facetType}: check {description} ", idx++, reqFacet.GetType().Name, reqFacet.Short());
+                        logger.LogInformation("       [r{i}] {facetType}: check {description} ", idx++, reqFacet.GetType().Name, reqFacet.Short());
                     }
                     IEnumerable<IPersistEntity> items = ModelBinder.SelectApplicableEntities(spec);
                     logger.LogInformation("          Checking {count} applicable items", items.Count());
                     foreach (var item in items)
                     {
                         var i = item as IIfcRoot;
-                        logger.LogInformation("        * {ID}: {Type} {Name} ", item.EntityLabel, item.GetType().Name, i?.Name);
+                        logger.LogInformation("          * #{ID}: {Type} {Name} ", item.EntityLabel, item.GetType().Name, i?.Name);
 
-                        idx = 1;
-                        foreach (var facet in spec.Requirement.Facets)
+               
+                        var result = ModelBinder.ValidateRequirement(item, spec.Requirement, logger);
+                        LogLevel level = LogLevel.Information;
+                        int pad = 0;
+                        if (result.ValidationStatus == ValidationStatus.Inconclusive) { level = LogLevel.Warning; pad = 4; }
+                        if (result.ValidationStatus == ValidationStatus.Failed) { level = LogLevel.Error; pad = 6; }
+                        logger.Log(level, "{pad}           {result}: Checking {short}", "".PadLeft(pad, ' '),  result.ValidationStatus.ToString().ToUpperInvariant(), spec.Requirement.Short());
+                        foreach (var message in result.Messages)
                         {
-                            var result = ModelBinder.ValidateRequirement(item, spec.Requirement, facet, logger);
-                            LogLevel level = LogLevel.Information;
-                            int pad = 0;
-                            if (result.ValidationStatus == ValidationStatus.Inconclusive) { level = LogLevel.Warning; pad = 4; }
-                            if (result.ValidationStatus == ValidationStatus.Failed) { level = LogLevel.Error; pad = 6; }
-                            logger.Log(level, "{pad}           [{i}] {result}: Checking {short} : {req}", "".PadLeft(pad, ' '), idx++, result.ValidationStatus.ToString().ToUpperInvariant(), facet.Short(), facet.ToString());
-                            foreach (var message in result.Messages)
-                            {
-                                logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
-                            }
-                            requirementResult.ApplicableResults.Add(result);
+                            logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
                         }
+                        requirementResult.ApplicableResults.Add(result);
+                        
                     }
-                    if(requirementResult.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Failed) )
-                    {
-                        requirementResult.Status = ValidationStatus.Failed;
-                    }
-                    else if (requirementResult.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Success))
-                    {
-                        requirementResult.Status = ValidationStatus.Success;
-                    }
+
+                    SetResults(spec, requirementResult);
                     // else inconclusive
 
 
@@ -114,6 +107,83 @@ namespace Xbim.IDS.Validator.Core
             }
             // TODO: Consider Inconclusive
             return outcome;
+        }
+
+        private static void SetResults(Specification specification, ValidationRequirement validation)
+        {
+            // TODO: Check this logic
+            if (specification.Cardinality is SimpleCardinality simpleCard)
+            {
+                if (simpleCard.ExpectsRequirements) // Required or Optional
+                {
+                    if(validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Failed))
+                    {
+                        validation.Status = ValidationStatus.Failed;
+                    }
+                    else
+                    {
+                        if (simpleCard.IsModelConstraint) // Definitely required
+                        {
+                            validation.Status = validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Success) 
+                                ? ValidationStatus.Success
+                                : ValidationStatus.Failed;
+                        }
+                        else
+                        {
+                            // Optional
+                            validation.Status = ValidationStatus.Success;
+                        }
+                    }
+                    
+                }
+                if (simpleCard.NoMatchingEntities)  // Prohibited
+                {
+                    if (validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Success))
+                    {
+                        validation.Status = ValidationStatus.Failed;
+                    }
+                    else
+                    {
+                        validation.Status = ValidationStatus.Success;
+                    }
+                }
+            }
+            else if (specification.Cardinality is MinMaxCardinality cardinality)
+            {
+                if (cardinality.ExpectsRequirements)
+                {
+                    if (cardinality.IsModelConstraint)
+                    {
+                        var successes = validation.ApplicableResults.Count(r => r.ValidationStatus == ValidationStatus.Success);
+                        // If None have failed and we have the number expected successful is within bounds of min-max we succeed
+                        validation.Status = cardinality.IsSatisfiedBy(successes) &&
+                            !validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Failed)
+                            ? ValidationStatus.Success 
+                            : ValidationStatus.Failed;
+                       
+                    }
+                    else
+                    {
+                        validation.Status = ValidationStatus.Success;
+                    }
+                }
+                if (cardinality.NoMatchingEntities)
+                {
+                    if (cardinality.IsModelConstraint)
+                    {
+                        var failures = validation.ApplicableResults.Count(r => r.ValidationStatus == ValidationStatus.Failed);
+                        // If None have suceeded and we have the number expected failed is within bounds of min-max we succeed
+                        validation.Status = (cardinality.MinOccurs <= failures && cardinality.MaxOccurs >= failures) &&
+                            !validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Success)
+                            ? ValidationStatus.Success
+                            : ValidationStatus.Failed;
+                    }
+                    else
+                    {
+                        validation.Status = ValidationStatus.Success;
+                    }
+                }
+            }
         }
     }
 

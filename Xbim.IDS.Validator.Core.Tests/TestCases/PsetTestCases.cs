@@ -62,10 +62,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [Theory]
         public void EntityTestPass(string idsFile)
         {
-            List<IdsValidationResult> results = VerifyIdsFile(idsFile);
-            results.Should().NotBeEmpty("Expect at least one result");
-            results.Where((IdsValidationResult r) => r.Successful.Any()).Should().NotBeEmpty();
-            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().BeEmpty();
+            var outcome = VerifyIdsFileNew(idsFile);
+
+            outcome.Status.Should().Be(ValidationStatus.Success);
         }
 
         [InlineData(@"TestCases/property/pass-predefined_properties_are_supported_but_discouraged_1_2.ids")]
@@ -81,10 +80,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [Theory(Skip ="Todo")]
         public void PassesToImplement(string idsFile)
         {
-            List<IdsValidationResult> results = VerifyIdsFile(idsFile);
-            results.Should().NotBeEmpty("Expect at least one result");
-            results.Where((IdsValidationResult r) => r.Successful.Any()).Should().NotBeEmpty();
-            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().BeEmpty();
+            var outcome = VerifyIdsFileNew(idsFile);
+
+            outcome.Status.Should().Be(ValidationStatus.Success);
         }
 
 
@@ -125,16 +123,18 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [Theory]
         public void EntityTestFailures(string idsFile)
         {
-            List<IdsValidationResult> results = VerifyIdsFile(idsFile);
-            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().NotBeEmpty();
+            var outcome = VerifyIdsFileNew(idsFile);
+
+            outcome.Status.Should().Be(ValidationStatus.Failed);
         }
 
         [InlineData(@"TestCases/property/fail-predefined_properties_are_supported_but_discouraged_2_2.ids")]
         [Theory(Skip="Todo")]
         public void FailuresToImplement(string idsFile)
         {
-            List<IdsValidationResult> results = VerifyIdsFile(idsFile);
-            results.Where((IdsValidationResult r) => r.Failures.Any()).Should().NotBeEmpty();
+            var outcome = VerifyIdsFileNew(idsFile);
+
+            outcome.Status.Should().Be(ValidationStatus.Success);
         }
     }
 }
