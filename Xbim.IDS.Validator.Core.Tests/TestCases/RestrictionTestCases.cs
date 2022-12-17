@@ -24,7 +24,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [Theory]
         public void EntityTestPass(string idsFile)
         {
-            var outcome = VerifyIdsFileNew(idsFile);
+            var outcome = VerifyIdsFile(idsFile);
 
             outcome.Status.Should().Be(ValidationStatus.Success);
         }
@@ -45,7 +45,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [Theory]
         public void EntityTestFailures(string idsFile)
         {
-            var outcome = VerifyIdsFileNew(idsFile);
+            var outcome = VerifyIdsFile(idsFile);
 
             outcome.Status.Should().Be(ValidationStatus.Failed);
         }

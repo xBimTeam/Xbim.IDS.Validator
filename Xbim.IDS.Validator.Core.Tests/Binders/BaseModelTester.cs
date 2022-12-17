@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xbim.Common;
+using Xbim.Common.Step21;
 using Xbim.Ifc;
 using Xunit.Abstractions;
 
@@ -8,28 +9,52 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
     public abstract class BaseModelTester
     {
-        protected static IModel model;
+        //protected static IModel model;
+
+        private static Lazy<IModel> lazyIfc4Model = new Lazy<IModel>(()=> BuildIfc4Model());
+        private static Lazy<IModel> lazyIfc2x3Model = new Lazy<IModel>(() => BuildIfc2x3Model());
+        public IModel Model
+        {
+            get
+            {
+                if (_schema == XbimSchemaVersion.Ifc2X3)
+                {
+                    return lazyIfc2x3Model.Value;
+                }
+                else
+                {
+                    return lazyIfc4Model.Value;
+                }
+            }
+        }
+            
         protected IfcQuery query;
 
-        private readonly ITestOutputHelper output; 
+        private readonly ITestOutputHelper output;
+        private XbimSchemaVersion _schema;
         protected readonly ILogger logger;
 
+        //Lazy<>
 
-        public BaseModelTester(ITestOutputHelper output)
+        public BaseModelTester(ITestOutputHelper output, XbimSchemaVersion schema = XbimSchemaVersion.Ifc4)
         {
             this.output = output;
+            _schema = schema;
             logger = GetXunitLogger();
             query = new IfcQuery();
         }
 
-        static BaseModelTester()
-        {
-            model = BuildModel();
-        }
+       
 
-        private static IModel BuildModel()
+        private static IModel BuildIfc4Model()
         {
             var filename = @"TestModels\SampleHouse4.ifc";
+            return IfcStore.Open(filename);
+        }
+
+        private static IModel BuildIfc2x3Model()
+        {
+            var filename = @"TestModels\Dormitory-ARC.ifczip";
             return IfcStore.Open(filename);
         }
 
@@ -52,5 +77,6 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             Range,
             Structure
         }
+        
     }
 }

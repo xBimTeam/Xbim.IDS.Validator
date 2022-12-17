@@ -39,6 +39,9 @@
      <None Update="TestModels\BasicRequirements.ids">
        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
      </None>
+     <None Update="TestModels\Dormitory-ARC.ifczip">
+       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+     </None>
     <None Update="TestModels\Example.ids">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -55,6 +58,7 @@
 
   <ItemGroup>
     <Folder Include="TestCases\entity\" />
+    <Folder Include="TestCases\xbim\" />
   </ItemGroup>
 
 </Project>

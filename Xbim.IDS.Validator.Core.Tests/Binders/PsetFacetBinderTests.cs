@@ -12,7 +12,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
     {
         public PsetFacetBinderTests(ITestOutputHelper output) : base(output)
         {
-            Binder = new PsetFacetBinder(model);
+            Binder = new PsetFacetBinder(Model);
         }
 
         /// <summary>
@@ -93,14 +93,14 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
                 }
             }
-            var binder = new PsetFacetBinder(model);
+            var binder = new PsetFacetBinder(Model);
 
             // Act
             var expression = Binder.BindSelectionExpression(query.InstancesExpression, propFacet);
 
             // Assert
 
-            var result = query.Execute(expression, model);
+            var result = query.Execute(expression, Model);
             result.Should().HaveCount(expectedCount);
 
         }

@@ -10,7 +10,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
     {
         public AttributeFacetBinderTests(ITestOutputHelper output) : base(output)
         {
-            Binder = new AttributeFacetBinder(model);
+            Binder = new AttributeFacetBinder(Model);
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             // Assert
 
-            var result = query.Execute(expression, model);
+            var result = query.Execute(expression, Model);
             result.Should().HaveCount(expectedCount);
 
         }
@@ -61,7 +61,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             // Assert
 
-            var result = query.Execute(expression, model);
+            var result = query.Execute(expression, Model);
             result.Should().HaveCount(expectedCount);
 
         }
@@ -84,7 +84,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 AttributeName = attributeFieldName,
                 AttributeValue = new ValueConstraint("not relevant")
             };
-            var ifcBinder = new IfcTypeFacetBinder(model);
+            var ifcBinder = new IfcTypeFacetBinder(Model);
 
 
             var expression = ifcBinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);

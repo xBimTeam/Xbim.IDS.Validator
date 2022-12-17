@@ -10,7 +10,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
     {
         public IfcClassificationFacetBinderTests(ITestOutputHelper output) : base(output)
         {
-            Binder = new IfcClassificationFacetBinder(model);
+            Binder = new IfcClassificationFacetBinder(Model);
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             // Assert
 
-            var result = query.Execute(expression, model);
+            var result = query.Execute(expression, Model);
             result.Should().HaveCount(expectedCount);
 
         }
@@ -67,7 +67,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [Theory]
         public void CanGetClassificationsReferencesForEntity(string system, string identifier)
         {
-            var instance = model.Instances[59964];
+            var instance = Model.Instances[59964];
             IfcClassificationFacet facet = new IfcClassificationFacet
             {
                 IncludeSubClasses = false
@@ -100,7 +100,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [Fact]
         public void CanGetClassificationsForEntity()
         {
-            var project = model.Instances[103];
+            var project = Model.Instances[103];
             IfcClassificationFacet facet = new IfcClassificationFacet
             {
                 IncludeSubClasses = false

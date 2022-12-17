@@ -39,11 +39,15 @@ namespace Xbim.IDS.Validator.Core.Binders
             {
                 throw new InvalidOperationException("IfcTypeFacet is not valid");
             }
-
-
+            // So we can do case insensitive comparisons
+            ifcFacet.IfcType.BaseType = NetTypeName.String;
 
             var expressTypes = GetExpressTypes(ifcFacet);
-            ValidateExpressTypes(expressTypes);
+            if(!ExpressTypesAreValid(expressTypes))
+            {
+                var types = ifcFacet.IfcType.ToString();
+                throw new InvalidOperationException($"Invalid IFC Type '{types}' for {Model.SchemaVersion}" );
+            }
 
             var expression = baseExpression;
             if (expression.Type.IsInterface && !expression.Type.IsAssignableTo(typeof(IEntityCollection)))
@@ -123,32 +127,22 @@ namespace Xbim.IDS.Validator.Core.Binders
                 yield break;
             }
 
-            // TODO: Use IsSatisifedBy approach
-            foreach (var ifcTypeConstraint in ifcFacet!.IfcType!.AcceptedValues ?? default)
+            if(ifcFacet.IfcType.IsSingleExact(out string ifcTypeName))
             {
-                switch (ifcTypeConstraint)
+                // Optimise for the typical scenario
+                yield return Model.Metadata.ExpressType(ifcTypeName.ToUpperInvariant());
+            }
+            else
+            {
+                // It's an enum, Regex, Range or Structure
+                foreach (var type in Model?.Metadata?.Types())
                 {
-                    case ExactConstraint e:
-                        string ifcTypeName = e.Value;
-                        yield return Model.Metadata.ExpressType(ifcTypeName.ToUpperInvariant());
-                        break;
-                    case PatternConstraint p:
-                        foreach (var type in Model?.Metadata?.Types())
-                        {
-                            if (p.IsSatisfiedBy(type.Name, ifcFacet.IfcType, ignoreCase: true))
-                            {
-                                yield return type;
-                            }
-                        }
-                        break;
-                    case RangeConstraint r:
-                    case StructureConstraint s:
-
-                    default:
-                        throw new NotImplementedException(ifcTypeConstraint.GetType().Name);
+                    if (ifcFacet?.IfcType?.IsSatisfiedBy(type.Name, true) == true)
+                    {
+                        yield return type;
+                    }
                 }
             }
-
         }
 
         private Expression BindPredefinedTypeFilter(IfcTypeFacet ifcFacet, Expression expression, ExpressType expressType)

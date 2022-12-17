@@ -9,7 +9,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
     {
         public MaterialBinderTests(ITestOutputHelper output) : base(output)
         {
-            Binder = new MaterialFacetBinder(model);
+            Binder = new MaterialFacetBinder(Model);
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             // Assert
 
-            var result = query.Execute(expression, model);
+            var result = query.Execute(expression, Model);
             result.Should().HaveCount(expectedCount);
 
         }

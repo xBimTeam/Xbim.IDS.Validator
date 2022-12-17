@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Xbim.Common.Step21;
 using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.TestCases
@@ -24,32 +25,38 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/entity/fail-user_defined_types_are_checked_case_sensitively.ids")]
 
         [Theory]
-        public void EntityTestFailures(string idsFile)
+        public void EntityTestFailures(string idsFile, params XbimSchemaVersion[] schemas)
         {
-            var outcome = VerifyIdsFileNew(idsFile);
+            foreach (var schema in GetSchemas(schemas))
+            {
+                var outcome = VerifyIdsFile(idsFile, schemaVersion: schema);
 
-            outcome.Status.Should().Be(ValidationStatus.Failed);
+                outcome.Status.Should().Be(ValidationStatus.Failed, schema.ToString());
+            }
         }
 
         [InlineData("TestCases/entity/pass-a_matching_entity_should_pass.ids")]
-        [InlineData("TestCases/entity/pass-a_matching_predefined_type_should_pass.ids")]
+        [InlineData("TestCases/entity/pass-a_matching_predefined_type_should_pass.ids", XbimSchemaVersion.Ifc4)]
         [InlineData("TestCases/entity/pass-a_predefined_type_may_specify_a_user_defined_element_type.ids")]
-        [InlineData("TestCases/entity/pass-a_predefined_type_may_specify_a_user_defined_object_type.ids")]
-        [InlineData("TestCases/entity/pass-a_predefined_type_may_specify_a_user_defined_process_type.ids")]
+        [InlineData("TestCases/entity/pass-a_predefined_type_may_specify_a_user_defined_object_type.ids", XbimSchemaVersion.Ifc4)]
+        [InlineData("TestCases/entity/pass-a_predefined_type_may_specify_a_user_defined_process_type.ids", XbimSchemaVersion.Ifc4)]
         [InlineData("TestCases/entity/pass-an_matching_entity_should_pass_regardless_of_predefined_type.ids")]
         [InlineData("TestCases/entity/pass-entities_can_be_specified_as_a_xsd_regex_pattern_2_2.ids")]
         [InlineData("TestCases/entity/pass-entities_can_be_specified_as_an_enumeration_1_3.ids")]
         [InlineData("TestCases/entity/pass-entities_can_be_specified_as_an_enumeration_2_3.ids")]
-        [InlineData("TestCases/entity/pass-inherited_predefined_types_should_pass.ids")]
-        [InlineData("TestCases/entity/pass-overridden_predefined_types_should_pass.ids")]
-        [InlineData("TestCases/entity/pass-restrictions_an_be_specified_for_the_predefined_type_1_3.ids")]
-        [InlineData("TestCases/entity/pass-restrictions_an_be_specified_for_the_predefined_type_2_3.ids")]
+        [InlineData("TestCases/entity/pass-inherited_predefined_types_should_pass.ids", XbimSchemaVersion.Ifc4)]
+        [InlineData("TestCases/entity/pass-overridden_predefined_types_should_pass.ids", XbimSchemaVersion.Ifc4)]
+        [InlineData("TestCases/entity/pass-restrictions_an_be_specified_for_the_predefined_type_1_3.ids", XbimSchemaVersion.Ifc4)]
+        [InlineData("TestCases/entity/pass-restrictions_an_be_specified_for_the_predefined_type_2_3.ids", XbimSchemaVersion.Ifc4)]
         [Theory]
-        public void EntityTestPass(string idsFile)
+        public void EntityTestPass(string idsFile, params XbimSchemaVersion[] schemas)
         {
-            var outcome = VerifyIdsFileNew(idsFile);
+            foreach (var schema in GetSchemas(schemas))
+            {
+                var outcome = VerifyIdsFile(idsFile, schemaVersion:schema);
 
-            outcome.Status.Should().Be(ValidationStatus.Success);
+                outcome.Status.Should().Be(ValidationStatus.Success, schema.ToString());
+            }
         }
 
         

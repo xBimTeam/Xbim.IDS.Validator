@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
 using Xbim.IDS.Validator.Core.Helpers;
+using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Extensions
@@ -57,6 +58,13 @@ namespace Xbim.IDS.Validator.Core.Extensions
             {
                 return constraint.IsSatisfiedBy(value);
             }
+
+            // Convert 2x3 Values to Ifc4 equivqlents. To minimise code
+            if(value is Ifc2x3.MeasureResource.IfcValue ifc2x3Value)
+            {
+                value = IfcValueHelper.ToIfc4(ifc2x3Value);
+            }
+            
             var valueType = value.GetType();
             var isNullWrapped = TypeHelper.IsNullable(valueType);
             var underlyingType = isNullWrapped ? Nullable.GetUnderlyingType(valueType) : valueType;
@@ -70,24 +78,45 @@ namespace Xbim.IDS.Validator.Core.Extensions
                 return constraint.IsSatisfiedBy(value?.ToString(), true);
             }
 
-            // TODO: handle IFC2x3
             // Wrap simple navigation objects to use built-in equality operators
+
             else if (value is Ifc4.MeasureResource.IfcLabel label)
             {
                 return constraint.IsSatisfiedBy(label.Value, true);
-            }
-            else if (value is Ifc4.MeasureResource.IfcText text)
-            {
-                return constraint.IsSatisfiedBy(text.Value, true);
-            }
-            else if (value is Ifc4.UtilityResource.IfcGloballyUniqueId guid)
-            {
-                return constraint.IsSatisfiedBy(guid.Value, true);
             }
             else if (value is Ifc4.MeasureResource.IfcIdentifier id)
             {
                 return constraint.IsSatisfiedBy(id.Value, true);
             }
+            else if (value is Ifc4.MeasureResource.IfcText text)
+            {
+                return constraint.IsSatisfiedBy(text.Value, true);
+            }
+            else if (value is Ifc4.MeasureResource.IfcBoolean boolean)
+            {
+                return constraint.IsSatisfiedBy(boolean.Value, true);
+            }
+            else if (value is Ifc4.MeasureResource.IfcInteger integer)
+            {
+                return constraint.IsSatisfiedBy(integer.Value, true);
+            }
+            else if (value is Ifc4.MeasureResource.IfcReal real)
+            {
+                return constraint.IsSatisfiedBy(real.Value, true);
+            }
+
+            else if (value is Ifc4.UtilityResource.IfcGloballyUniqueId guid)
+            {
+                return constraint.IsSatisfiedBy(guid.Value, true);
+            }
+            else if (value is Ifc2x3.UtilityResource.IfcGloballyUniqueId guid2x3)
+            {
+                return constraint.IsSatisfiedBy(guid2x3.Value, true);
+            }
+
+            
+
+            // Measures
             else if (value is Ifc4.MeasureResource.IfcCountMeasure cnt)
             {
                 return constraint.IsSatisfiedBy(cnt.Value, true);
@@ -112,14 +141,15 @@ namespace Xbim.IDS.Validator.Core.Extensions
             {
                 return constraint.IsSatisfiedBy(interval.Value, true);
             }
-            
-            //else if (underlyingType == typeof(string))
-            //{
-            //    queryValue = Expression.Constant(ifcAttributeValue);
-            //}
-            
+
+            else if (value is bool nativebool)
+            {
+                return constraint.IsSatisfiedBy(nativebool);
+            }
+
             else
             {
+                // Throw to catch omissions. 
                 throw new NotImplementedException($"Filtering on Ifc type {value?.GetType()?.Name} not implemented");
             }
 

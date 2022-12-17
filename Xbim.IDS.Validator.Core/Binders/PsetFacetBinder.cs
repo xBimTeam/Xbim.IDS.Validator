@@ -89,7 +89,10 @@ namespace Xbim.IDS.Validator.Core.Binders
             // Get underlying collection type
             var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
             var expressType = Model.Metadata.ExpressType(collectionType);
-            ValidateExpressType(expressType);
+            if(!ExpressTypeIsValid(expressType))
+            {
+                throw new InvalidOperationException($"Invalid IFC Type '{expression.Type.Name}'");
+            }
 
             expression = BindPropertyFilter(expression, facet);
             return expression;
@@ -467,7 +470,18 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             if (string.IsNullOrEmpty(expectedMeasure)) return;
 
-            var measure = Model.Metadata.ExpressType(propValue).Name;
+            string measure;
+            if(IsIfc2x3Model() && propValue is Ifc4.MeasureResource.IfcValue ifc4Value)
+            {
+                // In 2x3 models we need to convert over to the 2x3 Value
+                var ifc2x3Value = IfcValueHelper.ToIfc3(ifc4Value);
+                measure = Model.Metadata.ExpressType(ifc2x3Value).Name;
+            }
+            else
+            {
+                measure = Model.Metadata.ExpressType(propValue).Name;
+            }
+
             if (measure.Equals(expectedMeasure, StringComparison.InvariantCultureIgnoreCase))
             {
                 result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.Measure!, measure, "Measure matches", propValue));

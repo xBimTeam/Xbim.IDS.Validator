@@ -54,7 +54,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 if (expression.Type.IsInterface && expression.Type.IsAssignableTo(typeof(IEntityCollection)))
                 {
                     string[] rootTypes;
-                    if (Model.SchemaVersion == Common.Step21.XbimSchemaVersion.Ifc2X3)
+                    if (IsIfc2x3Model())
                     {
                         rootTypes = SchemaInfo.SchemaIfc2x3.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
                     }
@@ -69,7 +69,10 @@ namespace Xbim.IDS.Validator.Core.Binders
                 }
                 var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
                 var expressType = Model.Metadata.ExpressType(collectionType);
-                ValidateExpressType(expressType, collectionType.Name);
+                if(!ExpressTypeIsValid(expressType, collectionType.Name))
+                {
+                    throw new InvalidOperationException($"Invalid IFC Type '{expression.Type.Name}'");
+                }
 
                 expression = BindAttributeSelection(expression, expressType, (string)attributeName,
                     attrFacet?.AttributeValue);
@@ -104,6 +107,10 @@ namespace Xbim.IDS.Validator.Core.Binders
             {
                 var attrName = pair.Key;
                 var attrvalue = pair.Value;
+                if(IsIfc2x3Model() && attrvalue is Xbim.Ifc2x3.MeasureResource.IfcValue ifc2x3Value)
+                {
+                    attrvalue = IfcValueHelper.ToIfc4(ifc2x3Value);
+                }
                 bool isPopulated = IsValueRelevant(attrvalue);
                 // Name meets requirement if it has a value and is Required. Treat unknown logical as no value
                 if (isPopulated)

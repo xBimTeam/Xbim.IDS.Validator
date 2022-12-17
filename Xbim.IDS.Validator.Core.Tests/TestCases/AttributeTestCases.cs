@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using Xbim.Common.Step21;
 using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.TestCases
@@ -22,7 +23,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/attribute/fail-booleans_must_be_specified_as_uppercase_strings_2_3.ids")]
         [InlineData(@"TestCases/attribute/fail-dates_are_treated_as_strings_1_2.ids")]
         [InlineData(@"TestCases/attribute/fail-derived_attributes_cannot_be_checked_and_always_fail.ids")]
-        [InlineData(@"TestCases/attribute/fail-durations_are_treated_as_strings_2_2.ids")]
+        [InlineData(@"TestCases/attribute/fail-durations_are_treated_as_strings_2_2.ids", XbimSchemaVersion.Ifc4)]
         [InlineData(@"TestCases/attribute/fail-floating_point_numbers_are_compared_with_a_1e_6_tolerance_3_4.ids")]
         [InlineData(@"TestCases/attribute/fail-floating_point_numbers_are_compared_with_a_1e_6_tolerance_4_4.ids")]
         [InlineData(@"TestCases/attribute/fail-ids_does_not_handle_string_truncation_such_as_for_identifiers.ids")]
@@ -40,37 +41,42 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
 
         [Theory]
-        public void EntityTestFailures(string idsFile)
+        public void EntityTestFailures(string idsFile, params XbimSchemaVersion[] schemas)
         {
-            var outcome = VerifyIdsFileNew(idsFile);
+            foreach (var schema in GetSchemas(schemas))
+            {
+                var outcome = VerifyIdsFile(idsFile, schemaVersion: schema);
 
-            outcome.Status.Should().Be(ValidationStatus.Failed);
+                outcome.Status.Should().Be(ValidationStatus.Failed, schema.ToString());
+            }
         }
 
         [InlineData(@"TestCases/attribute/pass-a_required_facet_checks_all_parameters_as_normal.ids")]
         // Awaiting Support of Optional Cardinality (min=0, max =1)
         //[InlineData(@"TestCases/attribute/pass-an_optional_facet_always_passes_regardless_of_outcome_1_2.ids")]
         //[InlineData(@"TestCases/attribute/pass-an_optional_facet_always_passes_regardless_of_outcome_2_2.ids")]
-        [InlineData(@"TestCases/attribute/pass-attributes_referencing_an_object_should_pass.ids")]
+        [InlineData(@"TestCases/attribute/pass-attributes_referencing_an_object_should_pass.ids", XbimSchemaVersion.Ifc4)]
         [InlineData(@"TestCases/attribute/pass-attributes_should_check_strings_case_sensitively_1_2.ids")]
-        [InlineData(@"TestCases/attribute/pass-attributes_with_a_boolean_false_should_pass.ids")]
-        [InlineData(@"TestCases/attribute/pass-attributes_with_a_boolean_true_should_pass.ids")]
+        [InlineData(@"TestCases/attribute/pass-attributes_with_a_boolean_false_should_pass.ids", XbimSchemaVersion.Ifc4)]
+        [InlineData(@"TestCases/attribute/pass-attributes_with_a_boolean_true_should_pass.ids", XbimSchemaVersion.Ifc4)]
         [InlineData(@"TestCases/attribute/pass-attributes_with_a_select_referencing_a_primitive_should_pass.ids")]
         [InlineData(@"TestCases/attribute/pass-attributes_with_a_select_referencing_an_object_should_pass.ids")]
         [InlineData(@"TestCases/attribute/pass-attributes_with_a_string_value_should_pass.ids")]
-        [InlineData(@"TestCases/attribute/pass-attributes_with_a_zero_duration_should_pass.ids")]
+        [InlineData(@"TestCases/attribute/pass-attributes_with_a_zero_duration_should_pass.ids", XbimSchemaVersion.Ifc4)]
         [InlineData(@"TestCases/attribute/pass-attributes_with_a_zero_number_have_meaning_and_should_pass.ids")]
-        [InlineData(@"TestCases/attribute/pass-booleans_must_be_specified_as_uppercase_strings_2_3.ids")]
-        [InlineData(@"TestCases/attribute/pass-dates_are_treated_as_strings_1_2.ids")]
-        [InlineData(@"TestCases/attribute/pass-durations_are_treated_as_strings_1_2.ids")]
+        // IfcTask changed in IFC4
+        [InlineData(@"TestCases/attribute/pass-booleans_must_be_specified_as_uppercase_strings_2_3.ids", XbimSchemaVersion.Ifc4)]
+        [InlineData(@"TestCases/attribute/pass-dates_are_treated_as_strings_1_2.ids", XbimSchemaVersion.Ifc4)]
+        [InlineData(@"TestCases/attribute/pass-durations_are_treated_as_strings_1_2.ids", XbimSchemaVersion.Ifc4)]
         // Awaiting Tolerance support
         //[InlineData(@"TestCases/attribute/pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_1_4.ids")]
         //[InlineData(@"TestCases/attribute/pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_2_4.ids")]
         [InlineData(@"TestCases/attribute/pass-globalids_are_treated_as_strings_and_not_expanded.ids")]
         
         // TODO: Fix Long-Int cast issue in XIDS
-        [InlineData(@"TestCases/attribute/pass-integers_follow_the_same_rules_as_numbers.ids")]
-        [InlineData(@"TestCases/attribute/pass-integers_follow_the_same_rules_as_numbers_2_2.ids")]
+        // StairFlight.NumberOfRiser[s] got renamed in IFC4
+        [InlineData(@"TestCases/attribute/pass-integers_follow_the_same_rules_as_numbers.ids", XbimSchemaVersion.Ifc4)]
+        [InlineData(@"TestCases/attribute/pass-integers_follow_the_same_rules_as_numbers_2_2.ids", XbimSchemaVersion.Ifc4)]
         [InlineData(@"TestCases/attribute/pass-name_restrictions_will_match_any_result_1_3.ids")]
         [InlineData(@"TestCases/attribute/pass-name_restrictions_will_match_any_result_2_3.ids")]
         //[InlineData(@"TestCases/attribute/pass-name_restrictions_will_match_any_result_3_3.ids")]
@@ -86,11 +92,14 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/attribute/pass-value_restrictions_may_be_used_1_3.ids")]
         [InlineData(@"TestCases/attribute/pass-value_restrictions_may_be_used_2_3.ids")]
         [Theory]
-        public void EntityTestPass(string idsFile)
+        public void EntityTestPass(string idsFile, params XbimSchemaVersion[] schemas)
         {
-            var outcome = VerifyIdsFileNew(idsFile);
+            foreach (var schema in GetSchemas(schemas))
+            {
+                var outcome = VerifyIdsFile(idsFile, schemaVersion: schema);
 
-            outcome.Status.Should().Be(ValidationStatus.Success);
+                outcome.Status.Should().Be(ValidationStatus.Success, schema.ToString());
+            }
         }
 
         [InlineData(@"TestCases/attribute/pass-an_optional_facet_always_passes_regardless_of_outcome_1_2.ids")]
@@ -103,7 +112,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [Theory(Skip = "To fix")]
         public void ToFix(string idsFile)
         {
-            var outcome = VerifyIdsFileNew(idsFile);
+            var outcome = VerifyIdsFile(idsFile);
 
             outcome.Status.Should().Be(ValidationStatus.Success);
 

@@ -1,4 +1,6 @@
 ﻿using FluentAssertions;
+using Xbim.Common.Step21;
+using Xbim.IO.Xml.BsConf;
 using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.TestCases
@@ -17,7 +19,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/property/pass-a_property_set_to_false_is_still_considered_a_value_and_will_pass_a_name_check.ids")]
         [InlineData(@"TestCases/property/pass-a_property_set_to_true_will_pass_a_name_check.ids")]
         [InlineData(@"TestCases/property/pass-a_required_facet_checks_all_parameters_as_normal.ids")]
-        [InlineData(@"TestCases/property/pass-a_zero_duration_will_pass.ids")]
+        [InlineData(@"TestCases/property/pass-a_zero_duration_will_pass.ids", XbimSchemaVersion.Ifc4)]
         [InlineData(@"TestCases/property/pass-all_matching_properties_must_satisfy_requirements_1_3.ids")]
         [InlineData(@"TestCases/property/pass-all_matching_properties_must_satisfy_requirements_2_3.ids")]
         [InlineData(@"TestCases/property/pass-all_matching_property_sets_must_satisfy_requirements_1_3.ids")]
@@ -36,8 +38,8 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         //[InlineData(@"TestCases/property/pass-any_matching_value_in_an_enumerated_property_will_pass_1_3.ids")]
         //[InlineData(@"TestCases/property/pass-any_matching_value_in_an_enumerated_property_will_pass_2_3.ids")]
         [InlineData(@"TestCases/property/pass-booleans_must_be_specified_as_uppercase_strings_2_3.ids")]
-        [InlineData(@"TestCases/property/pass-dates_are_treated_as_strings_1_2.ids")]
-        [InlineData(@"TestCases/property/pass-durations_are_treated_as_strings_1_2.ids")]
+        [InlineData(@"TestCases/property/pass-dates_are_treated_as_strings_1_2.ids", XbimSchemaVersion.Ifc4)]
+        [InlineData(@"TestCases/property/pass-durations_are_treated_as_strings_1_2.ids", XbimSchemaVersion.Ifc4)]
         // Fix 1e_6 precision
         //[InlineData(@"TestCases/property/pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_1_4.ids")]
         //[InlineData(@"TestCases/property/pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_2_4.ids")]
@@ -60,12 +62,17 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/property/pass-unit_conversions_shall_take_place_to_ids_nominated_standard_units_2_2.ids")]
 
         [Theory]
-        public void EntityTestPass(string idsFile)
+        public void EntityTestPass(string idsFile, params XbimSchemaVersion[] schemas)
         {
-            var outcome = VerifyIdsFileNew(idsFile);
+            foreach(var schema in GetSchemas(schemas))
+            {
+                var outcome = VerifyIdsFile(idsFile, schemaVersion: schema);
 
-            outcome.Status.Should().Be(ValidationStatus.Success);
+                outcome.Status.Should().Be(ValidationStatus.Success, schema.ToString());
+            }
+            
         }
+
 
         [InlineData(@"TestCases/property/pass-predefined_properties_are_supported_but_discouraged_1_2.ids")]
         [InlineData(@"TestCases/property/pass-any_matching_value_in_a_bounded_property_will_pass_1_4.ids")]
@@ -80,7 +87,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [Theory(Skip ="Todo")]
         public void PassesToImplement(string idsFile)
         {
-            var outcome = VerifyIdsFileNew(idsFile);
+            var outcome = VerifyIdsFile(idsFile);
 
             outcome.Status.Should().Be(ValidationStatus.Success);
         }
@@ -121,18 +128,21 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/property/fail-specifying_a_value_performs_a_case_sensitive_match_2_2.ids")]
         [InlineData(@"TestCases/property/fail-unit_conversions_shall_take_place_to_ids_nominated_standard_units_1_2.ids")]
         [Theory]
-        public void EntityTestFailures(string idsFile)
+        public void EntityTestFailures(string idsFile, params XbimSchemaVersion[] schemas)
         {
-            var outcome = VerifyIdsFileNew(idsFile);
+            foreach (var schema in GetSchemas(schemas))
+            {
+                var outcome = VerifyIdsFile(idsFile);
 
-            outcome.Status.Should().Be(ValidationStatus.Failed);
+                outcome.Status.Should().Be(ValidationStatus.Failed, schema.ToString());
+            }
         }
 
         [InlineData(@"TestCases/property/fail-predefined_properties_are_supported_but_discouraged_2_2.ids")]
         [Theory(Skip="Todo")]
         public void FailuresToImplement(string idsFile)
         {
-            var outcome = VerifyIdsFileNew(idsFile);
+            var outcome = VerifyIdsFile(idsFile);
 
             outcome.Status.Should().Be(ValidationStatus.Success);
         }

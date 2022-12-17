@@ -55,21 +55,24 @@ namespace Xbim.IDS.Validator.Core.Binders
         public abstract void ValidateEntity(IPersistEntity item, FacetGroup requirement, ILogger logger, IdsValidationResult result, T facet);
 
 
-        protected static void ValidateExpressTypes(IEnumerable<ExpressType> expressTypes)
+        protected static bool ExpressTypesAreValid(IEnumerable<ExpressType> expressTypes)
         {
+            if(!expressTypes.Any())
+            {
+                throw new InvalidOperationException($"No matching IFC type");
+            }
             foreach (var expressType in expressTypes)
             {
-                ValidateExpressType(expressType);
+                if (!ExpressTypeIsValid(expressType))
+                    return false;
             }
+            return true;
         }
 
-        protected static void ValidateExpressType(ExpressType expressType, string? type = default)
+        protected static bool ExpressTypeIsValid(ExpressType expressType, string? type = default)
         {
             // Exclude invalid schema items (including un-rooted entity types like IfcLabel)
-            if (expressType == null || expressType.Properties.Count == 0)
-            {
-                throw new InvalidOperationException($"Invalid IFC Type '{type ?? expressType?.Name}'");
-            }
+            return !(expressType == null || expressType.Properties.Count == 0);
         }
 
         /// <summary>
@@ -102,7 +105,11 @@ namespace Xbim.IDS.Validator.Core.Binders
         internal Expression BindIfcExpressTypes(Expression expression, string[] rootTypes)
         {
             IEnumerable<ExpressType> expressTypes = GetExpressTypes(rootTypes);
-            ValidateExpressTypes(expressTypes);
+            if(!ExpressTypesAreValid(expressTypes))
+            {
+                var types = string.Join(',', rootTypes);
+                throw new InvalidOperationException($"Invalid IFC Types '{types}'");
+            }
 
             bool doConcat = false;
             foreach (var expressType in expressTypes)
@@ -240,7 +247,14 @@ namespace Xbim.IDS.Validator.Core.Binders
             object result = HandleBoolConventions(value);
             if (result is IIfcMeasureValue)
             {
-                result = HandleUnitConversion(value);
+                if(IsIfc2x3Model())
+                {
+                    result = HandleUnitConversionIfc2x3(value);
+                }
+                else
+                {
+                    result = HandleUnitConversionIfc4(value);
+                }
             }
             if (result is IIfcValue v)
             {
@@ -253,17 +267,19 @@ namespace Xbim.IDS.Validator.Core.Binders
         protected IIfcUnitAssignment GetUnits()
         {
             var project = Model.Instances.OfType<IIfcProject>().First();
+            
 
-            return project.UnitsInContext;
+            return project?.UnitsInContext ?? default;
         }
 
-        protected IIfcValue HandleUnitConversion(IIfcValue value)
+        
+        protected IIfcValue HandleUnitConversionIfc4(IIfcValue value)
         {
             var units = GetUnits() as IfcUnitAssignment;
 
             if (units == null) return value;
 
-            // TODO: handle 2x3
+            
             if (value is IfcCountMeasure c)
                 return c;
             if (value is IfcAreaMeasure area)
@@ -294,6 +310,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 return v;
             }
 
+            // TODO Add remaining measures
             //if (value is IfcMassMeasure w)
             //{
             //    var unit = units.GetUnitFor(w);
@@ -309,6 +326,67 @@ namespace Xbim.IDS.Validator.Core.Binders
             else
                 return value;
             //throw new NotImplementedException(value.GetType().Name);
+        }
+
+
+        protected IIfcValue HandleUnitConversionIfc2x3(IIfcValue value)
+        {
+            var units = GetUnits() as Ifc2x3.MeasureResource.IfcUnitAssignment;
+
+            if (units == null) return value;
+
+
+            if (value is IfcCountMeasure c)
+                return c;
+            if (value is IfcAreaMeasure area)
+            {
+                var unit = units.AreaUnit;
+                if (unit is IIfcSIUnit si)
+                {
+                    return new IfcAreaMeasure(area * si.Power);
+                }
+                return area;
+            }
+            else if (value is IfcLengthMeasure l)
+            {
+                var unit = units.LengthUnit;
+                if (unit is IIfcSIUnit si)
+                {
+                    return new IfcLengthMeasure(l * si.Power);
+                }
+                return l;
+            }
+            else if (value is IfcVolumeMeasure v)
+            {
+                var unit = units.VolumeUnit;
+                if (unit is IIfcSIUnit si)
+                {
+                    return new IfcMassMeasure(v * si.Power);
+                }
+                return v;
+            }
+
+            // TODO Add remaining measures
+            //if (value is IfcMassMeasure w)
+            //{
+            //    var unit = units.GetUnitFor(w);
+            //    if (unit is IIfcSIUnit si)
+            //    {
+            //        return new IfcMassMeasure(v * si.Power);
+            //    }
+            //    return w;
+            //}
+
+            if (value is IfcTimeMeasure t)
+                return t;
+            else
+                return value;
+            //throw new NotImplementedException(value.GetType().Name);
+        }
+
+        protected bool IsIfc2x3Model()
+        {
+            return Model.SchemaVersion == Common.Step21.XbimSchemaVersion.Ifc2X3;
         }
 
         protected static object HandleBoolConventions(object attrvalue)
