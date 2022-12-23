@@ -18,6 +18,12 @@ variables:
 jobs:
 - job: Build
   steps:
+  
+  - task: UseDotNet@2
+    inputs:
+      packageType: 'sdk'
+      version: '6.0'
+
   - task: VersionDotNetCoreAssemblies@3
     displayName: 'Version'
     inputs:
