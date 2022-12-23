@@ -474,7 +474,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             if(IsIfc2x3Model() && propValue is Ifc4.MeasureResource.IfcValue ifc4Value)
             {
                 // In 2x3 models we need to convert over to the 2x3 Value
-                var ifc2x3Value = IfcValueHelper.ToIfc3(ifc4Value);
+                var ifc2x3Value = ifc4Value.ToIfc3();
                 measure = Model.Metadata.ExpressType(ifc2x3Value).Name;
             }
             else
