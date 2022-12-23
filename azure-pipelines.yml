@@ -53,10 +53,10 @@ jobs:
     inputs:
       testSelector: 'testAssemblies'
       testAssemblyVer2: |
-        **\*test*.dll
+        **\*.Tests.dll
         !**\*TestAdapter.dll
         !**\obj\**
-      searchFolder: '$(System.DefaultWorkingDirectory)'
+      searchFolder: '$(build.sourcesdirectory)'
       rerunFailedTests: true
   
   - task: CopyFiles@2
