@@ -20,12 +20,13 @@ jobs:
   steps:
   
   - task: UseDotNet@2
+    displayName: 'Use .net6'
     inputs:
       packageType: 'sdk'
       version: '6.0.x'
 
   - task: VersionDotNetCoreAssemblies@3
-    displayName: 'Version'
+    displayName: 'Version files'
     inputs:
       Path: '$(Build.SourcesDirectory)'
       VersionNumber: '$(Build.BuildNumber)'
@@ -50,13 +51,15 @@ jobs:
       versioningScheme: 'off'
 
   - task: VSTest@2
+    displayName: 'Test'
     inputs:
       testSelector: 'testAssemblies'
       testAssemblyVer2: |
-        **\*.Tests.dll
-        !**\*TestAdapter.dll
-        !**\obj\**
+        **/*.Tests.dll
+        !**/*TestAdapter.dll
+        !**/obj/**
       searchFolder: '$(build.sourcesdirectory)'
+      failOnMinTestsNotRun: true
       rerunFailedTests: true
   
   - task: CopyFiles@2
