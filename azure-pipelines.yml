@@ -41,7 +41,6 @@ jobs:
     inputs:
       command: 'pack'
       packagesToPack: '**/*.csproj'
-      includesymbols: true
       versioningScheme: 'off'
 
   - task: DotNetCoreCLI@2
