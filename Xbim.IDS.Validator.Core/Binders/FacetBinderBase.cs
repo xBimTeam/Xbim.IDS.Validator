@@ -251,6 +251,10 @@ namespace Xbim.IDS.Validator.Core.Binders
                 {
                     result = HandleUnitConversionIfc2x3(value);
                 }
+                else if(IsIfc4x3Model())
+                {
+                    result = HandleUnitConversionIfc4x3(value);
+                }
                 else
                 {
                     result = HandleUnitConversionIfc4(value);
@@ -303,6 +307,61 @@ namespace Xbim.IDS.Validator.Core.Binders
             else if (value is IfcVolumeMeasure v)
             {
                 var unit = units.VolumeUnit;
+                if (unit is IIfcSIUnit si)
+                {
+                    return new IfcMassMeasure(v * si.Power);
+                }
+                return v;
+            }
+
+            // TODO Add remaining measures
+            //if (value is IfcMassMeasure w)
+            //{
+            //    var unit = units.GetUnitFor(w);
+            //    if (unit is IIfcSIUnit si)
+            //    {
+            //        return new IfcMassMeasure(v * si.Power);
+            //    }
+            //    return w;
+            //}
+
+            if (value is IfcTimeMeasure t)
+                return t;
+            else
+                return value;
+            //throw new NotImplementedException(value.GetType().Name);
+        }
+
+        protected IIfcValue HandleUnitConversionIfc4x3(IIfcValue value)
+        {
+            var units = GetUnits() as Ifc4x3.MeasureResource.IfcUnitAssignment;
+
+            if (units == null) return value;
+
+
+            if (value is IfcCountMeasure c)
+                return c;
+            if (value is IfcAreaMeasure area)
+            {
+                var unit = units.AreaUnit();
+                if (unit is IIfcSIUnit si)
+                {
+                    return new IfcAreaMeasure(area * si.Power);
+                }
+                return area;
+            }
+            else if (value is IfcLengthMeasure l)
+            {
+                var unit = units.LengthUnit();
+                if (unit is IIfcSIUnit si)
+                {
+                    return new IfcLengthMeasure(l * si.Power);
+                }
+                return l;
+            }
+            else if (value is IfcVolumeMeasure v)
+            {
+                var unit = units.VolumeUnit();
                 if (unit is IIfcSIUnit si)
                 {
                     return new IfcMassMeasure(v * si.Power);
@@ -387,6 +446,11 @@ namespace Xbim.IDS.Validator.Core.Binders
         protected bool IsIfc2x3Model()
         {
             return Model.SchemaVersion == Common.Step21.XbimSchemaVersion.Ifc2X3;
+        }
+
+        protected bool IsIfc4x3Model()
+        {
+            return Model.SchemaVersion == Common.Step21.XbimSchemaVersion.Ifc4x3;
         }
 
         protected static object HandleBoolConventions(object attrvalue)

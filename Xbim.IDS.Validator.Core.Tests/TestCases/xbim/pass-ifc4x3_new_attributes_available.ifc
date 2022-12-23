@@ -1,0 +1,15 @@
+﻿ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION (('ViewDefinition [CoordinationView]'), '2;1');
+FILE_NAME ('file.ifc', '2022-12-23T22:25:16', ('Andy Ward'), ('xbim Ltd'), 'xbim Toolkit', 'xbim IDS Unit tests', 'n/a');
+FILE_SCHEMA (('IFC4X3_ADD1'));
+ENDSEC;
+DATA;
+#1=IFCSPACETYPE('1TMTHY4ib7nf2JAB8DnOAh',#2,'Test',$,$,$,$,$,$,.SPACE.,'Long Name');
+#2=IFCOWNERHISTORY(#5,#6,$,.ADDED.,1671834316,$,$,0);
+#3=IFCPERSON($,'Ward','Andy',$,$,$,$,$);
+#4=IFCORGANIZATION($,'xbim Ltd',$,$,$);
+#5=IFCPERSONANDORGANIZATION(#3,#4,$);
+#6=IFCAPPLICATION(#4,'1.0','xbim IDS','xbim IDS Tests');
+ENDSEC;
+END-ISO-10303-21;

@@ -474,17 +474,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             if (string.IsNullOrEmpty(expectedMeasure)) return;
 
-            string measure;
-            if(IsIfc2x3Model() && propValue is Ifc4.MeasureResource.IfcValue ifc4Value)
-            {
-                // In 2x3 models we need to convert over to the 2x3 Value
-                var ifc2x3Value = ifc4Value.ToIfc3();
-                measure = Model.Metadata.ExpressType(ifc2x3Value).Name;
-            }
-            else
-            {
-                measure = Model.Metadata.ExpressType(propValue).Name;
-            }
+            string measure = propValue.GetType().Name;
 
             if (measure.Equals(expectedMeasure, StringComparison.InvariantCultureIgnoreCase))
             {

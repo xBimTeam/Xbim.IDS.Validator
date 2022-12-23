@@ -5,6 +5,7 @@ using Xbim.Common;
 using Xbim.Common.Metadata;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
+using Xbim.Ifc4x3;
 using Xbim.InformationSpecifications;
 using Xbim.InformationSpecifications.Helpers;
 
@@ -58,6 +59,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                     {
                         rootTypes = SchemaInfo.SchemaIfc2x3.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
                     }
+                    // TODO: IFC4x3 types once IDS supports Schema meta data
                     else
                     {
                         rootTypes = SchemaInfo.SchemaIfc4.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
@@ -110,6 +112,10 @@ namespace Xbim.IDS.Validator.Core.Binders
                 if(IsIfc2x3Model() && attrvalue is Xbim.Ifc2x3.MeasureResource.IfcValue ifc2x3Value)
                 {
                     attrvalue = ifc2x3Value.ToIfc4();
+                }
+                else if (IsIfc4x3Model() && attrvalue is Xbim.Ifc4x3.MeasureResource.IfcValue ifc4x3Value)
+                {
+                    attrvalue = ifc4x3Value.ToIfc4();
                 }
                 bool isPopulated = IsValueRelevant(attrvalue);
                 // Name meets requirement if it has a value and is Required. Treat unknown logical as no value

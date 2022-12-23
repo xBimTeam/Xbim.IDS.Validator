@@ -1,0 +1,26 @@
+﻿<ids xmlns="http://standards.buildingsmart.org/IDS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://standards.buildingsmart.org/IDS/ids_05.xsd">
+    <info>
+        <title>New attributes in 4x3 can be accessed</title>
+    </info>
+    <specifications>
+        <specification name="New attributes in 4x3 can be accessed" ifcVersion="IFC2X3 IFC4" minOccurs="1" maxOccurs="unbounded">
+            <applicability>
+                <entity>
+                    <name>
+                        <simpleValue>IFCSPACETYPE</simpleValue>
+                    </name>
+                </entity>
+            </applicability>
+            <requirements>
+              <attribute minOccurs="1" maxOccurs="1">
+                <name>
+                  <simpleValue>LongName</simpleValue>
+                </name>
+                <value>
+                  <simpleValue>Long Name</simpleValue>
+                </value>
+              </attribute>
+            </requirements>
+        </specification>
+    </specifications>
+</ids>

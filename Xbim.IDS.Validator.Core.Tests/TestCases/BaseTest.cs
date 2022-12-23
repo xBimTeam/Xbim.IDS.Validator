@@ -20,13 +20,19 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             logger = GetXunitLogger();
         }
 
+        static BaseTest()
+        {
+            IfcStore.ModelProviderFactory.UseHeuristicModelProvider();
+        }
+
         internal ILogger GetXunitLogger()
         {
             IServiceCollection services = new ServiceCollection().AddLogging(delegate (ILoggingBuilder builder)
             {
                 builder.AddXunit(output, new LoggingConfig
                 {
-                    LogLevel = LogLevel.Debug
+                    LogLevel = LogLevel.Debug,
+                    IgnoreTestBoundaryException = true
                 });
             });
             IServiceProvider provider = services.BuildServiceProvider();
@@ -51,6 +57,10 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             string ifcFile = Path.ChangeExtension(idsFile, "ifc");
             IfcStore model;
             if (schemaVersion == XbimSchemaVersion.Ifc4)
+            {
+                model = IfcStore.Open(ifcFile);
+            }
+            else if (schemaVersion == XbimSchemaVersion.Ifc4x3)
             {
                 model = IfcStore.Open(ifcFile);
             }
