@@ -43,13 +43,16 @@ jobs:
       packagesToPack: '**/*.csproj'
       versioningScheme: 'off'
 
-  - task: DotNetCoreCLI@2
-    displayName: 'Test'
+  - task: VSTest@2
     inputs:
-      command: 'test'
-      projects: '**/*.Tests.csproj'
-
-
+      testSelector: 'testAssemblies'
+      testAssemblyVer2: |
+        **\*test*.dll
+        !**\*TestAdapter.dll
+        !**\obj\**
+      searchFolder: '$(System.DefaultWorkingDirectory)'
+      rerunFailedTests: true
+  
   - task: CopyFiles@2
     name: ''
     displayName: 'Copy Nuget Packages to: $(build.artifactstagingdirectory)'
