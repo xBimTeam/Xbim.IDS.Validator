@@ -47,7 +47,7 @@ jobs:
     displayName: 'Test'
     inputs:
       command: 'test'
-      projects: '**\bin\**\*Tests.dll'
+      projects: '**/*.Tests.csproj'
 
 
   - task: CopyFiles@2
