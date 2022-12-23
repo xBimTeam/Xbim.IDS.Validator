@@ -50,13 +50,11 @@ jobs:
       packagesToPack: '**/*.sln'
       versioningScheme: 'off'
 
-  - task: VSTest@2
+  - task: DotNetCoreCLI@2
     displayName: 'Test'
     inputs:
-      testSelector: 'testAssemblies'
-      testAssemblyVer2: '**\*test*.dll'
-      failOnMinTestsNotRun: true
-      rerunFailedTests: true
+      command: 'test'
+      projects: '**/*.Tests.csproj'
   
   - task: CopyFiles@2
     name: ''
