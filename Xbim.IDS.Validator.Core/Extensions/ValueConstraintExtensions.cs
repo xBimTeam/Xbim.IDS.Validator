@@ -62,7 +62,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
             // Convert 2x3 Values to Ifc4 equivqlents. To minimise code
             if(value is Ifc2x3.MeasureResource.IfcValue ifc2x3Value)
             {
-                value = IfcValueHelper.ToIfc4(ifc2x3Value);
+                value = ifc2x3Value.ToIfc4();
             }
             
             var valueType = value.GetType();

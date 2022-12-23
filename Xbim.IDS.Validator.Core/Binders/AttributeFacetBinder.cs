@@ -69,7 +69,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 }
                 var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
                 var expressType = Model.Metadata.ExpressType(collectionType);
-                if(!ExpressTypeIsValid(expressType, collectionType.Name))
+                if(!ExpressTypeIsValid(expressType, collectionType?.Name))
                 {
                     throw new InvalidOperationException($"Invalid IFC Type '{expression.Type.Name}'");
                 }
@@ -109,7 +109,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 var attrvalue = pair.Value;
                 if(IsIfc2x3Model() && attrvalue is Xbim.Ifc2x3.MeasureResource.IfcValue ifc2x3Value)
                 {
-                    attrvalue = IfcValueHelper.ToIfc4(ifc2x3Value);
+                    attrvalue = ifc2x3Value.ToIfc4();
                 }
                 bool isPopulated = IsValueRelevant(attrvalue);
                 // Name meets requirement if it has a value and is Required. Treat unknown logical as no value

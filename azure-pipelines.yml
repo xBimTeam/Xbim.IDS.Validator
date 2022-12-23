@@ -1,0 +1,80 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+name: 0.$(date:yy).$(DayOfYear).$(rev:rr)
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+jobs:
+- job: Build
+  steps:
+  
+  - task: UseDotNet@2
+    displayName: 'Use .net6'
+    inputs:
+      packageType: 'sdk'
+      version: '6.0.x'
+
+  - task: VersionDotNetCoreAssemblies@3
+    displayName: 'Version files'
+    inputs:
+      Path: '$(Build.SourcesDirectory)'
+      VersionNumber: '$(Build.BuildNumber)'
+      Injectversion: False
+      VersionRegex: '\d+\.\d+\.\d+\.\d+'
+      FilenamePattern: '.csproj'
+      AddDefault: true
+      OutputVersion: 'OutputedVersion'
+  - task: DotNetCoreCLI@2
+    displayName: 'Restore'
+    inputs:
+      command: 'restore'
+      projects: '**/*.sln'
+      feedsToUse: 'config'
+      nugetConfigPath: 'nuget.config'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Build & Pack'
+    inputs:
+      command: 'pack'
+      packagesToPack: '**/*.sln'
+      versioningScheme: 'off'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Test'
+    inputs:
+      command: 'test'
+      projects: '**/*.Tests.csproj'
+  
+  - task: CopyFiles@2
+    name: ''
+    displayName: 'Copy Nuget Packages to: $(build.artifactstagingdirectory)'
+    inputs:
+      SourceFolder: $(build.sourcesdirectory)
+      Contents: '**\bin\$(BuildConfiguration)\**\*.nupkg'
+      TargetFolder: $(build.artifactstagingdirectory)
+
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Artifacts
+    inputs:
+      PathtoPublish: $(build.artifactstagingdirectory)
+
+  - task: NuGetCommand@2
+    displayName: 'Publish to FlexGet'
+    inputs:
+      command: 'push'
+      packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
+      nuGetFeedType: 'internal'
+      publishVstsFeed: 'f8484947-4741-4322-87d4-9a1586904e2d'
+
+  

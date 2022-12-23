@@ -11,9 +11,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Xbim.Essentials" Version="5.1.364-develop" />
+    <PackageReference Include="Xbim.Essentials" Version="5.9.374-develop" />
     <PackageReference Include="Xbim.InformationSpecifications" Version="0.3.30" />
-    <PackageReference Include="Xbim.IO.Esent" Version="5.1.364-develop" />
+    <PackageReference Include="Xbim.IO.Esent" Version="5.9.374-develop" />
   </ItemGroup>
 
   <ItemGroup>
