@@ -140,54 +140,54 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
         }
 
-        private IDictionary<string,object> GetAttributes(IPersistEntity entity, AttributeFacet facet)
+        private IDictionary<string,object?> GetAttributes(IPersistEntity entity, AttributeFacet facet)
         {
-            var results = new Dictionary<string, object>();
+            var results = new Dictionary<string, object?>();
 
             if (facet.AttributeName?.AcceptedValues?.Any() != true)
                 return results;
 
             var expressType = Model.Metadata.ExpressType(entity);
-            foreach(var constraint in facet.AttributeName.AcceptedValues)
+
+            if (facet.AttributeName.IsSingleExact(out string? attrName))
             {
-                switch(constraint)
+                // Optimise for the typical scenario where one Attribute name is specified exactly
+                
+                var propertyMeta = expressType.Properties.FirstOrDefault(p => p.Value.Name == attrName).Value;
+                if (propertyMeta == null)
                 {
-                    case ExactConstraint e:
-                        var attrName = e.Value;
-                        var propertyMeta = expressType.Properties.FirstOrDefault(p => p.Value.Name == attrName).Value;
-                        if (propertyMeta == null)
-                        {
-                            results.Add(attrName, null);
-                        }
-                        else
-                        {
-                            var ifcAttributePropInfo = propertyMeta.PropertyInfo;
-                            var value = ifcAttributePropInfo.GetValue(entity);
-                            results.Add(attrName, value);
-                        }
-                        break;
-
-                    case PatternConstraint e:
-                        foreach(var prop in expressType.Properties.Values)
-                        {
-                            
-                            if(e.IsSatisfiedBy(prop.Name, facet.AttributeName, true))
-                            {
-                                var value = prop.PropertyInfo.GetValue(entity);
-                                results.Add(prop.Name, value);
-                            }
-                        }
-                        break;
-
-                    default:
-                        throw new NotImplementedException(constraint.GetType().Name);
+                    results.Add(attrName, default);
+                }
+                else
+                {
+                    var ifcAttributePropInfo = propertyMeta.PropertyInfo;
+                    var value = ifcAttributePropInfo.GetValue(entity);
+                    results.Add(attrName, value);
                 }
             }
-            
+            else
+            {
+                // It's an enum, Regex, Range or Structure
+                foreach (var prop in expressType.Properties)
+                {
+                    if (facet?.AttributeName?.IsSatisfiedBy(prop.Value.Name, true) == true)
+                    {
+                        var value = prop.Value.PropertyInfo.GetValue(entity);
+                        if (!(value == null && IsEnum(facet.AttributeName)))   // TODO: should really only filter out enum choices?
+                        {
+                            results.Add(prop.Value.Name, value);
+                        }
+                    }
+                }
+            }
 
             return results;
         }
 
+        private static bool IsEnum(ValueConstraint constraint)
+        {
+            return constraint.AcceptedValues.Count(av => av is ExactConstraint) > 1;
+        }
 
         private static Expression BindAttributeSelection(Expression expression, ExpressType expressType,
             string ifcAttributeName, ValueConstraint constraint)

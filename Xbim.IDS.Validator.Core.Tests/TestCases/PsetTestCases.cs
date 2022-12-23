@@ -24,9 +24,8 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/property/pass-all_matching_properties_must_satisfy_requirements_2_3.ids")]
         [InlineData(@"TestCases/property/pass-all_matching_property_sets_must_satisfy_requirements_1_3.ids")]
         [InlineData(@"TestCases/property/pass-all_matching_property_sets_must_satisfy_requirements_3_3.ids")]
-        // TODO: Needs Optional
-        //[InlineData(@"TestCases/property/pass-an_optional_facet_always_passes_regardless_of_outcome_1_2.ids")]
-        //[InlineData(@"TestCases/property/pass-an_optional_facet_always_passes_regardless_of_outcome_2_2.ids")]
+        [InlineData(@"TestCases/property/pass-an_optional_facet_always_passes_regardless_of_outcome_1_2.ids")]
+        [InlineData(@"TestCases/property/pass-an_optional_facet_always_passes_regardless_of_outcome_2_2.ids")]
         // TODO: non SingleValue
         //[InlineData(@"TestCases/property/pass-any_matching_value_in_a_bounded_property_will_pass_1_4.ids")]
         //[InlineData(@"TestCases/property/pass-any_matching_value_in_a_bounded_property_will_pass_2_4.ids")]
@@ -118,8 +117,8 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         
         [InlineData(@"TestCases/property/fail-measures_are_used_to_specify_an_ifc_data_type_1_2.ids")]
         [InlineData(@"TestCases/property/fail-only_specifically_formatted_numbers_are_allowed_1_4.ids")]
-        // Needs Fix in XIDS
-        //[InlineData(@"TestCases/property/fail-only_specifically_formatted_numbers_are_allowed_2_4.ids")]
+
+        [InlineData(@"TestCases/property/fail-only_specifically_formatted_numbers_are_allowed_2_4.ids")]
         [InlineData(@"TestCases/property/fail-properties_can_be_overriden_by_an_occurrence_2_2.ids")]
         [InlineData(@"TestCases/property/fail-properties_with_a_null_value_fail.ids")]
         [InlineData(@"TestCases/property/fail-quantities_must_also_match_the_appropriate_measure.ids")]

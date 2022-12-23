@@ -18,8 +18,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/ids/pass-prohibited_specifications_fail_if_at_least_one_entity_passes_all_requirements_1_3.ids")]
         [InlineData(@"TestCases/ids/pass-prohibited_specifications_fail_if_at_least_one_entity_passes_all_requirements_2_3.ids")]
         [InlineData(@"TestCases/ids/pass-required_specifications_need_at_least_one_applicable_entity_1_2.ids")]
-        // TODO: Needs XIDs Optional fix
-        //[InlineData(@"TestCases/ids/pass-specification_optionality_and_facet_optionality_can_be_combined.ids")]
+        [InlineData(@"TestCases/ids/pass-specification_optionality_and_facet_optionality_can_be_combined.ids")]
         [InlineData(@"TestCases/ids/pass-specification_version_is_purely_metadata_and_does_not_impact_pass_or_fail_result.ids")]
         [Theory]
         public void EntityTestPass(string idsFile)

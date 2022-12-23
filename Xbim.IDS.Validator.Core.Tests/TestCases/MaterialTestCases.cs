@@ -14,8 +14,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/material/pass-a_material_category_may_pass_the_value_check.ids", XbimSchemaVersion.Ifc4)]
         [InlineData(@"TestCases/material/pass-a_material_name_may_pass_the_value_check.ids")]
         [InlineData(@"TestCases/material/pass-a_required_facet_checks_all_parameters_as_normal.ids")]
-        // Needs XIDS support Optional
-        //[InlineData(@"TestCases/material/pass-an_optional_facet_always_passes_regardless_of_outcome_1_2.ids")]
+        [InlineData(@"TestCases/material/pass-an_optional_facet_always_passes_regardless_of_outcome_1_2.ids")]
         [InlineData(@"TestCases/material/pass-any_constituent_category_in_a_constituent_set_will_pass_a_value_check.ids", XbimSchemaVersion.Ifc4)]
         [InlineData(@"TestCases/material/pass-any_constituent_name_in_a_constituent_set_will_pass_a_value_check.ids", XbimSchemaVersion.Ifc4)]
         [InlineData(@"TestCases/material/pass-any_layer_category_in_a_layer_set_will_pass_a_value_check.ids", XbimSchemaVersion.Ifc4)]

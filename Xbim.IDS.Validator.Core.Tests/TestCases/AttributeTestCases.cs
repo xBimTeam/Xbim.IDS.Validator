@@ -31,8 +31,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/attribute/fail-inverse_attributes_cannot_be_checked_and_always_fail.ids")]
         [InlineData(@"TestCases/attribute/fail-numeric_values_are_checked_using_type_casting_4_4.ids")]
         [InlineData(@"TestCases/attribute/fail-only_specifically_formatted_numbers_are_allowed_1_4.ids")]
-        // TODO: Investigate why 1234.5 = "123,4.5"
-        //[InlineData(@"TestCases/attribute/fail-only_specifically_formatted_numbers_are_allowed_2_4.ids")]
+        [InlineData(@"TestCases/attribute/fail-only_specifically_formatted_numbers_are_allowed_2_4.ids")]
         [InlineData(@"TestCases/attribute/fail-specifying_a_float_when_the_value_is_an_integer_will_fail.ids")]
         [InlineData(@"TestCases/attribute/fail-value_checks_always_fail_for_lists.ids")]
         [InlineData(@"TestCases/attribute/fail-value_checks_always_fail_for_objects.ids")]
@@ -52,9 +51,8 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         }
 
         [InlineData(@"TestCases/attribute/pass-a_required_facet_checks_all_parameters_as_normal.ids")]
-        // Awaiting Support of Optional Cardinality (min=0, max =1)
-        //[InlineData(@"TestCases/attribute/pass-an_optional_facet_always_passes_regardless_of_outcome_1_2.ids")]
-        //[InlineData(@"TestCases/attribute/pass-an_optional_facet_always_passes_regardless_of_outcome_2_2.ids")]
+        [InlineData(@"TestCases/attribute/pass-an_optional_facet_always_passes_regardless_of_outcome_1_2.ids")]
+        [InlineData(@"TestCases/attribute/pass-an_optional_facet_always_passes_regardless_of_outcome_2_2.ids")]
         [InlineData(@"TestCases/attribute/pass-attributes_referencing_an_object_should_pass.ids", XbimSchemaVersion.Ifc4)]
         [InlineData(@"TestCases/attribute/pass-attributes_should_check_strings_case_sensitively_1_2.ids")]
         [InlineData(@"TestCases/attribute/pass-attributes_with_a_boolean_false_should_pass.ids", XbimSchemaVersion.Ifc4)]
@@ -79,7 +77,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/attribute/pass-integers_follow_the_same_rules_as_numbers_2_2.ids", XbimSchemaVersion.Ifc4)]
         [InlineData(@"TestCases/attribute/pass-name_restrictions_will_match_any_result_1_3.ids")]
         [InlineData(@"TestCases/attribute/pass-name_restrictions_will_match_any_result_2_3.ids")]
-        //[InlineData(@"TestCases/attribute/pass-name_restrictions_will_match_any_result_3_3.ids")]
+        [InlineData(@"TestCases/attribute/pass-name_restrictions_will_match_any_result_3_3.ids")]
         [InlineData(@"TestCases/attribute/pass-non_ascii_characters_are_treated_without_encoding.ids")]
         [InlineData(@"TestCases/attribute/pass-numeric_values_are_checked_using_type_casting_1_4.ids")]
         [InlineData(@"TestCases/attribute/pass-numeric_values_are_checked_using_type_casting_2_4.ids")]
@@ -87,7 +85,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/attribute/pass-only_specifically_formatted_numbers_are_allowed_3_4.ids")]
         [InlineData(@"TestCases/attribute/pass-only_specifically_formatted_numbers_are_allowed_4_4.ids")]
         // Fix Long/decimal implicit cast issues
-        //[InlineData(@"TestCases/attribute/pass-strict_numeric_checking_may_be_done_with_a_bounds_restriction.ids")]
+        [InlineData(@"TestCases/attribute/pass-strict_numeric_checking_may_be_done_with_a_bounds_restriction.ids")]
         [InlineData(@"TestCases/attribute/pass-typecast_checking_may_also_occur_within_enumeration_restrictions.ids")]
         [InlineData(@"TestCases/attribute/pass-value_restrictions_may_be_used_1_3.ids")]
         [InlineData(@"TestCases/attribute/pass-value_restrictions_may_be_used_2_3.ids")]
@@ -102,13 +100,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             }
         }
 
-        [InlineData(@"TestCases/attribute/pass-an_optional_facet_always_passes_regardless_of_outcome_1_2.ids")]
-        [InlineData(@"TestCases/attribute/pass-an_optional_facet_always_passes_regardless_of_outcome_2_2.ids")]
+
         [InlineData(@"TestCases/attribute/pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_1_4.ids")]
         [InlineData(@"TestCases/attribute/pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_2_4.ids")]
-        [InlineData(@"TestCases/attribute/pass-integers_follow_the_same_rules_as_numbers.ids")]
-        [InlineData(@"TestCases/attribute/pass-integers_follow_the_same_rules_as_numbers_2_2.ids")]
-        [InlineData(@"TestCases/attribute/pass-strict_numeric_checking_may_be_done_with_a_bounds_restriction.ids")]
         [Theory(Skip = "To fix")]
         public void ToFix(string idsFile)
         {

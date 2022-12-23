@@ -13,9 +13,8 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         // Also change to IfcClassificationNotationSelect
         [InlineData("TestCases/classification/pass-a_classification_facet_with_no_data_matches_any_classification_2_2.ids")]
         [InlineData("TestCases/classification/pass-a_required_facet_checks_all_parameters_as_normal.ids")]
-        // Awaiting Optional support
-        //[InlineData("TestCases/classification/pass-an_optional_facet_always_passes_regardless_of_outcome_1_2.ids")]
-        //[InlineData("TestCases/classification/pass-an_optional_facet_always_passes_regardless_of_outcome_2_2.ids")]
+        [InlineData("TestCases/classification/pass-an_optional_facet_always_passes_regardless_of_outcome_1_2.ids")]
+        [InlineData("TestCases/classification/pass-an_optional_facet_always_passes_regardless_of_outcome_2_2.ids")]
         [InlineData("TestCases/classification/pass-both_system_and_value_must_match__all__not_any__if_specified_1_2.ids")]
         [InlineData("TestCases/classification/pass-non_rooted_resources_that_have_external_classification_references_should_also_pass.ids", false, XbimSchemaVersion.Ifc4)]
         [InlineData("TestCases/classification/pass-occurrences_override_the_type_classification_per_system_1_3.ids", true)]

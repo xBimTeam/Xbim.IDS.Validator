@@ -1,11 +1,9 @@
 ﻿
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using Xbim.Common;
 using Xbim.IDS.Validator.Core;
 using Xbim.Ifc;
-using Xbim.InformationSpecifications;
 
 class Program
 {
@@ -71,21 +69,24 @@ class Program
 
             var passed = req.ApplicableResults.Count( a=> a.ValidationStatus == ValidationStatus.Success );
             WriteColored(req.Status, req.Status.ToString());
-            Console.WriteLine($" : {req.Specification.Name} [{passed}/{req.ApplicableResults.Count}]");
-            Console.ForegroundColor = ConsoleColor.Blue;
-            Console.WriteLine($"  --Where {req.Specification.Applicability.Short()}");
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine($"  --Check {req.Specification.Cardinality.Description.ToUpper()} {req.Specification.Requirement?.Short()}");
+            WriteColored($" : {req.Specification.Name} [{passed}/{req.ApplicableResults.Count}]", ConsoleColor.Gray);
+            WriteColored($" {req.Specification.Cardinality.Description} Requirement\n", ConsoleColor.Cyan);
+            WriteColored($"  --Where {req.Specification.Applicability.Short()}\n", ConsoleColor.Blue);
+            WriteColored($"  --Check {req.Specification.Requirement?.Short()}\n",ConsoleColor.Gray);
 
+            Console.ForegroundColor = ConsoleColor.White;
             foreach (var itm in req.ApplicableResults)
             {
-                Console.ForegroundColor= ConsoleColor.Red;
                 if(itm.ValidationStatus != ValidationStatus.Success)
                 {
                     WriteColored(req.Status, "    " + req.Status.ToString());
-                    Console.WriteLine($":{itm.Requirement?.Name} - {itm.Requirement?.Description} : {itm.Entity} ");
+                    WriteColored($":{itm.Requirement?.Name} - {itm.Requirement?.Description}", ConsoleColor.Red);
+                    WriteColored($": {itm.Entity}\n", ConsoleColor.White);
+                    foreach(var msg in itm.Messages.Where(m=> m.Status != ValidationStatus.Success))
+                    {
+                        WriteColored($"                [{msg?.Clause?.GetType().Name}.{msg?.ValidatedField}] {msg?.Expectation} to match {msg?.ExpectedResult} - but actually found '{msg?.ActualResult}'\n", ConsoleColor.DarkGray);
+                    }
                 }
-                Console.ForegroundColor = ConsoleColor.White;
                 //Console.Write(".");
             }
             Console.WriteLine();
@@ -96,24 +97,38 @@ class Program
 
     private static void WriteColored(ValidationStatus status, string text)
     {
-        var color = Console.ForegroundColor; ;
+        
         switch(status)
         {
             case ValidationStatus.Success:
-                Console.ForegroundColor = ConsoleColor.Green;
+                WriteColored(text,ConsoleColor.Green);
                 break;
             case ValidationStatus.Inconclusive:
-                Console.ForegroundColor = ConsoleColor.Yellow;
+                WriteColored(text, ConsoleColor.Yellow);
                 break;
             case ValidationStatus.Failed:
-                Console.ForegroundColor = ConsoleColor.Red;
+            default:
+                WriteColored(text, ConsoleColor.Red);
                 break;
 
         }
-        Console.Write(text);
-        Console.ForegroundColor = color;
-    }
 
+    }
+    private static void WriteColored(string text, ConsoleColor color)
+    {
+        
+        var originalColor = Console.ForegroundColor;
+        try
+        {
+
+            Console.ForegroundColor = color;
+            Console.Write(text);
+        }
+        finally
+        {
+            Console.ForegroundColor = originalColor;
+        }
+    }
     private static IModel BuildModel(string ifcFile)
     {
         return IfcStore.Open(ifcFile);
