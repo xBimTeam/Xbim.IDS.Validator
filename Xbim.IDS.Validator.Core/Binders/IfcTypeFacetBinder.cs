@@ -7,7 +7,7 @@ using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Binders
 {
-#nullable disable
+
     public class IfcTypeFacetBinder : FacetBinderBase<IfcTypeFacet>
     {
 
@@ -127,19 +127,21 @@ namespace Xbim.IDS.Validator.Core.Binders
                 yield break;
             }
 
-            if(ifcFacet.IfcType.IsSingleExact(out string ifcTypeName))
+            if(ifcFacet?.IfcType?.IsSingleExact(out string? ifcTypeName) == true)
             {
                 // Optimise for the typical scenario
                 yield return Model.Metadata.ExpressType(ifcTypeName.ToUpperInvariant());
             }
             else
             {
+                if (Model?.Metadata?.Types() == null) yield break;
                 // It's an enum, Regex, Range or Structure
-                foreach (var type in Model?.Metadata?.Types())
+                var types = Model?.Metadata?.Types() ?? Enumerable.Empty<ExpressType>();
+                foreach (var type in types)
                 {
                     if (ifcFacet?.IfcType?.IsSatisfiedBy(type.Name, true) == true)
                     {
-                        yield return type;
+                        yield return type!;
                     }
                 }
             }
@@ -171,7 +173,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
 
-        public string GetPredefinedType(IPersistEntity entity)
+        public string? GetPredefinedType(IPersistEntity entity)
         {
             var expressType = Model.Metadata.ExpressType(entity.GetType());
             var propertyMeta = expressType.Properties.FirstOrDefault(p => p.Value.Name == "PredefinedType").Value;
@@ -191,11 +193,11 @@ namespace Xbim.IDS.Validator.Core.Binders
             if (value == "USERDEFINED")
             {
                 if (entity is IIfcObject obj)
-                    value = obj.ObjectType.Value;
+                    value = obj.ObjectType?.Value.ToString();
                 else if (entity is IIfcElementType type)
-                    value = type.ElementType.Value;
+                    value = type.ElementType?.Value.ToString();
                 else if (entity is IIfcTypeProcess process)
-                    value = process.ProcessType.Value;
+                    value = process.ProcessType?.Value.ToString();
             }
 
             return value;

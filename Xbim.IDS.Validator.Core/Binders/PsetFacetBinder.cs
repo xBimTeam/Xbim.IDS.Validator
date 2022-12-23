@@ -10,7 +10,7 @@ using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Binders
 {
-#nullable disable
+
     public class PsetFacetBinder : FacetBinderBase<IfcPropertyFacet>
     {
 
@@ -202,7 +202,11 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             // Get underlying collection type
             var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
-
+            if(collectionType == null)
+            {
+                // TODO: log
+                return expression;
+            }
           
             MethodInfo propsMethod;
             if(collectionType.IsAssignableTo(typeof(IIfcObject)))
@@ -235,11 +239,11 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <param name="psetName"></param>
         /// <param name="propName"></param>
         /// <returns></returns>
-        public IIfcValue GetProperty(int entityLabel, string psetName, string propName)
+        public IIfcValue? GetProperty(int entityLabel, string psetName, string propName)
         {
             var entity = Model.Instances[entityLabel];
 
-            IIfcPropertySingleValue psetValue;
+            IIfcPropertySingleValue? psetValue;
             if (entity is IIfcTypeObject type)
             {
                 psetValue = type.HasPropertySets.OfType<IIfcPropertySet>()
@@ -275,11 +279,11 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         }
 
-        public IIfcPhysicalQuantity GetQuantity(int entityLabel, string psetName, string propName)
+        public IIfcPhysicalQuantity? GetQuantity(int entityLabel, string psetName, string propName)
         {
             var entity = Model.Instances[entityLabel];
 
-            IIfcPhysicalQuantity psetValue;
+            IIfcPhysicalQuantity? psetValue;
             if (entity is IIfcTypeObject type)
             {
                 psetValue = type.HasPropertySets.OfType<IIfcElementQuantity>()
@@ -323,7 +327,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <param name="constraint"></param>
         /// <param name="logger"></param>
         /// <returns></returns>
-        public IEnumerable<T> GetPropertiesMatching<T>(int entityLabel, string psetName, ValueConstraint constraint, ILogger logger = null) where T: IIfcProperty
+        public IEnumerable<T> GetPropertiesMatching<T>(int entityLabel, string psetName, ValueConstraint constraint, ILogger? logger = null) where T: IIfcProperty
         {
             var entity = Model.Instances[entityLabel];
             if (entity is IIfcTypeObject type)
@@ -370,7 +374,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <param name="nameConstraint"></param>
         /// <param name="logger"></param>
         /// <returns></returns>
-        public IEnumerable<IIfcPhysicalQuantity> GetQuantitiesMatching(int entityLabel, string psetName, ValueConstraint nameConstraint, ILogger logger = null)
+        public IEnumerable<IIfcPhysicalQuantity> GetQuantitiesMatching(int entityLabel, string psetName, ValueConstraint nameConstraint, ILogger? logger = null)
         {
             var entity = Model.Instances[entityLabel];
             if (entity is IIfcTypeObject type)
@@ -407,7 +411,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
 
-        public IEnumerable<IIfcPropertySetDefinition> GetPropertySetsMatching(int entityLabel, ValueConstraint psetConstraint, ILogger logger = null)
+        public IEnumerable<IIfcPropertySetDefinition> GetPropertySetsMatching(int entityLabel, ValueConstraint psetConstraint, ILogger? logger = null)
         {
             var entity = Model.Instances[entityLabel];
             if (entity is IIfcTypeObject type)
@@ -441,7 +445,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
 
 
-        private bool ValidatePropertyValue(ValidationContext<IfcPropertyFacet> ctx, ILogger logger, IdsValidationResult result, IfcPropertyFacet pf, object value, IIfcValue ifcValue)
+        private bool ValidatePropertyValue(ValidationContext<IfcPropertyFacet> ctx, ILogger logger, IdsValidationResult result, IfcPropertyFacet pf, object? value, IIfcValue ifcValue)
         {
             if (pf.PropertyValue != null)
             {
@@ -496,7 +500,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         private class QuantityEqualityComparer : IEqualityComparer<IIfcPhysicalQuantity>
         {
-            public bool Equals(IIfcPhysicalQuantity x, IIfcPhysicalQuantity y)
+            public bool Equals(IIfcPhysicalQuantity? x, IIfcPhysicalQuantity? y)
             {
                 return x?.Name == y?.Name;
             }
@@ -509,7 +513,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         private class PropertyEqualityComparer<T> : IEqualityComparer<T> where T: IIfcProperty
         {
-            public bool Equals(T x, T y)
+            public bool Equals(T? x, T? y)
             {
                 return x?.Name == y?.Name;
             }

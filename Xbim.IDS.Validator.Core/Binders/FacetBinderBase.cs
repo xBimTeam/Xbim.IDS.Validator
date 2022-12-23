@@ -264,7 +264,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             return result;
         }
 
-        protected IIfcUnitAssignment GetUnits()
+        protected IIfcUnitAssignment? GetUnits()
         {
             var project = Model.Instances.OfType<IIfcProject>().First();
             

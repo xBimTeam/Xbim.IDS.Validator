@@ -69,7 +69,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 }
                 var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
                 var expressType = Model.Metadata.ExpressType(collectionType);
-                if(!ExpressTypeIsValid(expressType, collectionType.Name))
+                if(!ExpressTypeIsValid(expressType, collectionType?.Name))
                 {
                     throw new InvalidOperationException($"Invalid IFC Type '{expression.Type.Name}'");
                 }

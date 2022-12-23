@@ -131,7 +131,7 @@ namespace Xbim.IDS.Validator.Core
 
         }
 
-        public string Entity => EntityAffected != null ? EntityAffected!.ToString() : "n/a";
+        public string? Entity => (EntityAffected != null) ? EntityAffected.ToString() : "n/a";
 
         public ValidationStatus Status { get; set; }
         public string? Reason { get; set; }

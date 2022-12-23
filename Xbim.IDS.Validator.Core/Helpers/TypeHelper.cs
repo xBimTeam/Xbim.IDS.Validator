@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Xbim.IDS.Validator.Core.Helpers
 {
-#nullable disable   
+ 
     public static class TypeHelper
     {
         /// <summary>
@@ -98,7 +98,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
 
      
 
-            Type collectionInterface
+            Type? collectionInterface
                 = clrType.GetInterfaces()
                     .Union(new[] { clrType })
                     .FirstOrDefault(
@@ -119,7 +119,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        internal static Type GetImplementedIEnumerableType(Type type)
+        internal static Type? GetImplementedIEnumerableType(Type type)
         {
             // get inner type from Task<T>
             if (TypeHelper.IsGenericType(type) && type.GetGenericTypeDefinition() == typeof(Task<>))
@@ -153,7 +153,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
             return null;
         }
 
-        private static Type GetInnerGenericType(Type interfaceType)
+        private static Type? GetInnerGenericType(Type interfaceType)
         {
             // Getting the type T definition if the returning type implements IEnumerable<T>
             Type[] parameterTypes = interfaceType.GetGenericArguments();
