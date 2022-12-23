@@ -47,7 +47,7 @@ jobs:
     displayName: 'Build & Pack'
     inputs:
       command: 'pack'
-      packagesToPack: '**/*.csproj'
+      packagesToPack: '**/*.sln'
       versioningScheme: 'off'
 
   - task: VSTest@2
