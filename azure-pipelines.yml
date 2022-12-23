@@ -54,10 +54,7 @@ jobs:
     displayName: 'Test'
     inputs:
       testSelector: 'testAssemblies'
-      testAssemblyVer2: |
-        **/*.Tests.dll
-        !**/*TestAdapter.dll
-      searchFolder: '$(build.sourcesdirectory)'
+      testAssemblyVer2: '**\*test*.dll'
       failOnMinTestsNotRun: true
       rerunFailedTests: true
   
