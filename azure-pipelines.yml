@@ -19,6 +19,7 @@ jobs:
 - job: Build
   steps:
   - task: VersionDotNetCoreAssemblies@3
+    displayName: 'Version'
     inputs:
       Path: '$(Build.SourcesDirectory)'
       VersionNumber: '$(Build.BuildNumber)'
@@ -36,24 +37,19 @@ jobs:
       nugetConfigPath: 'nuget.config'
 
   - task: DotNetCoreCLI@2
-    displayName: 'Build' 
+    displayName: 'Build & Pack'
     inputs:
-      command: 'build'
-      projects: '**/*.sln'
+      command: 'pack'
+      packagesToPack: '**/*.csproj'
+      versioningScheme: 'off'
 
   - task: DotNetCoreCLI@2
     displayName: 'Test'
     inputs:
       command: 'test'
-      projects: '**\bin\**\*Test.dll'
+      projects: '**/*.Tests.csproj'
 
-  - task: DotNetCoreCLI@2
-    displayName: 'Test'
-    inputs:
-      command: 'pack'
-      packagesToPack: '**/*.csproj'
-      includesymbols: true
-      versioningScheme: 'off'
+
   - task: CopyFiles@2
     name: ''
     displayName: 'Copy Nuget Packages to: $(build.artifactstagingdirectory)'
@@ -61,7 +57,18 @@ jobs:
       SourceFolder: $(build.sourcesdirectory)
       Contents: '**\bin\$(BuildConfiguration)\**\*.nupkg'
       TargetFolder: $(build.artifactstagingdirectory)
+
   - task: PublishBuildArtifacts@1
     displayName: Publish Artifacts
     inputs:
       PathtoPublish: $(build.artifactstagingdirectory)
+
+  - task: NuGetCommand@2
+    displayName: 'Publish to FlexGet'
+    inputs:
+      command: 'push'
+      packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
+      nuGetFeedType: 'internal'
+      publishVstsFeed: 'f8484947-4741-4322-87d4-9a1586904e2d'
+
+  
