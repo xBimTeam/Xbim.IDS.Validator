@@ -9,7 +9,7 @@ trigger:
 pool:
   vmImage: 'windows-latest'
 
-name: 0.$(date:yy).$(DayOfYear).$(rev:.rr)
+name: 0.$(date:yy).$(DayOfYear).$(rev:rr)
 
 variables:
   solution: '**/*.sln'
