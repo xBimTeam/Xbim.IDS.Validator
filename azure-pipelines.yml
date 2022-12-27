@@ -5,6 +5,7 @@
 
 trigger:
 - master
+- netstandard
 
 pool:
   vmImage: 'windows-latest'
