@@ -1,5 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Xbim.Common;
@@ -49,8 +53,8 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             var expression = baseExpression;
             // When an Ifc Type has not yet been specified, we start with the RelDefinesByProperties
-            
-            if (expression.Type.IsInterface && expression.Type.IsAssignableTo(typeof(IEntityCollection)))
+
+            if (expression.Type.IsInterface && typeof(IEntityCollection).IsAssignableFrom(expression.Type))
             {
                 expression = BindIfcExpressType(expression, Model.Metadata.ExpressType(typeof(IfcRelDefinesByProperties)));
                 expression = BindPropertySelection(expression, psetFacet);
@@ -80,8 +84,8 @@ namespace Xbim.IDS.Validator.Core.Binders
 
 
             var expression = baseExpression;
-            
-            if (expression.Type.IsInterface && expression.Type.IsAssignableTo(typeof(IEntityCollection)))
+
+            if (expression.Type.IsInterface && typeof(IEntityCollection).IsAssignableFrom(expression.Type))
             {
                 throw new NotSupportedException("Expected a selection expression before applying filters");
             }
@@ -89,7 +93,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             // Get underlying collection type
             var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
             var expressType = Model.Metadata.ExpressType(collectionType);
-            if(!ExpressTypeIsValid(expressType))
+            if (!ExpressTypeIsValid(expressType))
             {
                 throw new InvalidOperationException($"Invalid IFC Type '{expression.Type.Name}'");
             }
@@ -190,7 +194,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             return Expression.Call(null, propsMethod, new[] { expression, facetExpr });
 
-          
+
         }
 
 
@@ -202,18 +206,19 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             // Get underlying collection type
             var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
-            if(collectionType == null)
+            if (collectionType == null)
             {
                 // TODO: log
                 return expression;
             }
-          
+
             MethodInfo propsMethod;
-            if(collectionType.IsAssignableTo(typeof(IIfcObject)))
+            if (typeof(IIfcObject).IsAssignableFrom(collectionType))
             {
                 propsMethod = ExpressionHelperMethods.EnumerableObjectWhereAssociatedWithProperty;
 
-            } else if (collectionType.IsAssignableTo(typeof(IIfcTypeObject)))
+            }
+            else if (typeof(IIfcTypeObject).IsAssignableFrom(collectionType))
             {
                 propsMethod = ExpressionHelperMethods.EnumerableTypeWhereAssociatedWithProperty;
             }
@@ -260,7 +265,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                     .SelectMany(p => ((IIfcPropertySet)p.RelatingPropertyDefinition)
                         .HasProperties.Where(ps => ps.Name == propName)
                         .OfType<IIfcPropertySingleValue>())
-                    
+
                     .FirstOrDefault();
                 if (psetValue == null)
                 {
@@ -327,7 +332,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <param name="constraint"></param>
         /// <param name="logger"></param>
         /// <returns></returns>
-        public IEnumerable<T> GetPropertiesMatching<T>(int entityLabel, string psetName, ValueConstraint constraint, ILogger? logger = null) where T: IIfcProperty
+        public IEnumerable<T> GetPropertiesMatching<T>(int entityLabel, string psetName, ValueConstraint constraint, ILogger? logger = null) where T : IIfcProperty
         {
             var entity = Model.Instances[entityLabel];
             if (entity is IIfcTypeObject type)
@@ -347,8 +352,8 @@ namespace Xbim.IDS.Validator.Core.Binders
                     .SelectMany(p => ((IIfcPropertySet)p.RelatingPropertyDefinition)
                         .HasProperties.Where(ps => constraint.IsSatisfiedBy(ps.Name.Value, true, logger))
                         .OfType<T>());
-                    
-                
+
+
                 if (obj.IsTypedBy?.Any() == true)
                 {
                     // Inherit extra properties from Type - Deduping on name
@@ -450,7 +455,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             if (pf.PropertyValue != null)
             {
                 value = ApplyWorkarounds(value, pf.PropertyValue);
-                if (IsTypeAppropriateForConstraint(pf.PropertyValue, value) &&  pf.PropertyValue.IsSatisfiedBy(value, logger))
+                if (IsTypeAppropriateForConstraint(pf.PropertyValue, value) && pf.PropertyValue.IsSatisfiedBy(value, logger))
                 {
                     result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, value, "Value matches", ifcValue));
                     return true;
@@ -501,9 +506,9 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
         }
 
-        private class PropertyEqualityComparer<T> : IEqualityComparer<T> where T: IIfcProperty
+        private class PropertyEqualityComparer<T> : IEqualityComparer<T> where T : IIfcProperty
         {
-            public bool Equals(T? x, T? y)
+            public bool Equals(T x, T y)
             {
                 return x?.Name == y?.Name;
             }

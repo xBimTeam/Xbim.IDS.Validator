@@ -1,4 +1,6 @@
-﻿using Xbim.Common;
+﻿using System;
+using System.Linq;
+using Xbim.Common;
 using Xbim.Ifc4x3.MeasureResource;
 using Xbim.Ifc4x3.PropertyResource;
 using Xbim.Ifc4x3.QuantityResource;

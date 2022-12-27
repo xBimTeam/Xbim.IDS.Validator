@@ -1,4 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.Common.Metadata;
@@ -50,7 +53,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
 
             var expression = baseExpression;
-            if (expression.Type.IsInterface && !expression.Type.IsAssignableTo(typeof(IEntityCollection)))
+            if (expression.Type.IsInterface && !typeof(IEntityCollection).IsAssignableFrom(expression.Type))
             {
                 throw new NotSupportedException("Expected an unfiltered set of Instances");
             }

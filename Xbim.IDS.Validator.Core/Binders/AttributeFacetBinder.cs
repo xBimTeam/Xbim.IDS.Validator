@@ -1,4 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Xbim.Common;
@@ -17,7 +20,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         {
         }
 
-       
+
         /// <summary>
         /// Binds an IFC attribute filter to an expression, where Attributes are built in IFC schema fields
         /// </summary>
@@ -46,13 +49,13 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
 
             var expression = baseExpression;
-            
-            if(attrFacet.AttributeName.IsSingleExact(out var attributeName))
+
+            if (attrFacet.AttributeName.IsSingleExact(out var attributeName))
             {
                 // When an Ifc Type facet has not yet been specified, find correct root type(s) for this AttributeName
                 // using the lookup that XIDS provides
 
-                if (expression.Type.IsInterface && expression.Type.IsAssignableTo(typeof(IEntityCollection)))
+                if (expression.Type.IsInterface && typeof(IEntityCollection).IsAssignableFrom(expression.Type))
                 {
                     string[] rootTypes;
                     if (IsIfc2x3Model())
@@ -67,11 +70,11 @@ namespace Xbim.IDS.Validator.Core.Binders
 
                     expression = base.BindIfcExpressTypes(expression, rootTypes);
 
-                    
+
                 }
                 var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
                 var expressType = Model.Metadata.ExpressType(collectionType);
-                if(!ExpressTypeIsValid(expressType, collectionType?.Name))
+                if (!ExpressTypeIsValid(expressType, collectionType?.Name))
                 {
                     throw new InvalidOperationException($"Invalid IFC Type '{expression.Type.Name}'");
                 }
@@ -86,7 +89,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 // Not sure why we'd want to pick attributes with a regex, range, or even an enum?
                 throw new NotSupportedException("Complex AttributeName constraints are not supported");
             }
-            
+
         }
 
         public override Expression BindWhereExpression(Expression baseExpression, AttributeFacet attrFacet)
@@ -109,7 +112,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             {
                 var attrName = pair.Key;
                 var attrvalue = pair.Value;
-                if(IsIfc2x3Model() && attrvalue is Xbim.Ifc2x3.MeasureResource.IfcValue ifc2x3Value)
+                if (IsIfc2x3Model() && attrvalue is Xbim.Ifc2x3.MeasureResource.IfcValue ifc2x3Value)
                 {
                     attrvalue = ifc2x3Value.ToIfc4();
                 }
@@ -146,7 +149,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
         }
 
-        private IDictionary<string,object?> GetAttributes(IPersistEntity entity, AttributeFacet facet)
+        private IDictionary<string, object?> GetAttributes(IPersistEntity entity, AttributeFacet facet)
         {
             var results = new Dictionary<string, object?>();
 
@@ -158,7 +161,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             if (facet.AttributeName.IsSingleExact(out string? attrName))
             {
                 // Optimise for the typical scenario where one Attribute name is specified exactly
-                
+
                 var propertyMeta = expressType.Properties.FirstOrDefault(p => p.Value.Name == attrName).Value;
                 if (propertyMeta == null)
                 {
@@ -242,12 +245,12 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             // build params, & unwrap Type
             //var propType = ifcAttributePropInfo.PropertyType;
-            
-   
+
+
             var valueExpr = Expression.Convert(nameProperty, typeof(object));
 
 
-            Expression querybody = Expression.Call(null, ExpressionHelperMethods.IdsSatisifiesConstraintMethod, constraintExpr, valueExpr );
+            Expression querybody = Expression.Call(null, ExpressionHelperMethods.IdsSatisifiesConstraintMethod, constraintExpr, valueExpr);
 
             // Build Lambda expression for filter predicate (Func<T,bool>)
             var filterExpression = Expression.Lambda(querybody, ifcTypeParam);
@@ -256,7 +259,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             return Expression.Call(null, whereMethod, new[] { expression, filterExpression });
         }
 
-    
+
 
     }
 }

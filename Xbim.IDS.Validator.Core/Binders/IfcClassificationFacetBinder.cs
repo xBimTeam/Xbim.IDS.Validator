@@ -1,4 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Xbim.Common;
@@ -37,7 +41,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             var expression = baseExpression;
             // When an Ifc Type has not yet been specified, we start with the IIfcRelAssociatesClassification
 
-            if (expression.Type.IsInterface && expression.Type.IsAssignableTo(typeof(IEntityCollection)))
+            if (expression.Type.IsInterface && typeof(IEntityCollection).IsAssignableFrom(expression.Type))
             {
                 expression = BindIfcExpressType(expression, Model.Metadata.ExpressType(nameof(IfcRelAssociatesClassification).ToUpperInvariant()));
                 // Apply the Classification filter
@@ -69,7 +73,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             var expression = baseExpression;
 
-            if (expression.Type.IsInterface && expression.Type.IsAssignableTo(typeof(IEntityCollection)))
+            if (expression.Type.IsInterface && typeof(IEntityCollection).IsAssignableFrom(expression.Type))
             {
                 throw new NotSupportedException("Expected a selection expression before applying filters");
             }
@@ -78,7 +82,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             if (TypeHelper.IsCollection(expression.Type, out Type elementType))
             {
                 // Apply the Classification filter
-                if (elementType.IsAssignableTo(typeof(IIfcObjectDefinition)))
+                if (typeof(IIfcObjectDefinition).IsAssignableFrom(elementType))
                 {
                     // Objects and Types classified by HasAssociations
                     
