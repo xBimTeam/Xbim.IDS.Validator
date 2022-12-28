@@ -9,7 +9,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
     {
         public MaterialBinderTests(ITestOutputHelper output) : base(output)
         {
-            Binder = new MaterialFacetBinder(Model);
+            Binder = new MaterialFacetBinder(BinderContext);
         }
 
         /// <summary>

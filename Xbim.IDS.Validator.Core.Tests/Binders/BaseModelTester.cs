@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Xbim.Common;
 using Xbim.Common.Step21;
+using Xbim.IDS.Validator.Core.Binders;
 using Xbim.Ifc;
 using Xunit.Abstractions;
 
@@ -13,6 +14,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         private static Lazy<IModel> lazyIfc4Model = new Lazy<IModel>(()=> BuildIfc4Model());
         private static Lazy<IModel> lazyIfc2x3Model = new Lazy<IModel>(() => BuildIfc2x3Model());
+
+        private BinderContext _context = new BinderContext();
         public IModel Model
         {
             get
@@ -27,7 +30,16 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 }
             }
         }
-            
+
+        public BinderContext BinderContext
+        {
+            get
+            {
+                _context.Model = Model;
+                return _context;
+            }
+        }
+
         protected IfcQuery query;
 
         private readonly ITestOutputHelper output;

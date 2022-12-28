@@ -14,7 +14,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 {
     public class MaterialFacetBinder : FacetBinderBase<MaterialFacet>
     {
-        public MaterialFacetBinder(IModel model) : base(model)
+        public MaterialFacetBinder(BinderContext context) : base(context.Model)
         {
         }
 

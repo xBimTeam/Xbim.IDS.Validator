@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Xbim.Common;
 using Xbim.IDS.Validator.Core.Extensions;
+using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
@@ -13,10 +14,15 @@ namespace Xbim.IDS.Validator.Core.Tests
     {
         
         private readonly ITestOutputHelper output;
+        private readonly IServiceProvider provider;
 
         public IdsModelBinderTests(ITestOutputHelper output)
         {
             this.output = output;
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddLogging().AddIdsValidation();
+
+            provider = serviceCollection.BuildServiceProvider();
         }
 
 
@@ -29,7 +35,7 @@ namespace Xbim.IDS.Validator.Core.Tests
         public void Can_Bind_Specification_to_model(string idcFile, string ifcFile)
         {
             var model = BuildModel(ifcFile);
-            var modelBinder = new IdsModelBinder(model);
+            var modelBinder = provider.GetRequiredService<IIdsModelBinder>();
             var logger = GetXunitLogger();
 
             var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idcFile, logger);
@@ -54,7 +60,7 @@ namespace Xbim.IDS.Validator.Core.Tests
                     {
                         logger.LogInformation("       [{i}] {facetType}: check {description} ", idx++, reqFacet.GetType().Name, reqFacet.Short());
                     }
-                    IEnumerable <IPersistEntity> items = modelBinder.SelectApplicableEntities(spec);
+                    IEnumerable <IPersistEntity> items = modelBinder.SelectApplicableEntities(model, spec);
                     logger.LogInformation("          Checking {count} applicable items", items.Count());
                     foreach (var item in items)
                     {

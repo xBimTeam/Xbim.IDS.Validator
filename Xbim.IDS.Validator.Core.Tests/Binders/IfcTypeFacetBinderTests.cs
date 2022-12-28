@@ -10,7 +10,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
     {
         public IfcTypeFacetBinderTests(ITestOutputHelper output) : base(output)
         {
-            Binder = new IfcTypeFacetBinder(Model);
+            Binder = new IfcTypeFacetBinder(BinderContext);
         }
 
         /// <summary>

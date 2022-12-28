@@ -4,22 +4,26 @@ using System.Collections.Generic;
 using System.Linq;
 using Xbim.Common;
 using Xbim.IDS.Validator.Core.Extensions;
+using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 using Xbim.InformationSpecifications.Cardinality;
 
 namespace Xbim.IDS.Validator.Core
 {
-    public class IdsModelValidator
+    /// <summary>
+    /// Class that will validate a model against a set of IDS specification requirements
+    /// </summary>
+    public class IdsModelValidator : IIdsModelValidator
     {
-        public IdsModelValidator(IdsModelBinder modelBinder)
+        public IdsModelValidator(IIdsModelBinder modelBinder)
         {
             ModelBinder = modelBinder;
         }
 
-        public IdsModelBinder ModelBinder { get; }
+        public IIdsModelBinder ModelBinder { get; }
 
-        public ValidationOutcome ValidateAgainstIds(string idsFile, ILogger logger)
+        public ValidationOutcome ValidateAgainstIds(IModel model, string idsFile, ILogger logger)
         {
             if (logger is null)
             {
@@ -28,7 +32,7 @@ namespace Xbim.IDS.Validator.Core
 
             var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idsFile, logger);
             var outcome = new ValidationOutcome(idsSpec);
-            if(idsSpec == null)
+            if (idsSpec == null)
             {
                 outcome.MarkFailed($"Unable to open IDS file '{idsFile}'");
                 logger.LogError("Unable to open IDS file '{idsFile}", idsFile);
@@ -70,26 +74,26 @@ namespace Xbim.IDS.Validator.Core
                     {
                         logger.LogInformation("       [r{i}] {facetType}: check {description} ", idx++, reqFacet.GetType().Name, reqFacet.Short());
                     }
-                    IEnumerable<IPersistEntity> items = ModelBinder.SelectApplicableEntities(spec);
+                    IEnumerable<IPersistEntity> items = ModelBinder.SelectApplicableEntities(model, spec);
                     logger.LogInformation("          Checking {count} applicable items", items.Count());
                     foreach (var item in items)
                     {
                         var i = item as IIfcRoot;
                         logger.LogInformation("          * #{ID}: {Type} {Name} ", item.EntityLabel, item.GetType().Name, i?.Name);
 
-               
+
                         var result = ModelBinder.ValidateRequirement(item, spec.Requirement, logger);
                         LogLevel level = LogLevel.Information;
                         int pad = 0;
                         if (result.ValidationStatus == ValidationStatus.Inconclusive) { level = LogLevel.Warning; pad = 4; }
                         if (result.ValidationStatus == ValidationStatus.Failed) { level = LogLevel.Error; pad = 6; }
-                        logger.Log(level, "{pad}           {result}: Checking {short}", "".PadLeft(pad, ' '),  result.ValidationStatus.ToString().ToUpperInvariant(), spec.Requirement.Short());
+                        logger.Log(level, "{pad}           {result}: Checking {short}", "".PadLeft(pad, ' '), result.ValidationStatus.ToString().ToUpperInvariant(), spec.Requirement.Short());
                         foreach (var message in result.Messages)
                         {
                             logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
                         }
                         requirementResult.ApplicableResults.Add(result);
-                        
+
                     }
 
                     SetResults(spec, requirementResult);
@@ -104,7 +108,7 @@ namespace Xbim.IDS.Validator.Core
             {
                 outcome.Status = ValidationStatus.Failed;
             }
-            else if(outcome.ExecutedRequirements.Any(r => r.Status == ValidationStatus.Success))
+            else if (outcome.ExecutedRequirements.Any(r => r.Status == ValidationStatus.Success))
             {
                 outcome.Status = ValidationStatus.Success;
             }
@@ -119,7 +123,7 @@ namespace Xbim.IDS.Validator.Core
             {
                 if (simpleCard.ExpectsRequirements) // Required or Optional
                 {
-                    if(validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Failed))
+                    if (validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Failed))
                     {
                         validation.Status = ValidationStatus.Failed;
                     }
@@ -127,7 +131,7 @@ namespace Xbim.IDS.Validator.Core
                     {
                         if (simpleCard.IsModelConstraint) // Definitely required
                         {
-                            validation.Status = validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Success) 
+                            validation.Status = validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Success)
                                 ? ValidationStatus.Success
                                 : ValidationStatus.Failed;
                         }
@@ -137,7 +141,7 @@ namespace Xbim.IDS.Validator.Core
                             validation.Status = ValidationStatus.Success;
                         }
                     }
-                    
+
                 }
                 if (simpleCard.NoMatchingEntities)  // Prohibited
                 {
@@ -161,9 +165,9 @@ namespace Xbim.IDS.Validator.Core
                         // If None have failed and we have the number expected successful is within bounds of min-max we succeed
                         validation.Status = cardinality.IsSatisfiedBy(successes) &&
                             !validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Failed)
-                            ? ValidationStatus.Success 
+                            ? ValidationStatus.Success
                             : ValidationStatus.Failed;
-                       
+
                     }
                     else
                     {

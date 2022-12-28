@@ -18,7 +18,7 @@ namespace Xbim.IDS.Validator.Core.Binders
     public class PsetFacetBinder : FacetBinderBase<IfcPropertyFacet>
     {
 
-        public PsetFacetBinder(IModel model) : base(model)
+        public PsetFacetBinder(BinderContext context) : base(context.Model)
         {
 
         }

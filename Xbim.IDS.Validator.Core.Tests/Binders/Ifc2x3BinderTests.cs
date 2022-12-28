@@ -38,9 +38,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 AttributeName = attributeFieldName,
                 AttributeValue = new ValueConstraint(attributeValue)
             };
-            var ifcbinder = new IfcTypeFacetBinder(Model);
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext);
 
-            var attrbinder = new AttributeFacetBinder(Model);
+            var attrbinder = new AttributeFacetBinder(BinderContext);
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -76,9 +76,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             propertyFacet.PropertyName.AddAccepted(new ExactConstraint(propName));
             if (value != null)
                 propertyFacet.PropertyValue.AddAccepted(new ExactConstraint(value?.ToString()));
-            var ifcbinder = new IfcTypeFacetBinder(Model);
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext);
 
-            var psetbinder = new PsetFacetBinder(Model);
+            var psetbinder = new PsetFacetBinder(BinderContext);
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -108,9 +108,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 Value = new ValueConstraint(NetTypeName.String),
             };
             materialFacet.Value = material;
-            var ifcbinder = new IfcTypeFacetBinder(Model);
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext);
 
-            var materialbinder = new MaterialFacetBinder(Model);
+            var materialbinder = new MaterialFacetBinder(BinderContext);
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);

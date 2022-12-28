@@ -16,7 +16,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 {
     public class AttributeFacetBinder : FacetBinderBase<AttributeFacet>
     {
-        public AttributeFacetBinder(IModel model) : base(model)
+        public AttributeFacetBinder(BinderContext context) : base(context.Model)
         {
         }
 

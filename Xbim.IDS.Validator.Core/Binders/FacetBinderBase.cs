@@ -9,6 +9,7 @@ using Xbim.Common;
 using Xbim.Common.Metadata;
 using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
+using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4.MeasureResource;
 using Xbim.InformationSpecifications;
@@ -503,6 +504,24 @@ namespace Xbim.IDS.Validator.Core.Binders
             return new ValidationContext<T>(facet, expectation);
         }
 
-        
+        Expression IFacetBinder.BindSelectionExpression(Expression baseExpression, IFacet facet)
+        {
+            return BindSelectionExpression(baseExpression, (T)facet);
+        }
+
+        Expression IFacetBinder.BindWhereExpression(Expression baseExpression, IFacet facet)
+        {
+            return BindWhereExpression(baseExpression, (T)facet);
+        }
+
+        void IFacetBinder.ValidateEntity(IPersistEntity item, FacetGroup requirement, ILogger logger, IdsValidationResult result, IFacet facet)
+        {
+            ValidateEntity(item, requirement, logger, result, (T)facet);
+        }
+
+        ValidationContext<IFacet> IFacetBinder.CreateValidationContext(FacetGroup requirement, IFacet facet)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
