@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Xbim.IDS.Validator.Core.Binders;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
@@ -10,7 +11,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
     {
         public AttributeFacetBinderTests(ITestOutputHelper output) : base(output)
         {
-            Binder = new AttributeFacetBinder(BinderContext);
+            Binder = new AttributeFacetBinder(BinderContext, Logger);
         }
 
         /// <summary>
@@ -84,7 +85,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 AttributeName = attributeFieldName,
                 AttributeValue = new ValueConstraint("not relevant")
             };
-            var ifcBinder = new IfcTypeFacetBinder(new BinderContext { Model = Model});
+            var ifcBinder = new IfcTypeFacetBinder(new BinderContext { Model = Model}, GetLogger<IfcTypeFacetBinder>());
 
 
             var expression = ifcBinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -95,6 +96,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             ex.Should().BeOfType<InvalidOperationException>();
 
         }
+
+        ILogger<AttributeFacetBinder> Logger { get => GetLogger<AttributeFacetBinder>(); }
 
     }
 }

@@ -1,8 +1,7 @@
 ﻿using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Xbim.IDS.Validator.Core.Binders;
-
 using Xbim.Ifc4.Interfaces;
-
 using Xbim.InformationSpecifications;
 using Xunit.Abstractions;
 
@@ -10,9 +9,14 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
     public class PsetFacetBinderTests : BaseModelTester
     {
+
+
+        
+    
+
         public PsetFacetBinderTests(ITestOutputHelper output) : base(output)
         {
-            Binder = new PsetFacetBinder(BinderContext);
+            Binder = new PsetFacetBinder(BinderContext, Logger);
         }
 
         /// <summary>
@@ -93,7 +97,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
                 }
             }
-            var binder = new PsetFacetBinder(BinderContext);
+            var binder = new PsetFacetBinder(BinderContext, Logger);
 
             // Act
             var expression = Binder.BindSelectionExpression(query.InstancesExpression, propFacet);
@@ -149,5 +153,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         }
 
+
+        ILogger<PsetFacetBinder> Logger { get => GetLogger<PsetFacetBinder>(); }
     }
 }

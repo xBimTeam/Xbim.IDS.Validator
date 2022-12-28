@@ -13,10 +13,11 @@ namespace Xbim.IDS.Validator.Core.Binders
 
     public class PsetFacetBinder : FacetBinderBase<IfcPropertyFacet>
     {
+        private readonly ILogger<PsetFacetBinder> logger;
 
-        public PsetFacetBinder(BinderContext context) : base(context.Model)
+        public PsetFacetBinder(BinderContext context, ILogger<PsetFacetBinder> logger) : base(context)
         {
-
+            this.logger = logger;
         }
 
         /// <summary>
@@ -98,7 +99,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             return expression;
         }
 
-        public override void ValidateEntity(IPersistEntity item, FacetGroup requirement, ILogger logger, IdsValidationResult result, IfcPropertyFacet pf)
+        public override void ValidateEntity(IPersistEntity item, IfcPropertyFacet pf, FacetGroup requirement, IdsValidationResult result)
         {
             var ctx = CreateValidationContext(requirement, pf);
             var psets = GetPropertySetsMatching(item.EntityLabel, pf.PropertySetName, logger);
@@ -204,7 +205,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
             if(collectionType == null)
             {
-                // TODO: log
+                logger.LogWarning("Expected an enumerable collection but found {expressionType}", expression.Type.Name);
                 return expression;
             }
           
@@ -219,7 +220,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             else
             {
-                // TODO: log
+                logger.LogWarning("Property sets can only be filtered on Types and Objects, but this is {collectionType} ", collectionType.Name);
                 // Not applicable
                 return BindNotFound(expression, collectionType);
             }

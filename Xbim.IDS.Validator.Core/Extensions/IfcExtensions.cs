@@ -18,7 +18,11 @@ namespace Xbim.IDS.Validator.Core.Extensions
         public static IEnumerable<IIfcObjectDefinition> GetIfcObjectsWithProperties(this IEnumerable<IIfcRelDefinesByProperties> relDefines,
             IfcPropertyFacet facet)
         {
-            // TODO: Update to Facet filter
+            if (relDefines is null)
+            {
+                throw new ArgumentNullException(nameof(relDefines));
+            }
+
             return relDefines.FilterByFacet(facet)
                     .SelectMany(r => r.RelatedObjects);
         }

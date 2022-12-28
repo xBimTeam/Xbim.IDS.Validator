@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Xbim.Common.Step21;
 using Xbim.IDS.Validator.Core.Binders;
 
@@ -38,9 +39,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 AttributeName = attributeFieldName,
                 AttributeValue = new ValueConstraint(attributeValue)
             };
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext);
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>());
 
-            var attrbinder = new AttributeFacetBinder(BinderContext);
+            var attrbinder = new AttributeFacetBinder(BinderContext, GetLogger<AttributeFacetBinder>());
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -76,9 +77,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             propertyFacet.PropertyName.AddAccepted(new ExactConstraint(propName));
             if (value != null)
                 propertyFacet.PropertyValue.AddAccepted(new ExactConstraint(value?.ToString()));
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext);
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>());
 
-            var psetbinder = new PsetFacetBinder(BinderContext);
+            var psetbinder = new PsetFacetBinder(BinderContext, GetLogger<PsetFacetBinder>());
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -108,9 +109,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 Value = new ValueConstraint(NetTypeName.String),
             };
             materialFacet.Value = material;
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext);
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>());
 
-            var materialbinder = new MaterialFacetBinder(BinderContext);
+            var materialbinder = new MaterialFacetBinder(BinderContext, GetLogger<MaterialFacetBinder>());
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -122,5 +123,6 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             result.Should().HaveCount(expectedCount);
 
         }
+
     }
 }

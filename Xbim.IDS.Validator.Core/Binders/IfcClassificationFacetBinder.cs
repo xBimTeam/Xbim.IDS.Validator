@@ -7,13 +7,17 @@ using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4.Kernel;
 using Xbim.InformationSpecifications;
+using static Xbim.IO.Xml.XbimXmlReader3;
 
 namespace Xbim.IDS.Validator.Core.Binders
 {
     public class IfcClassificationFacetBinder : FacetBinderBase<IfcClassificationFacet>
     {
-        public IfcClassificationFacetBinder(BinderContext context) : base(context.Model)
+        private readonly ILogger<IfcClassificationFacetBinder> logger;
+
+        public IfcClassificationFacetBinder(BinderContext context, ILogger<IfcClassificationFacetBinder> logger) : base(context)
         {
+            this.logger = logger;
         }
 
         public override Expression BindSelectionExpression(Expression baseExpression, IfcClassificationFacet facet)
@@ -89,7 +93,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 {
                     // Not supported, return nothing
 
-                    // TODO: log
+                    logger.LogWarning("Cannot filter by classification on {collectionType} items", elementType.Name);
                     return BindNotFound(expression, elementType);
 
                 }
@@ -130,7 +134,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             return expression;
         }
 
-        public override void ValidateEntity(IPersistEntity item, FacetGroup requirement, ILogger logger, IdsValidationResult result, IfcClassificationFacet facet)
+        public override void ValidateEntity(IPersistEntity item, IfcClassificationFacet facet, FacetGroup requirement, IdsValidationResult result)
         {
             if (facet is null)
             {

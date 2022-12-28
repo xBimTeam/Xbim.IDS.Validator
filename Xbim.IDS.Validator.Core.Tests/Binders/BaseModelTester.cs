@@ -10,12 +10,15 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
     public abstract class BaseModelTester
     {
-        //protected static IModel model;
 
         private static Lazy<IModel> lazyIfc4Model = new Lazy<IModel>(()=> BuildIfc4Model());
         private static Lazy<IModel> lazyIfc2x3Model = new Lazy<IModel>(() => BuildIfc2x3Model());
 
         private BinderContext _context = new BinderContext();
+        private readonly IServiceProvider provider;
+       
+
+
         public IModel Model
         {
             get
@@ -46,14 +49,18 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         private XbimSchemaVersion _schema;
         protected readonly ILogger logger;
 
-        //Lazy<>
+
 
         public BaseModelTester(ITestOutputHelper output, XbimSchemaVersion schema = XbimSchemaVersion.Ifc4)
         {
             this.output = output;
             _schema = schema;
-            logger = GetXunitLogger();
             query = new IfcQuery();
+            var services = new ServiceCollection()
+                        .AddLogging((builder) => builder.AddXunit(output,
+                        new Divergic.Logging.Xunit.LoggingConfig { LogLevel = LogLevel.Debug }));
+            provider = services.BuildServiceProvider();
+            logger = GetXunitLogger();
         }
 
        
@@ -72,13 +79,14 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         internal ILogger<IdsModelBinderTests> GetXunitLogger()
         {
-            var services = new ServiceCollection()
-                        .AddLogging((builder) => builder.AddXunit(output,
-                        new Divergic.Logging.Xunit.LoggingConfig { LogLevel = LogLevel.Debug }));
-            IServiceProvider provider = services.BuildServiceProvider();
-            var logger = provider.GetRequiredService<ILogger<IdsModelBinderTests>>();
+            var logger = GetLogger<IdsModelBinderTests>();
             Assert.NotNull(logger);
             return logger;
+        }
+
+        internal ILogger<T> GetLogger<T>()
+        {
+            return provider.GetRequiredService<ILogger<T>>();
         }
 
 
