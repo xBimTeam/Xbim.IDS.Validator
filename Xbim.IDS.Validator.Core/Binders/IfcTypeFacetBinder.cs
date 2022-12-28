@@ -11,9 +11,10 @@ namespace Xbim.IDS.Validator.Core.Binders
     public class IfcTypeFacetBinder : FacetBinderBase<IfcTypeFacet>
     {
 
-        public IfcTypeFacetBinder(IModel model): base(model)
+        public IfcTypeFacetBinder(BinderContext binderContext): base(binderContext.Model)
         {
         }
+
 
         /// <summary>
         /// Builds expression filtering on an IFC Type Facet

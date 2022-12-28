@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xbim.Common;
+using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc;
 using Xunit.Abstractions;
 
@@ -11,9 +12,15 @@ namespace Xbim.IDS.Validator.Core.Tests.TestModels
     {
         private readonly ITestOutputHelper output;
 
+        private readonly IServiceProvider provider;
+
         public IdsModelValidatorTests(ITestOutputHelper output)
         {
             this.output = output;
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddLogging().AddIdsValidation();
+
+            provider = serviceCollection.BuildServiceProvider();
         }
 
         [Fact]
@@ -23,13 +30,13 @@ namespace Xbim.IDS.Validator.Core.Tests.TestModels
             string idsScript = @"TestModels\Example.ids";
 
             var model = BuildModel(modelFile);
-            var modelBinder = new IdsModelBinder(model);
+
             var logger = GetXunitLogger();
 
 
-            var idsValidator = new IdsModelValidator(modelBinder);
+            var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
 
-            var results = idsValidator.ValidateAgainstIds(idsScript, logger);
+            var results = idsValidator.ValidateAgainstIds(model, idsScript, logger);
 
             results.Should().NotBeNull();
 

@@ -31,9 +31,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 AttributeName = attributeFieldName,
                 AttributeValue = new ValueConstraint(attributeValue)
             };
-            var ifcbinder = new IfcTypeFacetBinder(Model);
+  
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext);
 
-            var attrbinder = new AttributeFacetBinder(Model);
+            var attrbinder = new AttributeFacetBinder(BinderContext);
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -66,9 +67,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             };
             attrFacet.AttributeValue.AddAccepted(new StructureConstraint() { MinLength = 1, MaxLength = 10 });
 
-            var ifcbinder = new IfcTypeFacetBinder(Model);
+   
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext);
 
-            var attrbinder = new AttributeFacetBinder(Model);
+            var attrbinder = new AttributeFacetBinder(BinderContext);
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -108,9 +110,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             {
                 classFacet.Identification = new ValueConstraint(ident);
             }
-            var ifcbinder = new IfcTypeFacetBinder(Model);
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext);
 
-            var classbinder = new IfcClassificationFacetBinder(Model);
+            var classbinder = new IfcClassificationFacetBinder(BinderContext);
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -124,9 +126,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         }
 
 
-        [InlineData("IfcWindow", "Uniclass", null, 4)]
-        
-        [Theory(Skip ="Need to implement")]
+        [InlineData("IfcWindow", "Uniclass 2015", null, 4)]
+
+        [Theory(Skip = "Need to implement")]
         public void TODOCan_Query_By_Ifc_And_Classifications(string ifcType, string system, string ident, int expectedCount)
         {
 
@@ -144,9 +146,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             {
                 classFacet.Identification = new ValueConstraint(ident);
             }
-            var ifcbinder = new IfcTypeFacetBinder(Model);
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext);
 
-            var classbinder = new IfcClassificationFacetBinder(Model);
+            var classbinder = new IfcClassificationFacetBinder(BinderContext);
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -179,9 +181,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 Value = new ValueConstraint(NetTypeName.String),
             };
             materialFacet.Value = material;
-            var ifcbinder = new IfcTypeFacetBinder(Model);
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext);
 
-            var materialbinder = new MaterialFacetBinder(Model);
+            var materialbinder = new MaterialFacetBinder(BinderContext);
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -215,9 +217,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             propertyFacet.PropertyName.AddAccepted(new ExactConstraint(propName));
             if(value != null)
             propertyFacet.PropertyValue.AddAccepted(new ExactConstraint(value?.ToString()));
-            var ifcbinder = new IfcTypeFacetBinder(Model);
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext);
 
-            var psetbinder = new PsetFacetBinder(Model);
+            var psetbinder = new PsetFacetBinder(BinderContext);
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);

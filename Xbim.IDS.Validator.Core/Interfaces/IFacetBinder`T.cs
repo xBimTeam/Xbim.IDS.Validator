@@ -3,10 +3,11 @@ using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.InformationSpecifications;
 
-namespace Xbim.IDS.Validator.Core.Binders
+namespace Xbim.IDS.Validator.Core.Interfaces
 {
-    public interface IFacetBinder<T> where T: IFacet
+    public interface IFacetBinder<T> : IFacetBinder where T : IFacet
     {
+
         /// <summary>
         /// Binds the appropriate model filters to satisify the initial <paramref name="facet"/>'s criteria
         /// </summary>

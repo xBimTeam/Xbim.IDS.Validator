@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.IDS.Validator.Core.Binders;
+using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core
@@ -9,27 +10,28 @@ namespace Xbim.IDS.Validator.Core
     /// <summary>
     /// Binds an IDS Specification to an <see cref="IModel"/> to filter applicable entities and test against the requirements
     /// </summary>
-    public class IdsModelBinder
+    public class IdsModelBinder : IIdsModelBinder
     {
-        private readonly IModel model;
-        private IfcQuery ifcQuery;
+        
+        private readonly BinderContext binderContext;
+        private IfcQuery? ifcQuery;
 
-        private PsetFacetBinder psetFacetBinder;
-        private AttributeFacetBinder attrFacetBinder;
-        private IfcTypeFacetBinder ifcTypeFacetBinder;
-        private MaterialFacetBinder materialFacetBinder;
-        private IfcClassificationFacetBinder classificationFacetBinder;
+        public IIdsFacetBinderFactory FacetBinderFactory { get; }
 
-        public IdsModelBinder(IModel model)
+
+        public IdsModelBinder(IIdsFacetBinderFactory facetBinderFactory, BinderContext binderContext)
         {
-            this.model = model;
-            ifcQuery = new IfcQuery();
-            psetFacetBinder = new PsetFacetBinder(model);
-            attrFacetBinder = new AttributeFacetBinder(model);
-            ifcTypeFacetBinder = new IfcTypeFacetBinder(model);
-            materialFacetBinder = new MaterialFacetBinder(model);
-            classificationFacetBinder = new IfcClassificationFacetBinder(model);
+            FacetBinderFactory = facetBinderFactory;
+            this.binderContext = binderContext;
         }
+
+
+        public void Initialise(IModel model)
+        {
+            this.binderContext.Model = model;
+            ifcQuery = new IfcQuery();
+        }
+
 
         /// <summary>
         /// Returns all entities in the model that apply to a specification
@@ -37,21 +39,28 @@ namespace Xbim.IDS.Validator.Core
         /// <param name="facets"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public IEnumerable<IPersistEntity> SelectApplicableEntities(Specification spec)
+        public IEnumerable<IPersistEntity> SelectApplicableEntities(IModel model, Specification spec)
         {
+            if (model is null)
+            {
+                throw new ArgumentNullException(nameof(model));
+            }
+
             if (spec is null)
             {
                 throw new ArgumentNullException(nameof(spec));
             }
+            Initialise(model);
+    
 
             var facets = spec.Applicability.Facets;
-           
+
             var ifcFacet = facets.OfType<IfcTypeFacet>().FirstOrDefault();
             Expression expression;
-            if(ifcFacet != null)
+            if (ifcFacet != null)
             {
                 // If possible start with an IFCType to narrow the selection down
-                expression = BindSelection(ifcQuery.InstancesExpression, ifcFacet);
+                expression = BindSelection(ifcQuery?.InstancesExpression, ifcFacet);
                 foreach (var facet in facets.Except(new[] { ifcFacet }))
                 {
                     expression = BindFilters(expression, facet);
@@ -60,7 +69,7 @@ namespace Xbim.IDS.Validator.Core
             else
             {
                 var firstFacet = facets.First();
-                expression = BindSelection(ifcQuery.InstancesExpression, firstFacet);
+                expression = BindSelection(ifcQuery?.InstancesExpression, firstFacet);
                 foreach (var facet in facets.Except(new[] { firstFacet }))
                 {
                     expression = BindFilters(expression, facet);
@@ -70,7 +79,7 @@ namespace Xbim.IDS.Validator.Core
             return ifcQuery.Execute(expression, model);
         }
 
-   
+
         /// <summary>
         /// Validate an IFC entity meets its requirements against the defined Constraints
         /// </summary>
@@ -86,49 +95,14 @@ namespace Xbim.IDS.Validator.Core
 
             foreach (var facet in requirement.Facets)
             {
-
-                switch (facet)
-                {
-                    case IfcTypeFacet f:
-
-
-                        ifcTypeFacetBinder.ValidateEntity(item, requirement, logger, result, f);
-                        break;
-
-
-                    case IfcPropertyFacet pf:
-
-                        psetFacetBinder.ValidateEntity(item, requirement, logger, result, pf);
-                        break;
-
-
-                    case AttributeFacet af:
-
-                        attrFacetBinder.ValidateEntity(item, requirement, logger, result, af);
-                        break;
-
-                    case MaterialFacet mf:
-
-                        materialFacetBinder.ValidateEntity(item, requirement, logger, result, mf);
-                        break;
-
-                    case IfcClassificationFacet cf:
-
-                        classificationFacetBinder.ValidateEntity(item, requirement, logger, result, cf);
-                        break;
-
-
-                    default:
-                        logger.LogWarning("Skipping unimplemented validation {type}", facet.GetType().Name);
-                        break;
-                        //throw new NotImplementedException($"Validation of Facet not implemented: '{facet.GetType().Name}' - {facet.Short()}");
-                }
+                var binder = FacetBinderFactory.Create(facet);
+                binder.ValidateEntity(item, requirement, logger, result, facet);
             }
-            if(result.Failures.Any())
+            if (result.Failures.Any())
             {
                 result.ValidationStatus = ValidationStatus.Failed;
             }
-            else if(result.Messages.Any(m=> m.Status != ValidationStatus.Failed))
+            else if (result.Messages.Any(m => m.Status != ValidationStatus.Failed))
             {
                 // Success and Inconclusive all count as success
                 result.ValidationStatus = ValidationStatus.Success;
@@ -146,74 +120,15 @@ namespace Xbim.IDS.Validator.Core
         /// <exception cref="NotImplementedException"></exception>
         private Expression BindSelection(Expression baseExpression, IFacet facet)
         {
-            switch (facet)
-            {
-                case IfcTypeFacet f:
-                    return ifcTypeFacetBinder.BindSelectionExpression(baseExpression, f);
-
-                case AttributeFacet af:
-                    return attrFacetBinder.BindSelectionExpression(baseExpression, af);
-
-                case IfcPropertyFacet pf:
-                    return psetFacetBinder.BindSelectionExpression(baseExpression, pf);
-
-                case IfcClassificationFacet cf:
-                    return classificationFacetBinder.BindSelectionExpression(baseExpression, cf);
-
-                case DocumentFacet df:
-                    // TODO: 
-                    return baseExpression;
-
-                case IfcRelationFacet rf:
-                    // TODO: 
-                    return baseExpression;
-
-                case PartOfFacet pf:
-                    // TODO: 
-                    return baseExpression;
-
-                case MaterialFacet mf:
-                    return materialFacetBinder.BindSelectionExpression(baseExpression, mf);
-
-                default:
-                    throw new NotImplementedException($"Facet not implemented: '{facet.GetType().Name}'");
-            }
+            var binder = FacetBinderFactory.Create(facet);
+            return binder.BindSelectionExpression(baseExpression, facet); 
+           
         }
 
         private Expression BindFilters(Expression baseExpression, IFacet facet)
         {
-            switch (facet)
-            {
-                case IfcTypeFacet f:
-                    return ifcTypeFacetBinder.BindWhereExpression(baseExpression, f);
-
-                case AttributeFacet af:
-                    return attrFacetBinder.BindWhereExpression(baseExpression, af);
-
-                case IfcPropertyFacet pf:
-                    return psetFacetBinder.BindWhereExpression(baseExpression, pf);
-
-                case IfcClassificationFacet cf:
-                    return classificationFacetBinder.BindWhereExpression(baseExpression, cf);
-
-                case DocumentFacet df:
-                    // TODO: 
-                    return baseExpression;
-
-                case IfcRelationFacet rf:
-                    // TODO: 
-                    return baseExpression;
-
-                case PartOfFacet pf:
-                    // TODO: 
-                    return baseExpression;
-
-                case MaterialFacet mf:
-                    return materialFacetBinder.BindWhereExpression(baseExpression, mf);
-
-                default:
-                    throw new NotImplementedException($"Facet not implemented: '{facet.GetType().Name}'");
-            }
+            var binder = FacetBinderFactory.Create(facet);
+            return binder.BindWhereExpression(baseExpression, facet);
         }
     }
 }

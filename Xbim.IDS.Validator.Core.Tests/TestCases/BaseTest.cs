@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xbim.Common.Step21;
+using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xunit.Abstractions;
@@ -14,10 +15,24 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
         protected readonly ILogger logger;
 
+        private readonly IServiceProvider provider;
+
         public BaseTest(ITestOutputHelper output)
         {
             this.output = output;
             logger = GetXunitLogger();
+            provider = BuildServiceProvider();
+        }
+
+        private static ServiceProvider BuildServiceProvider()
+        {
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddLogging();
+
+            serviceCollection.AddIdsValidation();
+
+            var provider = serviceCollection.BuildServiceProvider();
+            return provider;
         }
 
         static BaseTest()
@@ -101,9 +116,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                     logger.LogWarning("Spotfix failed. Check if this code can be removed");
                 }
             }
-            IdsModelBinder modelBinder = new IdsModelBinder(model);
-            var validator = new IdsModelValidator(modelBinder);
-            var outcome = validator.ValidateAgainstIds(idsFile, logger);
+            
+            var validator = provider.GetRequiredService<IIdsModelValidator>();
+            var outcome = validator.ValidateAgainstIds(model, idsFile, logger);
 
             var results = outcome.ExecutedRequirements.SelectMany(e => e.ApplicableResults);
             foreach (IdsValidationResult res in results)

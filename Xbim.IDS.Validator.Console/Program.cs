@@ -1,25 +1,40 @@
 ﻿
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
 using Xbim.Common;
 using Xbim.IDS.Validator.Core;
+using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc;
 
 class Program
 {
 
     static ILogger? logger;
+
+    static readonly ServiceProvider provider;
+
+    static Program()
+    {
+        provider = BuildServiceProvider();
+    }
+
     static async Task<int> Main(string[] args)
     {
-
-        var factory = LoggerFactory.Create(builder =>
-        {
-            //builder.AddConsole();
-        });
-        logger = factory.CreateLogger<Program>();
         var command = SetupParams();
-
+        logger = provider.GetRequiredService<ILogger<Program>>();
         return await command.InvokeAsync(args);
+    }
+
+    private static ServiceProvider BuildServiceProvider()
+    {
+        var serviceCollection = new ServiceCollection();
+        serviceCollection.AddLogging(/*o => o.AddConsole()*/);
+
+        serviceCollection.AddIdsValidation();
+
+        var provider = serviceCollection.BuildServiceProvider();
+        return provider;
     }
 
     private static RootCommand SetupParams()
@@ -57,12 +72,12 @@ class Program
         Console.WriteLine("IFC File: {0}", modelFile);
         Console.WriteLine("Loading Model..."); 
         IModel model = BuildModel(modelFile);
-        var modelBinder = new IdsModelBinder(model);
-        
-        var idsValidator = new IdsModelValidator(modelBinder);
+
+        // Normally we'd inject rather than service discovery
+        var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
 
         Console.WriteLine("Validating...");
-        var results = idsValidator.ValidateAgainstIds(ids, logger);
+        var results = idsValidator.ValidateAgainstIds(model, ids, logger);
 
         foreach(var req in results.ExecutedRequirements)
         {

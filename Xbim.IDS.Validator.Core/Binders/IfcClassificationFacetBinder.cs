@@ -12,7 +12,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 {
     public class IfcClassificationFacetBinder : FacetBinderBase<IfcClassificationFacet>
     {
-        public IfcClassificationFacetBinder(IModel model) : base(model)
+        public IfcClassificationFacetBinder(BinderContext context) : base(context.Model)
         {
         }
 
@@ -85,12 +85,6 @@ namespace Xbim.IDS.Validator.Core.Binders
                     expression = BindClassificationFilter(expression, facet);
                     return expression;
                 }
-                // TODO:
-                //else if (elementType.IsAssignableTo(typeof(IIfcMaterialDefinition)))
-                //{
-                //    // Materials special-cased by HasExternalReferences
-                //    expression = BindSelectManyClassifications(ref expression, elementType, typeof(IIfcExternalReferenceRelationship), nameof(IIfcMaterialDefinition.HasExternalReferences));
-                //}
                 else
                 {
                     // Not supported, return nothing
