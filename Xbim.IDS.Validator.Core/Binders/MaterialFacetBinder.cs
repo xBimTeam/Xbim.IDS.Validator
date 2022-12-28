@@ -14,8 +14,11 @@ namespace Xbim.IDS.Validator.Core.Binders
 {
     public class MaterialFacetBinder : FacetBinderBase<MaterialFacet>
     {
-        public MaterialFacetBinder(BinderContext context) : base(context.Model)
+        private readonly ILogger<MaterialFacetBinder> logger;
+
+        public MaterialFacetBinder(BinderContext context, ILogger<MaterialFacetBinder> logger) : base(context)
         {
+            this.logger = logger;
         }
 
         public override Expression BindSelectionExpression(Expression baseExpression, MaterialFacet facet)
@@ -80,7 +83,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 // Apply the Classification filter
                 if (typeof(IIfcObjectDefinition).IsAssignableFrom(elementType))
                 {
-                    // Objects and Types classified by HasAssociations
+                    // Objects and Types
 
                     expression = BindMaterialFilter(expression, facet);
                     return expression;
@@ -89,7 +92,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 {
                     // Not supported, return nothing
 
-                    // TODO: log
+                    logger.LogWarning("Cannot filter by material on {collectionType} items", elementType.Name);
                     return BindNotFound(expression, elementType);
 
                 }
@@ -99,7 +102,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             throw new NotSupportedException("Cannot filter materials on this type " + elementType.Name);
         }
 
-        public override void ValidateEntity(IPersistEntity item, FacetGroup requirement, ILogger logger, IdsValidationResult result, MaterialFacet facet)
+        public override void ValidateEntity(IPersistEntity item, MaterialFacet facet, FacetGroup requirement, IdsValidationResult result)
         {
             if (facet is null)
             {

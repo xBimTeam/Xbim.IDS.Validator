@@ -13,9 +13,11 @@ namespace Xbim.IDS.Validator.Core.Binders
 
     public class IfcTypeFacetBinder : FacetBinderBase<IfcTypeFacet>
     {
+        private readonly ILogger<IfcTypeFacetBinder> logger;
 
-        public IfcTypeFacetBinder(BinderContext binderContext): base(binderContext.Model)
+        public IfcTypeFacetBinder(BinderContext binderContext, ILogger<IfcTypeFacetBinder> logger) : base(binderContext)
         {
+            this.logger = logger;
         }
 
 
@@ -50,6 +52,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             if(!ExpressTypesAreValid(expressTypes))
             {
                 var types = ifcFacet.IfcType.ToString();
+                logger.LogWarning("Unexpected IFC Type: {ifcTypes} for schema {ifcSchema}", types, Model.SchemaVersion);
                 throw new InvalidOperationException($"Invalid IFC Type '{types}' for {Model.SchemaVersion}" );
             }
 
@@ -91,7 +94,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             throw new NotImplementedException();
         }
 
-        public override void ValidateEntity(IPersistEntity item, FacetGroup requirement, ILogger logger, IdsValidationResult result, IfcTypeFacet f)
+        public override void ValidateEntity(IPersistEntity item, IfcTypeFacet f, FacetGroup requirement, IdsValidationResult result)
         {
             var ctx = CreateValidationContext(requirement, f);
             var entityType = Model.Metadata.ExpressType(item);

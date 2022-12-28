@@ -99,7 +99,7 @@ namespace Xbim.IDS.Validator.Core
             foreach (var facet in requirement.Facets)
             {
                 var binder = FacetBinderFactory.Create(facet);
-                binder.ValidateEntity(item, requirement, logger, result, facet);
+                binder.ValidateEntity(item, facet, requirement, result);
             }
             if (result.Failures.Any())
             {

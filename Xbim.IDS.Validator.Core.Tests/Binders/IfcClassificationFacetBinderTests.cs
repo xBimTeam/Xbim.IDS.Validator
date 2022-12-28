@@ -10,7 +10,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
     {
         public IfcClassificationFacetBinderTests(ITestOutputHelper output) : base(output)
         {
-            Binder = new IfcClassificationFacetBinder(BinderContext);
+            Binder = new IfcClassificationFacetBinder(BinderContext, GetLogger<IfcClassificationFacetBinder>());
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             var validationResult = new IdsValidationResult(instance, group);
 
-            Binder.ValidateEntity(instance, group, logger, validationResult, facet);
+            Binder.ValidateEntity(instance, facet, group, validationResult);
 
             foreach(var message in validationResult.Messages) 
             {
@@ -115,7 +115,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             var validationResult = new IdsValidationResult(project, group);
 
-            Binder.ValidateEntity(project, group, logger, validationResult, facet);
+            Binder.ValidateEntity(project, facet, group, validationResult);
 
             foreach (var message in validationResult.Messages)
             {

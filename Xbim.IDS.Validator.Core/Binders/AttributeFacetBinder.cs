@@ -16,8 +16,11 @@ namespace Xbim.IDS.Validator.Core.Binders
 {
     public class AttributeFacetBinder : FacetBinderBase<AttributeFacet>
     {
-        public AttributeFacetBinder(BinderContext context) : base(context.Model)
+        private readonly ILogger<AttributeFacetBinder> logger;
+
+        public AttributeFacetBinder(BinderContext context, ILogger<AttributeFacetBinder> logger) : base(context)
         {
+            this.logger = logger;
         }
 
 
@@ -98,7 +101,8 @@ namespace Xbim.IDS.Validator.Core.Binders
             return BindSelectionExpression(baseExpression, attrFacet);
         }
 
-        public override void ValidateEntity(IPersistEntity item, FacetGroup requirement, ILogger logger, IdsValidationResult result, AttributeFacet af)
+        
+        public override void ValidateEntity(IPersistEntity item, AttributeFacet af, FacetGroup requirement, IdsValidationResult result)
         {
             if (af is null)
             {
@@ -182,7 +186,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                     if (facet?.AttributeName?.IsSatisfiedBy(prop.Value.Name, true) == true)
                     {
                         var value = prop.Value.PropertyInfo.GetValue(entity);
-                        if (!(value == null && IsEnum(facet.AttributeName)))   // TODO: should really only filter out enum choices?
+                        if (!(value == null && IsEnum(facet.AttributeName)))
                         {
                             results.Add(prop.Value.Name, value);
                         }

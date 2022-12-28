@@ -28,15 +28,18 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// Constructs a new <see cref="FacetBinderBase{T}"/>
         /// </summary>
         /// <param name="model"></param>
-        public FacetBinderBase(IModel model)
+        public FacetBinderBase(BinderContext binderContext)
         {
-            Model = model;
+            BinderContext = binderContext ?? throw new ArgumentNullException(nameof(binderContext));
+
         }
+
+        public BinderContext BinderContext { get; }
 
         /// <summary>
         /// The model being queried
         /// </summary>
-        public IModel Model { get; }
+        public IModel? Model { get => BinderContext.Model; }
 
         /// <summary>
         /// Applies a Selection and Filter predicate to the supplied <paramref name="baseExpression"/> from the <paramref name="facet"/>
@@ -57,7 +60,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <param name="logger"></param>
         /// <param name="result"></param>
         /// <param name="facet"></param>
-        public abstract void ValidateEntity(IPersistEntity item, FacetGroup requirement, ILogger logger, IdsValidationResult result, T facet);
+        public abstract void ValidateEntity(IPersistEntity item, T facet, FacetGroup requirement, IdsValidationResult result);
 
 
         protected static bool ExpressTypesAreValid(IEnumerable<ExpressType> expressTypes)
@@ -100,7 +103,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             // call .OfType("IfcWall", true)
             expression = Expression.Call(expression, ofTypeMethod, entityTypeName, activate);   // TODO: switch to Generic sig
 
-            // TODO: Currently requred just to pass the Type downstream for other Facets
+            // Currently required just to pass the Type downstream for other Facets
             // call .Cast<EntityType>()
             expression = Expression.Call(null, ExpressionHelperMethods.EnumerableCastGeneric.MakeGenericMethod(expressType.Type), expression);
 
@@ -514,9 +517,9 @@ namespace Xbim.IDS.Validator.Core.Binders
             return BindWhereExpression(baseExpression, (T)facet);
         }
 
-        void IFacetBinder.ValidateEntity(IPersistEntity item, FacetGroup requirement, ILogger logger, IdsValidationResult result, IFacet facet)
+        void IFacetBinder.ValidateEntity(IPersistEntity item, IFacet facet, FacetGroup requirement, IdsValidationResult result)
         {
-            ValidateEntity(item, requirement, logger, result, (T)facet);
+            ValidateEntity(item, (T)facet, requirement, result);
         }
 
         ValidationContext<IFacet> IFacetBinder.CreateValidationContext(FacetGroup requirement, IFacet facet)

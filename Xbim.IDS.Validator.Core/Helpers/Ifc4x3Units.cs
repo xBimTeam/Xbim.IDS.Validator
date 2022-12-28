@@ -24,6 +24,8 @@ namespace Xbim.IDS.Validator.Core.Helpers
         SquareFoot,
         CubicFoot
     }
+
+    // TODO: Move this back into xbim.Ifc4x3
     public static class IfcUnitAssignmentExtensions
     {
         /// <summary>
@@ -145,11 +147,11 @@ namespace Xbim.IDS.Validator.Core.Helpers
             else if (property.NominalValue is IfcAmountOfSubstanceMeasure)
                 requiredUnit = IfcUnitEnum.AMOUNTOFSUBSTANCEUNIT;
             else if (property.NominalValue is IfcContextDependentMeasure)
-                requiredUnit = null; // todo: not sure what to do here
+                requiredUnit = null; 
             else if (property.NominalValue is IfcCountMeasure)
-                requiredUnit = null; // todo: not sure what to do here
+                requiredUnit = null; 
             else if (property.NominalValue is IfcDescriptiveMeasure)
-                requiredUnit = null; // todo: not sure what to do here
+                requiredUnit = null; 
             else if (property.NominalValue is IfcElectricCurrentMeasure)
                 requiredUnit = IfcUnitEnum.ELECTRICCURRENTUNIT;
             else if (property.NominalValue is IfcLuminousIntensityMeasure)
@@ -157,19 +159,19 @@ namespace Xbim.IDS.Validator.Core.Helpers
             else if (property.NominalValue is IfcMassMeasure)
                 requiredUnit = IfcUnitEnum.MASSUNIT;
             else if (property.NominalValue is IfcNormalisedRatioMeasure)
-                requiredUnit = null; // todo: not sure what to do here
+                requiredUnit = null; 
             else if (property.NominalValue is IfcNumericMeasure)
-                requiredUnit = null; // todo: not sure what to do here.
+                requiredUnit = null; 
             else if (property.NominalValue is IfcParameterValue)
-                requiredUnit = null; // todo: not sure what to do here.
+                requiredUnit = null; 
             else if (property.NominalValue is IfcPlaneAngleMeasure)
                 requiredUnit = IfcUnitEnum.PLANEANGLEUNIT;
             else if (property.NominalValue is IfcPositiveRatioMeasure)
-                requiredUnit = null; // todo: not sure what to do here.
+                requiredUnit = null; 
             else if (property.NominalValue is IfcPositivePlaneAngleMeasure)
                 requiredUnit = IfcUnitEnum.PLANEANGLEUNIT;
             else if (property.NominalValue is IfcRatioMeasure)
-                requiredUnit = null; // todo: not sure what to do here.
+                requiredUnit = null; 
             else if (property.NominalValue is IfcSolidAngleMeasure)
                 requiredUnit = IfcUnitEnum.SOLIDANGLEUNIT;
             else if (property.NominalValue is IfcThermodynamicTemperatureMeasure)
@@ -177,7 +179,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
             else if (property.NominalValue is IfcTimeMeasure)
                 requiredUnit = IfcUnitEnum.TIMEUNIT;
             else if (property.NominalValue is IfcComplexNumber)
-                requiredUnit = null; // todo: not sure what to do here.
+                requiredUnit = null; 
             // types from IfcSimpleValue
             else if (property.NominalValue is IfcSimpleValue)
                 requiredUnit = null;
