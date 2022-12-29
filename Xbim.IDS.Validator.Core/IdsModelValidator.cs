@@ -76,17 +76,18 @@ namespace Xbim.IDS.Validator.Core
                     foreach (var item in items)
                     {
                         var i = item as IIfcRoot;
-                        logger.LogInformation("          * #{ID}: {Type} {Name} ", item.EntityLabel, item.GetType().Name, i?.Name);
+                        logger.LogInformation("          * {entity}", item);
 
 
                         var result = ModelBinder.ValidateRequirement(item, spec.Requirement, logger);
-                        LogLevel level = LogLevel.Information;
-                        int pad = 0;
-                        if (result.ValidationStatus == ValidationStatus.Inconclusive) { level = LogLevel.Warning; pad = 4; }
-                        if (result.ValidationStatus == ValidationStatus.Failed) { level = LogLevel.Error; pad = 6; }
-                        logger.Log(level, "{pad}           {result}: Checking {short}", "".PadLeft(pad, ' '), result.ValidationStatus.ToString().ToUpperInvariant(), spec.Requirement.Short());
+                        LogLevel level;
+                        int pad;
+                        GetLogLevel(result.ValidationStatus, out level, out pad);
+                        logger.Log(level, "{pad}           {result}: Checking {short}", "".PadLeft(pad, ' '), 
+                            result.ValidationStatus.ToString().ToUpperInvariant(), spec.Requirement.Short());
                         foreach (var message in result.Messages)
                         {
+                            GetLogLevel(message.Status, out level, out pad, LogLevel.Debug);
                             logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
                         }
                         requirementResult.ApplicableResults.Add(result);
@@ -111,6 +112,14 @@ namespace Xbim.IDS.Validator.Core
             }
             // TODO: Consider Inconclusive
             return outcome;
+        }
+
+        private static void GetLogLevel(ValidationStatus status, out LogLevel level, out int pad, LogLevel defaultLevel = LogLevel.Information)
+        {
+            level = defaultLevel;
+            pad = 0;
+            if (status == ValidationStatus.Inconclusive) { level = LogLevel.Warning; pad = 4; }
+            if (status == ValidationStatus.Failed) { level = LogLevel.Error; pad = 6; }
         }
 
         private static void SetResults(Specification specification, ValidationRequirement validation)

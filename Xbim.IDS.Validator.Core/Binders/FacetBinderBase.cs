@@ -35,7 +35,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <summary>
         /// The model being queried
         /// </summary>
-        public IModel? Model { get => BinderContext.Model; }
+        public IModel Model { get => BinderContext.Model ?? throw new ArgumentNullException(); }
 
         /// <summary>
         /// Applies a Selection and Filter predicate to the supplied <paramref name="baseExpression"/> from the <paramref name="facet"/>
@@ -73,7 +73,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             return true;
         }
 
-        protected static bool ExpressTypeIsValid(ExpressType expressType, string? type = default)
+        protected static bool ExpressTypeIsValid(ExpressType expressType)
         {
             // Exclude invalid schema items (including un-rooted entity types like IfcLabel)
             return !(expressType == null || expressType.Properties.Count == 0);

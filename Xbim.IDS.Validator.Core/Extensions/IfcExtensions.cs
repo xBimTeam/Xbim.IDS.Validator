@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using Xbim.Ifc4.Interfaces;
+using Xbim.Ifc4x3.PortsAndWaterwaysDomain;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Extensions
@@ -23,7 +24,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
                 throw new ArgumentNullException(nameof(relDefines));
             }
 
-            return relDefines.FilterByFacet(facet)
+            return relDefines.FilterByPropertyFacet(facet)
                     .SelectMany(r => r.RelatedObjects);
         }
 
@@ -40,14 +41,15 @@ namespace Xbim.IDS.Validator.Core.Extensions
                 throw new ArgumentNullException(nameof(materialFacet));
             }
 
-            return relAssociates.FilterByFacet(materialFacet)
+            return relAssociates.FilterByMaterialFacet(materialFacet)
                     .SelectMany(r => r.RelatedObjects).OfType<IIfcObjectDefinition>();
         }
 
 
         /// <summary>
-        /// Selects all objects using a matching classification
+        /// Selects all objects using a matching classification, inferring from Types where appropriate
         /// </summary>
+        /// <remarks>The filtering also accounts for hierarchical classification schemes</remarks>
         /// <param name="relAssociates"></param>
         /// <param name="materialName"></param>
         /// <returns></returns>
@@ -58,8 +60,22 @@ namespace Xbim.IDS.Validator.Core.Extensions
                 throw new ArgumentNullException(nameof(facet));
             }
 
-            return relAssociates.FilterByFacet(facet)
-                .SelectMany(r => r.RelatedObjects).OfType<IIfcObjectDefinition>();
+            // When Getting objects we cast the net wide, starting at IIfcRelAssociatesClassification and traversing from Types to instances
+            // This differs to filtering (WhereAssociatedToClassification), where we determine if existing selection meets classification criteria
+
+            var matchingRels = relAssociates.FilterByClassificationFacet(facet);
+            // Find objects with matching classifications
+            IEnumerable<IIfcObjectDefinition> results = matchingRels
+                .SelectMany(r => r.RelatedObjects).OfType<IIfcObject>();
+
+            // Append Types with matching classifications
+            var typeResults = matchingRels.SelectMany(r => r.RelatedObjects).OfType<IIfcTypeObject>();
+
+            results = results.Union(typeResults);
+            // Append instances of objects defined by matching types
+            results = results.Union(typeResults.SelectMany(t => t.Types.SelectMany(tt => tt.RelatedObjects)));
+
+            return results;
 
         }
 
@@ -106,7 +122,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
             {
                 throw new ArgumentNullException(nameof(facet));
             }
-            return relAssociates.FilterByFacet(facet)
+            return relAssociates.FilterByClassificationFacet(facet)
                 .Select(r=> r.RelatingClassification).OfType<IIfcClassificationSelect>();
 
         }
@@ -114,27 +130,36 @@ namespace Xbim.IDS.Validator.Core.Extensions
 
         public static IEnumerable<IIfcObjectDefinition> WhereAssociatedWithClassification(this IEnumerable<IIfcObjectDefinition> ent, IfcClassificationFacet facet)
         {
-            return ent.Where(e => e.HasAssociations.OfType<IIfcRelAssociatesClassification>().FilterByFacet(facet).Any());
+            // Where classification matches directly, or an object's Type matches classification
+            IEnumerable<IIfcObjectDefinition> results = ent.Where(e => e.HasAssociations.OfType<IIfcRelAssociatesClassification>()
+                .FilterByClassificationFacet(facet).Any() || 
+                e is IIfcObject t && t.IsTypedBy.Any(r => r.RelatingType.HasAssociations.OfType<IIfcRelAssociatesClassification>()
+                .FilterByClassificationFacet(facet).Any()));
+                
 
+            return results;
         }
 
         public static IEnumerable<IIfcObjectDefinition> WhereAssociatedWithMaterial(this IEnumerable<IIfcObjectDefinition> ent, MaterialFacet facet)
         {
-            return ent.Where(e => e.HasAssociations.OfType<IIfcRelAssociatesMaterial>().FilterByFacet(facet).Any());
+            return ent.Where(e => e.HasAssociations.OfType<IIfcRelAssociatesMaterial>().FilterByMaterialFacet(facet).Any());
         }
 
         public static IEnumerable<IIfcObject> WhereAssociatedWithProperty(this IEnumerable<IIfcObject> ent, IfcPropertyFacet facet)
         {
-            return ent.Where(e => e.IsDefinedBy.OfType<IIfcRelDefinesByProperties>().FilterByFacet(facet).Any());
+            return ent.Where(e => e.IsDefinedBy.OfType<IIfcRelDefinesByProperties>().FilterByPropertyFacet(facet).Any() 
+            ||
+            // Or we inherit from the type
+            e.IsTypedBy.Any(r=> r.RelatingType.HasPropertySets.OfType<IIfcPropertySet>().FilterByPropertyFacet(facet).Any()));
         }
 
         public static IEnumerable<IIfcTypeObject> WhereAssociatedWithProperty(this IEnumerable<IIfcTypeObject> ent, IfcPropertyFacet facet)
         {
-            return ent.Where(e => e.HasPropertySets.OfType<IIfcPropertySet>().FilterByFacet(facet).Any());
+            return ent.Where(e => e.HasPropertySets.OfType<IIfcPropertySet>().FilterByPropertyFacet(facet).Any());
         }
 
 
-        private static IEnumerable<IIfcRelAssociatesMaterial> FilterByFacet(this IEnumerable<IIfcRelAssociatesMaterial> relAssociates, MaterialFacet facet)
+        private static IEnumerable<IIfcRelAssociatesMaterial> FilterByMaterialFacet(this IEnumerable<IIfcRelAssociatesMaterial> relAssociates, MaterialFacet facet)
         {
             // Note, keep in sync with GetMaterialsForEntity() above [or find a way to share the predicate]
             return relAssociates.Where(r =>
@@ -154,7 +179,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
             );
         }
 
-        private static IEnumerable<IIfcRelAssociatesClassification> FilterByFacet(this IEnumerable<IIfcRelAssociatesClassification> relAssociates, IfcClassificationFacet facet)
+        private static IEnumerable<IIfcRelAssociatesClassification> FilterByClassificationFacet(this IEnumerable<IIfcRelAssociatesClassification> relAssociates, IfcClassificationFacet facet)
         {
             return relAssociates.Where(r =>
                 (
@@ -228,29 +253,14 @@ namespace Xbim.IDS.Validator.Core.Extensions
         }
 
 
-
-        private static IEnumerable<IIfcRelDefinesByProperties> FilterByFacet(this IEnumerable<IIfcRelDefinesByProperties> relDefines,
-            string psetName, string propName, string? propValue)
-        {
-            if (propValue == null)
-            {
-                return relDefines
-                    .Where(r => r.RelatingPropertyDefinition is IIfcPropertySet ps && string.Equals(ps.Name, psetName, StringComparison.InvariantCultureIgnoreCase))
-                    .Where(r => ((IIfcPropertySet)r.RelatingPropertyDefinition).HasProperties.Where(ps => string.Equals(ps.Name, propName, StringComparison.InvariantCultureIgnoreCase)).Any());
-            }
-            else
-            {
-                return relDefines
-                    .Where(r => r.RelatingPropertyDefinition is IIfcPropertySet ps && string.Equals(ps.Name, psetName, StringComparison.InvariantCultureIgnoreCase))
-                    .Where(r => ((IIfcPropertySet)r.RelatingPropertyDefinition)
-                        .HasProperties.OfType<IIfcPropertySingleValue>().Where(ps =>
-                        string.Equals(ps.Name, propName, StringComparison.InvariantCultureIgnoreCase) &&
-                        string.Equals(ps.NominalValue.ToString(), propValue, StringComparison.InvariantCultureIgnoreCase)
-                        ).Any());
-            }
-        }
-
-        private static IEnumerable<IIfcRelDefinesByProperties> FilterByFacet(this IEnumerable<IIfcRelDefinesByProperties> relDefines,
+        /// <summary>
+        /// Applies facet filter to the supplied <see cref="IIfcRelDefinesByProperties"/> set
+        /// </summary>
+        /// <param name="relDefines"></param>
+        /// <param name="facet"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        private static IEnumerable<IIfcRelDefinesByProperties> FilterByPropertyFacet(this IEnumerable<IIfcRelDefinesByProperties> relDefines,
             IfcPropertyFacet facet)
         {
 
@@ -258,34 +268,24 @@ namespace Xbim.IDS.Validator.Core.Extensions
             {
                 throw new ArgumentNullException(nameof(facet));
             }
+            return relDefines.Select(r => r.RelatingPropertyDefinition)
+                .OfType<IIfcPropertySetDefinition>()
+                .FilterByPropertyFacet(facet)
+                .SelectMany(p => p.DefinesOccurrence);
 
-            // Try Psets first
-            // TODO: non PropertySingleValues
-            var psets = relDefines
-                .Where(r => r.RelatingPropertyDefinition is IIfcPropertySet ps && facet!.PropertySetName?.IsSatisfiedBy(ps.Name?.Value, true) == true)
-                .Where(r => ((IIfcPropertySet)r.RelatingPropertyDefinition)
-                    .HasProperties.OfType<IIfcPropertySingleValue>().Where(ps =>
-                    facet!.PropertyName?.IsSatisfiedBy(ps.Name.Value, true) == true &&
-                    (facet.PropertyValue?.HasAnyAcceptedValue() != true || facet!.PropertyValue?.IsSatisfiedBy(ps.NominalValue.Value, true) == true )
-                    ).Any());
 
-            // Append Quantities
-            var quants = relDefines
-                .Where(r => r.RelatingPropertyDefinition is IIfcElementQuantity eq && facet!.PropertySetName?.IsSatisfiedBy(eq.Name?.Value, true) == true)
-                .Where(r => ((IIfcElementQuantity)r.RelatingPropertyDefinition)
-                .Quantities.
-                    Where(q =>
-                    facet!.PropertyName?.IsSatisfiedBy(q.Name.Value, true) == true &&
-                    (facet.PropertyValue?.HasAnyAcceptedValue() != true || 
-                        PhysicalQuantitySatisifies(facet.PropertyValue, q))
-                    ).Any());
-
-            return psets.Concat(quants);
 
         }
 
 
-        private static IEnumerable<IIfcPropertySet> FilterByFacet(this IEnumerable<IIfcPropertySet> relDefines,
+        /// <summary>
+        /// Applies facet filter to the supplied <see cref="IIfcPropertySet"/> set
+        /// </summary>
+        /// <param name="relDefines"></param>
+        /// <param name="facet"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        private static IEnumerable<IIfcPropertySetDefinition> FilterByPropertyFacet(this IEnumerable<IIfcPropertySetDefinition> relDefines,
            IfcPropertyFacet facet)
         {
 
@@ -295,14 +295,49 @@ namespace Xbim.IDS.Validator.Core.Extensions
             }
 
             // Try Psets first
-            // TODO: non PropertySingleValues
             var psets = relDefines
-                .Where(ps => facet!.PropertySetName?.IsSatisfiedBy(ps.Name?.Value, true) == true)
-                .Where(ps => ps
-                    .HasProperties.OfType<IIfcPropertySingleValue>().Where(ps =>
-                    facet!.PropertyName?.IsSatisfiedBy(ps.Name.Value, true) == true &&
-                    (facet.PropertyValue?.HasAnyAcceptedValue() != true || facet!.PropertyValue?.IsSatisfiedBy(ps.NominalValue.Value, true) == true)
-                    ).Any());
+                .Where(psd => facet!.PropertySetName?.IsSatisfiedBy(psd.Name?.Value, true) == true)
+                .Where(psd => psd is IIfcPropertySet ps && 
+                    (
+                        // Single Values
+                        ps.HasProperties.OfType<IIfcPropertySingleValue>().Where(psv =>
+                        facet!.PropertyName?.IsSatisfiedBy(psv.Name.Value, true) == true &&
+                        (
+                            facet.PropertyValue?.HasAnyAcceptedValue() != true || 
+                            facet!.PropertyValue?.IsSatisfiedBy(psv.NominalValue.Value, true) == true)
+                        ).Any()
+                        // Bounded Values
+                        || ps.HasProperties.OfType<IIfcPropertyBoundedValue>().Where(pbv =>
+                        facet!.PropertyName?.IsSatisfiedBy(pbv.Name.Value, true) == true &&
+                        (
+                            facet.PropertyValue?.HasAnyAcceptedValue() != true || 
+                            facet!.PropertyValue?.IsSatisfiedBy(pbv.UpperBoundValue.Value, true) == true  ||
+                            facet!.PropertyValue?.IsSatisfiedBy(pbv.LowerBoundValue.Value, true) == true ||
+                            facet!.PropertyValue?.IsSatisfiedBy(pbv.SetPointValue.Value, true) == true
+                        )).Any()
+                        // Enum Values
+                        || ps.HasProperties.OfType<IIfcPropertyEnumeratedValue>().Where(pe =>
+                        facet!.PropertyName?.IsSatisfiedBy(pe.Name.Value, true) == true &&
+                        (
+                            facet.PropertyValue?.HasAnyAcceptedValue() != true ||
+                            pe.EnumerationValues.Any(v => facet!.PropertyName?.IsSatisfiedBy(v.Value, true) == true)
+                        )).Any()
+                        // List Values
+                        || ps.HasProperties.OfType<IIfcPropertyListValue>().Where(pl =>
+                        facet!.PropertyName?.IsSatisfiedBy(pl.Name.Value, true) == true &&
+                        (
+                            facet.PropertyValue?.HasAnyAcceptedValue() != true ||
+                            pl.ListValues.Any(v => facet!.PropertyName?.IsSatisfiedBy(v.Value, true) == true)
+                        )).Any()
+                        // Table Values
+                        || ps.HasProperties.OfType<IIfcPropertyTableValue>().Where(ptv =>
+                        facet!.PropertyName?.IsSatisfiedBy(ptv.Name.Value, true) == true &&
+                        (
+                            facet.PropertyValue?.HasAnyAcceptedValue() != true || 
+                            ptv.DefinedValues.Any(v => facet!.PropertyName?.IsSatisfiedBy(v.Value, true) == true) ||
+                            ptv.DefiningValues.Any(v => facet!.PropertyName?.IsSatisfiedBy(v.Value, true) == true)
+                        )).Any()
+                    ));
 
             // Append Quantities
             var quants = relDefines
@@ -337,10 +372,10 @@ namespace Xbim.IDS.Validator.Core.Extensions
                 return w.WeightValue;
             if (quantity is IIfcQuantityTime t)
                 return t.TimeValue;
-            if (quantity is IIfcPhysicalComplexQuantity comp)
+            if (quantity is IIfcPhysicalComplexQuantity)
                 return default;
 
-
+            // TODO: Check other Physical Quantities
             throw new NotImplementedException(quantity.GetType().Name);
         }
     }
