@@ -18,10 +18,12 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         /// </summary>
         IfcClassificationFacetBinder Binder { get; }
 
+      
+        [InlineData("Uniclass", "EF_25_30_97", 5)] // Via Type
         [InlineData("Uniclass", "Pr_40_50_12", 7)]
         [InlineData("Uniclass", "Pr_40_50.*", 7, ConstraintType.Exact, ConstraintType.Pattern)]
         [InlineData("", "Pr_40_50_12", 7)]
-        [InlineData("Uniclass", "", 9)]
+        [InlineData("Uniclass", "", 12)]
         [Theory]
         public void Can_Query_By_Classifications(string system, string identifier, int expectedCount, ConstraintType sysConType = ConstraintType.Exact, ConstraintType idConType = ConstraintType.Exact)
         {

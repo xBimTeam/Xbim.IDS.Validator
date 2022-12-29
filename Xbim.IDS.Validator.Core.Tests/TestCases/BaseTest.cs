@@ -42,11 +42,12 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
         internal ILogger GetXunitLogger()
         {
-            IServiceCollection services = new ServiceCollection().AddLogging(delegate (ILoggingBuilder builder)
+            IServiceCollection services = new ServiceCollection().AddLogging(builder =>
             {
+                builder.SetMinimumLevel(LogLevel.Debug);
                 builder.AddXunit(output, new LoggingConfig
                 {
-                    LogLevel = LogLevel.Debug,
+                    //LogLevel = LogLevel.Debug,
                     IgnoreTestBoundaryException = true
                 });
             });
@@ -71,6 +72,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
             string ifcFile = Path.ChangeExtension(idsFile, "ifc");
             IfcStore model;
+            logger.LogInformation("Verifying {schema} model {model}", schemaVersion, ifcFile);
             if (schemaVersion == XbimSchemaVersion.Ifc4)
             {
                 model = IfcStore.Open(ifcFile);
@@ -120,28 +122,6 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             var validator = provider.GetRequiredService<IIdsModelValidator>();
             var outcome = validator.ValidateAgainstIds(model, idsFile, logger);
 
-            var results = outcome.ExecutedRequirements.SelectMany(e => e.ApplicableResults);
-            foreach (IdsValidationResult res in results)
-            {
-                LogLevel logLevel = LogLevel.Information;
-                if (res.ValidationStatus == ValidationStatus.Failed)
-                {
-                    logLevel = LogLevel.Error;
-                }
-                if (res.ValidationStatus == ValidationStatus.Inconclusive)
-                {
-                    logLevel = LogLevel.Warning;
-                }
-                logger.Log(logLevel, "Entity {ent}", res.Entity?.EntityLabel);
-                foreach (string pass in res.Successful)
-                {
-                    logger.LogInformation("  {message}", pass);
-                }
-                foreach (string fail in res.Failures)
-                {
-                    logger.LogError("  {error}", fail);
-                }
-            }
             return outcome;
         }
     }

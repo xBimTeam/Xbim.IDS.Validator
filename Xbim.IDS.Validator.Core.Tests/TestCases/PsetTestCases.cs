@@ -11,8 +11,6 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
         }
 
-
-
         [InlineData(@"TestCases/property/pass-a_name_check_will_match_any_property_with_any_string_value.ids")]
         [InlineData(@"TestCases/property/pass-a_name_check_will_match_any_quantity_with_any_value.ids")]
         [InlineData(@"TestCases/property/pass-a_number_specified_as_a_string_is_treated_as_a_string.ids")]
@@ -26,16 +24,15 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/property/pass-all_matching_property_sets_must_satisfy_requirements_3_3.ids")]
         [InlineData(@"TestCases/property/pass-an_optional_facet_always_passes_regardless_of_outcome_1_2.ids")]
         [InlineData(@"TestCases/property/pass-an_optional_facet_always_passes_regardless_of_outcome_2_2.ids")]
-        // TODO: non SingleValue
-        //[InlineData(@"TestCases/property/pass-any_matching_value_in_a_bounded_property_will_pass_1_4.ids")]
-        //[InlineData(@"TestCases/property/pass-any_matching_value_in_a_bounded_property_will_pass_2_4.ids")]
-        //[InlineData(@"TestCases/property/pass-any_matching_value_in_a_bounded_property_will_pass_3_4.ids")]
-        //[InlineData(@"TestCases/property/pass-any_matching_value_in_a_list_property_will_pass_1_3.ids")]
-        //[InlineData(@"TestCases/property/pass-any_matching_value_in_a_list_property_will_pass_2_3.ids")]
-        //[InlineData(@"TestCases/property/pass-any_matching_value_in_a_table_property_will_pass_1_3.ids")]
-        //[InlineData(@"TestCases/property/pass-any_matching_value_in_a_table_property_will_pass_2_3.ids")]
-        //[InlineData(@"TestCases/property/pass-any_matching_value_in_an_enumerated_property_will_pass_1_3.ids")]
-        //[InlineData(@"TestCases/property/pass-any_matching_value_in_an_enumerated_property_will_pass_2_3.ids")]
+        [InlineData(@"TestCases/property/pass-any_matching_value_in_a_bounded_property_will_pass_1_4.ids")]
+        [InlineData(@"TestCases/property/pass-any_matching_value_in_a_bounded_property_will_pass_2_4.ids")]
+        [InlineData(@"TestCases/property/pass-any_matching_value_in_a_bounded_property_will_pass_3_4.ids", XbimSchemaVersion.Ifc4)]
+        [InlineData(@"TestCases/property/pass-any_matching_value_in_a_list_property_will_pass_1_3.ids")]
+        [InlineData(@"TestCases/property/pass-any_matching_value_in_a_list_property_will_pass_2_3.ids")]
+        [InlineData(@"TestCases/property/pass-any_matching_value_in_a_table_property_will_pass_1_3.ids")]
+        [InlineData(@"TestCases/property/pass-any_matching_value_in_a_table_property_will_pass_2_3.ids")]
+        [InlineData(@"TestCases/property/pass-any_matching_value_in_an_enumerated_property_will_pass_1_3.ids")]
+        [InlineData(@"TestCases/property/pass-any_matching_value_in_an_enumerated_property_will_pass_2_3.ids")]
         [InlineData(@"TestCases/property/pass-booleans_must_be_specified_as_uppercase_strings_2_3.ids")]
         [InlineData(@"TestCases/property/pass-dates_are_treated_as_strings_1_2.ids", XbimSchemaVersion.Ifc4)]
         [InlineData(@"TestCases/property/pass-durations_are_treated_as_strings_1_2.ids", XbimSchemaVersion.Ifc4)]
@@ -74,16 +71,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
 
         [InlineData(@"TestCases/property/pass-predefined_properties_are_supported_but_discouraged_1_2.ids")]
-        [InlineData(@"TestCases/property/pass-any_matching_value_in_a_bounded_property_will_pass_1_4.ids")]
-        [InlineData(@"TestCases/property/pass-any_matching_value_in_a_bounded_property_will_pass_2_4.ids")]
-        [InlineData(@"TestCases/property/pass-any_matching_value_in_a_bounded_property_will_pass_3_4.ids")]
-        [InlineData(@"TestCases/property/pass-any_matching_value_in_a_list_property_will_pass_1_3.ids")]
-        [InlineData(@"TestCases/property/pass-any_matching_value_in_a_list_property_will_pass_2_3.ids")]
-        [InlineData(@"TestCases/property/pass-any_matching_value_in_a_table_property_will_pass_1_3.ids")]
-        [InlineData(@"TestCases/property/pass-any_matching_value_in_a_table_property_will_pass_2_3.ids")]
-        [InlineData(@"TestCases/property/pass-any_matching_value_in_an_enumerated_property_will_pass_1_3.ids")]
-        [InlineData(@"TestCases/property/pass-any_matching_value_in_an_enumerated_property_will_pass_2_3.ids")]
-        [Theory(Skip ="Todo")]
+        [Theory(Skip ="To do")]
         public void PassesToImplement(string idsFile)
         {
             var outcome = VerifyIdsFile(idsFile);

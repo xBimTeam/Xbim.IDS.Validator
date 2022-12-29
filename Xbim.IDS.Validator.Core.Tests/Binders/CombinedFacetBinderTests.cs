@@ -89,9 +89,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData("IfcProject", "Uniclass", null, 1)]
         [InlineData("IfcMaterial", "Uniclass", null, 0)]
         [InlineData("IfcWindowType", "Uniclass", null, 1)]
-        
-        // TODO: Fix Filtering on Type inherited
-        //[InlineData("IfcWindow", "Uniclass", null, 4)]
+        [InlineData("IfcWindow", "Uniclass", null, 4)]  // Via WindowType
+        [InlineData("IfcWindow", "Uniclass", "EF_25_30_97", 4)]
+        [InlineData("IfcWindow", "Uniclass", "EF_25_30", 4)]
         [InlineData("IfcProperty", "Uniclass", null, 0)]
         [Theory]
         public void Can_Query_By_Ifc_And_Classifications(string ifcType, string system, string ident, int expectedCount)
@@ -127,40 +127,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         }
 
 
-        [InlineData("IfcWindow", "Uniclass 2015", null, 4)]
+       
 
-        [Theory(Skip = "Need to implement")]
-        public void TODOCan_Query_By_Ifc_And_Classifications(string ifcType, string system, string ident, int expectedCount)
-        {
-
-
-            IfcTypeFacet ifcFacet = new IfcTypeFacet
-            {
-                IfcType = new ValueConstraint(ifcType),
-            };
-
-            IfcClassificationFacet classFacet = new IfcClassificationFacet
-            {
-                ClassificationSystem = system,
-            };
-            if (!string.IsNullOrEmpty(ident))
-            {
-                classFacet.Identification = new ValueConstraint(ident);
-            }
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
-
-            var classbinder = new IfcClassificationFacetBinder(BinderContext, GetLogger<IfcClassificationFacetBinder>());
-
-            // Act
-            var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
-            expression = classbinder.BindWhereExpression(expression, classFacet);
-
-            // Assert
-
-            var result = query.Execute(expression, Model);
-            result.Should().HaveCount(expectedCount);
-
-        }
+        
         //TODO: Tests for Docs etc
 
 
@@ -200,6 +169,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         [InlineData("IfcWindowType", "Dimensions", "Frame Depth", 65, 1)]
         [InlineData("IfcWindow", "BaseQuantities", "Width", 1810, 4)]
+        //[InlineData("IfcWall", "Analytical Properties", "Roughness", 3, 3)]
+        [InlineData("IfcWall", "Construction", "Function", "Exterior", 3)]  // Via Type
+        [InlineData("IfcWallType", "Construction", "Function", "Exterior", 1)]
         [Theory]
         public void Can_Query_By_Ifc_And_Properties(string ifcType, string psetName, string propName, object value,  int expectedCount)
         {

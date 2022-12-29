@@ -66,27 +66,34 @@ namespace Xbim.IDS.Validator.Core.Tests
                     {
                         var i = item as IIfcRoot;
                         logger.LogInformation("        * {ID}: {Type} {Name} ", item.EntityLabel, item.GetType().Name, i?.Name);
-                        
+
                         var result = modelBinder.ValidateRequirement(item, spec.Requirement, logger);
-                        LogLevel level = LogLevel.Information;
-                        int pad = 0;
-                        if (result.ValidationStatus == ValidationStatus.Inconclusive) { level = LogLevel.Warning; pad = 4; }
-                        if (result.ValidationStatus == ValidationStatus.Failed) { level = LogLevel.Error; pad = 6; }
-                        logger.Log(level, "{pad}          {result}: Checking {short}", "".PadLeft(pad, ' '),  result.ValidationStatus.ToString().ToUpperInvariant(), spec.Requirement.Short());
-                        foreach(var message in result.Messages)
+                        LogLevel level;
+                        int pad;
+                        GetLogLevel(result.ValidationStatus, out level, out pad);
+                        logger.Log(level, "{pad}          {result}: Checking {short}", "".PadLeft(pad, ' '), result.ValidationStatus.ToString().ToUpperInvariant(), spec.Requirement.Short());
+                        foreach (var message in result.Messages)
                         {
+                            GetLogLevel(message.Status, out level, out pad);
                             logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
                         }
-                        
+
                     }
 
-                   
+
 
                 }
             }
         }
 
-        
+        private static void GetLogLevel(ValidationStatus status, out LogLevel level, out int pad)
+        {
+            level = LogLevel.Information;
+            pad = 0;
+            if (status == ValidationStatus.Inconclusive) { level = LogLevel.Warning; pad = 4; }
+            if (status == ValidationStatus.Failed) { level = LogLevel.Error; pad = 6; }
+        }
+
 
         private static IModel BuildModel(string ifcFile)
         {
