@@ -7,7 +7,7 @@ namespace Xbim.IDS.Validator.Core
 {
 
     /// <summary>
-    /// Represents the resultof validating a specific entity against an IDS requirement
+    /// Represents the result of validating a specific entity against an IDS requirement
     /// </summary>
     /// 
     [DebuggerDisplay("{ValidationStatus}: {Entity}. {Messages.Count} messages")]
@@ -55,17 +55,17 @@ namespace Xbim.IDS.Validator.Core
 
 
         // Gets the status based on current Expectation mode - i.e. Failure to match in Prohibited model = Success
-        private static ValidationStatus GetStatus(Expectation expectation, bool? success)
+        private static ValidationStatus GetStatus(RequirementCardinalityOptions expectation, bool? success)
         {
             switch (expectation)
             {
-                case Expectation.Required:
+                case RequirementCardinalityOptions.Expected:
                     return success == true ? ValidationStatus.Success : success == false ? ValidationStatus.Failed : ValidationStatus.Inconclusive;
 
-                case Expectation.Prohibited:
+                case RequirementCardinalityOptions.Prohibited:
                     return success == true ? ValidationStatus.Failed : success == false ? ValidationStatus.Success : ValidationStatus.Inconclusive;
 
-                case Expectation.Optional:
+                case RequirementCardinalityOptions.Optional:
                 default:
                     return ValidationStatus.Inconclusive;
 
@@ -120,7 +120,7 @@ namespace Xbim.IDS.Validator.Core
         public ValidationMessage()
         {
         }
-        public ValidationMessage(ValidationStatus status, Expectation expectation, IFacet clause, string? reason = null, object? expectedResult = null, object? actualResult = null)
+        public ValidationMessage(ValidationStatus status, RequirementCardinalityOptions expectation, IFacet clause, string? reason = null, object? expectedResult = null, object? actualResult = null)
         {
             Status = status;
             Reason = reason;
@@ -137,7 +137,7 @@ namespace Xbim.IDS.Validator.Core
         public string? Reason { get; set; }
         public object? ExpectedResult { get; set; }
         public object? ActualResult { get; set; }
-        public Expectation Expectation { get; set; }
+        public RequirementCardinalityOptions Expectation { get; set; }
 
         public IFacet? Clause { get; set; }
         public string? ValidatedField { get; set; }
@@ -176,7 +176,7 @@ namespace Xbim.IDS.Validator.Core
     /// <typeparam name="T"></typeparam>
     public class ValidationContext<T> where T: IFacet
     {
-        public ValidationContext(T clause, Expectation expectationMode)
+        public ValidationContext(T clause, RequirementCardinalityOptions expectationMode)
         {
             ExpectationMode = expectationMode;
             Clause = clause;
@@ -204,7 +204,7 @@ namespace Xbim.IDS.Validator.Core
             
         }
 
-        public Expectation ExpectationMode { get; set; } = Expectation.Required;   // Default to Required, not Prohibited
+        public RequirementCardinalityOptions ExpectationMode { get; set; } = RequirementCardinalityOptions.Expected;   // Default to Required, not Prohibited
         public T Clause { get; set; }
     }
 }

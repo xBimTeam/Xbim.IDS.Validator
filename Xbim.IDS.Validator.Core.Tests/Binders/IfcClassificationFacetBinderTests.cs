@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Xbim.IDS.Validator.Core.Binders;
+using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.InformationSpecifications;
 using Xunit.Abstractions;
 
@@ -84,7 +85,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             var validationResult = new IdsValidationResult(instance, group);
 
-            Binder.ValidateEntity(instance, facet, group, validationResult);
+            Binder.ValidateEntity(instance, facet, group.GetCardinality(facet), validationResult);
 
             foreach(var message in validationResult.Messages) 
             {
@@ -117,7 +118,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             var validationResult = new IdsValidationResult(project, group);
 
-            Binder.ValidateEntity(project, facet, group, validationResult);
+            Binder.ValidateEntity(project, facet, group.GetCardinality(facet), validationResult);
 
             foreach (var message in validationResult.Messages)
             {

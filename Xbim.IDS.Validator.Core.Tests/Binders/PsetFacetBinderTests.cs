@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Xbim.IDS.Validator.Core.Binders;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
+using Xbim.InformationSpecifications.Cardinality;
 using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
@@ -76,26 +77,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             }
             if (propValue != null)
             {
-
-                switch (valueConstraint)
-                {
-                    case ConstraintType.Exact:
-                        if (propValue is bool)
-                            propFacet.PropertyValue.BaseType = NetTypeName.Boolean;
-                        propFacet.PropertyValue.AddAccepted(new ExactConstraint(propValue.ToString()));
-                        break;
-
-                    case ConstraintType.Pattern:
-                        propFacet.PropertyValue.AddAccepted(new PatternConstraint(propValue.ToString()));
-                        break;
-
-                    case ConstraintType.Range:
-                        propFacet.PropertyValue.BaseType = NetTypeName.Double;
-                        propFacet.PropertyValue.AddAccepted(new RangeConstraint("0", false, propValue.ToString(), true ));
-                        break;
-
-
-                }
+                SetPropertyValue(propValue, valueConstraint, propFacet);
             }
             var binder = new PsetFacetBinder(BinderContext, Logger);
 
@@ -109,47 +91,94 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         }
 
+        private static void SetPropertyValue(object propValue, ConstraintType valueConstraint, IfcPropertyFacet propFacet)
+        {
+            switch (valueConstraint)
+            {
+                case ConstraintType.Exact:
+                    if (propValue is bool)
+                        propFacet.PropertyValue.BaseType = NetTypeName.Boolean;
+                    propFacet.PropertyValue.AddAccepted(new ExactConstraint(propValue.ToString()));
+                    break;
 
-        [InlineData(421, "Pset_SpaceCommon", "IsExternal", false)]
+                case ConstraintType.Pattern:
+                    propFacet.PropertyValue.AddAccepted(new PatternConstraint(propValue.ToString()));
+                    break;
+
+                case ConstraintType.Range:
+                    propFacet.PropertyValue.BaseType = NetTypeName.Double;
+                    propFacet.PropertyValue.AddAccepted(new RangeConstraint("0", false, propValue.ToString(), true));
+                    break;
+
+
+            }
+        }
+
+        //[InlineData(421, "Pset_SpaceCommon", "IsExternal", false)]
         [InlineData(323, "Energy Analysis", "Area per Person", 28.5714285714286d)]
         [InlineData(323, "Dimensions", "Area", 15.41678125d)]
         [InlineData(10942, "Other", "Category", "Doors")] // Type
-        [InlineData(3951, "Dimensions", "Thickness", 25d)] // Type Inheritance
+        [InlineData(3951, "Dimensions", "Thickness", 25d/1000)] // Type Inheritance
         [Theory]
-        public void Can_Select_Properties(int entityLabel, string psetName, string propName, object expectedtext)
+        public void Can_Validate_Properties(int entityLabel, string psetName, string propName, object expectedtext)
         {
-           
-            var result = Binder.GetProperty(entityLabel, psetName, propName);
+
+            var entity = Model.Instances[entityLabel];
+            var propFacet = new IfcPropertyFacet
+            {
+                PropertySetName = psetName,
+                PropertyName = propName,
+                PropertyValue = new ValueConstraint()
+            };
+            SetPropertyValue(expectedtext, ConstraintType.Exact, propFacet);
+            FacetGroup group = BuildGroup(propFacet);
+            var result = new IdsValidationResult(entity, group);
+            Binder.ValidateEntity(entity, propFacet, RequirementCardinalityOptions.Expected, result);
 
             // Assert
 
-            result.Value.Should().Be(expectedtext);
+            result.Successful.Should().NotBeEmpty();
+            result.Failures.Should().BeEmpty();
 
+        }
+
+        private static FacetGroup BuildGroup(IfcPropertyFacet propFacet)
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+            var group = new FacetGroup();
+#pragma warning restore CS0618 // Type or member is obsolete
+            group.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>();
+            group.RequirementOptions.Add(RequirementCardinalityOptions.Expected);
+            group.Facets.Add(propFacet);
+            return group;
         }
 
 
         [InlineData(177, "BaseQuantities", "GrossFloorArea", 51.9948250000001d)]
-        [InlineData(177, "BaseQuantities", "Height", 2500d)]
+        [InlineData(177, "BaseQuantities", "Height", 2500d/1000)]
         [InlineData(177, "BaseQuantities", "GrossVolume", 129987.0625d)]
         [Theory]
         public void Can_Select_Quantites(int entityLabel, string psetName, string propName, double expectedquant)
         {
-            
-            var result = Binder.GetQuantity(entityLabel, psetName, propName);
+
+            var entity = Model.Instances[entityLabel];
+            var propFacet = new IfcPropertyFacet
+            {
+                PropertySetName = psetName,
+                PropertyName = propName,
+                PropertyValue = new ValueConstraint()
+            };
+            SetPropertyValue(expectedquant, ConstraintType.Exact, propFacet);
+            FacetGroup group = BuildGroup(propFacet);
+            var result = new IdsValidationResult(entity, group);
+            Binder.ValidateEntity(entity, propFacet, RequirementCardinalityOptions.Expected, result);
 
             // Assert
 
-            if(result is IIfcQuantityArea area)
-                area.AreaValue.Value.Should().Be(expectedquant); 
-            else if(result is IIfcQuantityLength l)
-                l.LengthValue.Value.Should().Be(expectedquant);
-            else if (result is IIfcQuantityVolume v)
-                v.VolumeValue.Value.Should().Be(expectedquant);
-            else
-                throw new NotImplementedException(result.GetType().Name); 
-            
+            result.Successful.Should().NotBeEmpty();
+            result.Failures.Should().BeEmpty();
 
-            
+
 
         }
 

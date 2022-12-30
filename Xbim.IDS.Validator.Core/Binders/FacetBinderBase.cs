@@ -56,7 +56,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <param name="logger"></param>
         /// <param name="result"></param>
         /// <param name="facet"></param>
-        public abstract void ValidateEntity(IPersistEntity item, T facet, FacetGroup requirement, IdsValidationResult result);
+        public abstract void ValidateEntity(IPersistEntity item, T facet, RequirementCardinalityOptions requirement, IdsValidationResult result);
 
 
         protected static bool ExpressTypesAreValid(IEnumerable<ExpressType> expressTypes)
@@ -478,7 +478,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             return true;
         }
 
-        // We should nto attempt pattern matches on non strings
+        // We should not attempt pattern matches on anything but strings
         protected static bool IsTypeAppropriateForConstraint(ValueConstraint attributeValue, object? attrvalue)
         {
             if (attributeValue.AcceptedValues.Any(v => v is PatternConstraint))
@@ -494,13 +494,13 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <param name="requirement"></param>
         /// <param name="facet"></param>
         /// <returns></returns>
-        public ValidationContext<T> CreateValidationContext(FacetGroup requirement, T facet)
+        public ValidationContext<T> CreateValidationContext(RequirementCardinalityOptions requirement, T facet)
         {
             // Set the Requirement expectation - Required, Optional, Prohibit so we negate Success/Failure
 
-            var required = requirement.IsRequired(facet);
-            var expectation = required == true ? Expectation.Required : required == false ? Expectation.Prohibited : Expectation.Optional;
-            return new ValidationContext<T>(facet, expectation);
+            //var required = requirement.IsRequired(facet);
+            //var expectation = required == true ? Expectation.Required : required == false ? Expectation.Prohibited : Expectation.Optional;
+            return new ValidationContext<T>(facet, requirement);
         }
 
         Expression IFacetBinder.BindSelectionExpression(Expression baseExpression, IFacet facet)
@@ -513,14 +513,10 @@ namespace Xbim.IDS.Validator.Core.Binders
             return BindWhereExpression(baseExpression, (T)facet);
         }
 
-        void IFacetBinder.ValidateEntity(IPersistEntity item, IFacet facet, FacetGroup requirement, IdsValidationResult result)
+        void IFacetBinder.ValidateEntity(IPersistEntity item, IFacet facet, RequirementCardinalityOptions requirement, IdsValidationResult result)
         {
             ValidateEntity(item, (T)facet, requirement, result);
         }
 
-        ValidationContext<IFacet> IFacetBinder.CreateValidationContext(FacetGroup requirement, IFacet facet)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

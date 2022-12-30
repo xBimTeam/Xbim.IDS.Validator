@@ -19,6 +19,23 @@ namespace Xbim.IDS.Validator.Core.Extensions
             return requirement.RequirementOptions?[idx];
         }
 
+        public static RequirementCardinalityOptions GetCardinality(this FacetGroup requirement, IFacet facet)
+        {
+            var idx = requirement.Facets.IndexOf(facet);
+            if (idx != -1)
+            {
+
+
+                if (requirement.RequirementOptions == null)
+                {
+                    // Workaround for Options being null when any facet is invalid. Expected is the default
+                    requirement.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>(requirement.Facets.Select(f => RequirementCardinalityOptions.Expected));
+                }
+                return requirement.RequirementOptions[idx];
+            }
+            throw new ArgumentOutOfRangeException(nameof(facet));
+        }
+
         /// <summary>
         /// Determines whether this facet rule is Required, Prohibited or Optional
         /// </summary>

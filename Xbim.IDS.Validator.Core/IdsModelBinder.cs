@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.IDS.Validator.Core.Binders;
+using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.InformationSpecifications;
 
@@ -96,7 +97,8 @@ namespace Xbim.IDS.Validator.Core
             foreach (var facet in requirement.Facets)
             {
                 var binder = FacetBinderFactory.Create(facet);
-                binder.ValidateEntity(item, facet, requirement, result);
+                var card = requirement.GetCardinality(facet);
+                binder.ValidateEntity(item, facet, card, result);
             }
             if (result.Failures.Any())
             {

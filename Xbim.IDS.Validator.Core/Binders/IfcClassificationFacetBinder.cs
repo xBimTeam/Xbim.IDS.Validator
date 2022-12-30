@@ -7,7 +7,6 @@ using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4.Kernel;
 using Xbim.InformationSpecifications;
-using static Xbim.IO.Xml.XbimXmlReader3;
 
 namespace Xbim.IDS.Validator.Core.Binders
 {
@@ -134,7 +133,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             return expression;
         }
 
-        public override void ValidateEntity(IPersistEntity item, IfcClassificationFacet facet, FacetGroup requirement, IdsValidationResult result)
+        public override void ValidateEntity(IPersistEntity item, IfcClassificationFacet facet, RequirementCardinalityOptions requirement, IdsValidationResult result)
         {
             if (facet is null)
             {

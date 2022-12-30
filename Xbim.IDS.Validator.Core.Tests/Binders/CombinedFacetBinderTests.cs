@@ -169,6 +169,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         [InlineData("IfcWindowType", "Dimensions", "Frame Depth", 65, 1)]
         [InlineData("IfcWindow", "BaseQuantities", "Width", 1810, 4)]
+        // Needs cast fix in IDS for long-int 
         //[InlineData("IfcWall", "Analytical Properties", "Roughness", 3, 3)]
         [InlineData("IfcWall", "Construction", "Function", "Exterior", 3)]  // Via Type
         [InlineData("IfcWallType", "Construction", "Function", "Exterior", 1)]
@@ -189,7 +190,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             propertyFacet.PropertySetName.AddAccepted( new ExactConstraint(psetName));
             propertyFacet.PropertyName.AddAccepted(new ExactConstraint(propName));
             if(value != null)
-            propertyFacet.PropertyValue.AddAccepted(new ExactConstraint(value?.ToString()));
+                propertyFacet.PropertyValue.AddAccepted(new ExactConstraint(value?.ToString()));
             var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
 
             var psetbinder = new PsetFacetBinder(BinderContext, GetLogger<PsetFacetBinder>());
