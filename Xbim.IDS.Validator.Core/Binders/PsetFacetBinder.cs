@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -123,7 +124,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                             var satisfiedValue = false;
                             var satisfiedProp = false;
 
-                            foreach(var propValue in values)
+                            foreach (var propValue in values)
                             {
                                 object? value = UnwrapValue(propValue);
                                 bool isPopulated = IsValueRelevant(value);
@@ -131,11 +132,11 @@ namespace Xbim.IDS.Validator.Core.Binders
                                 {
                                     satisfiedProp = true;
                                 }
-                                
-                                if(ValueSatifiesConstraint(facet, value))
+
+                                if (ValueSatifiesConstraint(facet, value))
                                 {
                                     satisfiedValue = true;
-                                    if(ValidateMeasure(ctx, result, propValue, facet.Measure))
+                                    if (ValidateMeasure(ctx, result, propValue, facet.Measure))
                                     {
                                         // We found a match
                                         break;
@@ -150,9 +151,9 @@ namespace Xbim.IDS.Validator.Core.Binders
                             {
                                 result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, prop.Name, "No property matching", prop));
                             }
-                            
+
                             var vals = string.Join(',', values);
-                            if(satisfiedValue)
+                            if (satisfiedValue)
                             {
                                 result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, vals, "Value matches", prop));
                             }
@@ -177,9 +178,9 @@ namespace Xbim.IDS.Validator.Core.Binders
                                 result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, quant.Name, "No quantity matching", quant));
                             }
                             ValidateMeasure(ctx, result, propValue, facet.Measure);
-                            
 
-                            if(ValueSatifiesConstraint(facet, value))
+
+                            if (ValueSatifiesConstraint(facet, value))
                             {
                                 result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, value, "Value matches", propValue));
                             }
@@ -206,14 +207,14 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         private static IEnumerable<IIfcValue> ExtractPropertyValues(IIfcSimpleProperty prop)
         {
-            switch(prop)
+            switch (prop)
             {
                 case IIfcPropertySingleValue single:
                     yield return single.NominalValue;
                     break;
 
                 case IIfcPropertyListValue list:
-                    foreach(var item in list.ListValues)
+                    foreach (var item in list.ListValues)
                         yield return item;
                     break;
 
@@ -314,7 +315,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <param name="constraint"></param>
         /// <param name="logger"></param>
         /// <returns></returns>
-        private IEnumerable<T> GetPropertiesMatching<T>(int entityLabel, string psetName, ValueConstraint constraint, ILogger? logger = null) where T: IIfcProperty
+        private IEnumerable<T> GetPropertiesMatching<T>(int entityLabel, string psetName, ValueConstraint constraint, ILogger? logger = null) where T : IIfcProperty
         {
             var entity = Model.Instances[entityLabel];
             if (entity is IIfcTypeObject type)
@@ -471,7 +472,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Measure!, measure, "Invalid Measure", propValue));
                 return false;
             }
-            
+
         }
 
 

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 using Xbim.Common;
 using Xbim.InformationSpecifications;
 
