@@ -32,14 +32,7 @@ namespace Xbim.IDS.Validator.Core.Interfaces
         /// <param name="requirement"></param>
         /// <param name="result"></param>
         /// <param name="facet"></param>
-        void ValidateEntity(IPersistEntity item, IFacet facet, FacetGroup requirement, IdsValidationResult result);
+        void ValidateEntity(IPersistEntity item, IFacet facet, RequirementCardinalityOptions requirement, IdsValidationResult result);
 
-        /// <summary>
-        /// Creates a validation context used for tracking validation progress
-        /// </summary>
-        /// <param name="requirement"></param>
-        /// <param name="facet"></param>
-        /// <returns></returns>
-        ValidationContext<IFacet> CreateValidationContext(FacetGroup requirement, IFacet facet);
     }
 }

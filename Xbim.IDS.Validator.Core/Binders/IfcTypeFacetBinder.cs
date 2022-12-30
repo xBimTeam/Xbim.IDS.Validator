@@ -94,7 +94,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             throw new NotImplementedException();
         }
 
-        public override void ValidateEntity(IPersistEntity item, IfcTypeFacet f, FacetGroup requirement, IdsValidationResult result)
+        public override void ValidateEntity(IPersistEntity item, IfcTypeFacet f, RequirementCardinalityOptions requirement, IdsValidationResult result)
         {
             var ctx = CreateValidationContext(requirement, f);
             var entityType = Model.Metadata.ExpressType(item);
@@ -180,7 +180,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
 
-        public string? GetPredefinedType(IPersistEntity entity)
+        private string? GetPredefinedType(IPersistEntity entity)
         {
             var expressType = Model.Metadata.ExpressType(entity.GetType());
             var propertyMeta = expressType.Properties.FirstOrDefault(p => p.Value.Name == "PredefinedType").Value;

@@ -102,17 +102,17 @@ namespace Xbim.IDS.Validator.Core.Binders
             return expression;
         }
 
-        public override void ValidateEntity(IPersistEntity item, IfcPropertyFacet pf, FacetGroup requirement, IdsValidationResult result)
+        public override void ValidateEntity(IPersistEntity item, IfcPropertyFacet facet, RequirementCardinalityOptions requirement, IdsValidationResult result)
         {
-            var ctx = CreateValidationContext(requirement, pf);
-            var psets = GetPropertySetsMatching(item.EntityLabel, pf.PropertySetName, logger);
+            var ctx = CreateValidationContext(requirement, facet);
+            var psets = GetPropertySetsMatching(item.EntityLabel, facet.PropertySetName, logger);
             if (psets.Any())
             {
                 foreach (var pset in psets)
                 {
                     result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PropertySetName!, pset.Name, "Pset Matched", pset));
-                    var props = GetPropertiesMatching<IIfcSimpleProperty>(item.EntityLabel, pset.Name, pf.PropertyName);
-                    var quants = GetQuantitiesMatching(item.EntityLabel, pset.Name, pf.PropertyName);
+                    var props = GetPropertiesMatching<IIfcSimpleProperty>(item.EntityLabel, pset.Name, facet.PropertyName);
+                    var quants = GetQuantitiesMatching(item.EntityLabel, pset.Name, facet.PropertyName);
                     if (props.Any() || quants.Any())
                     {
                         foreach (var prop in props)
@@ -132,10 +132,10 @@ namespace Xbim.IDS.Validator.Core.Binders
                                     satisfiedProp = true;
                                 }
                                 
-                                if(IsAcceptablePropertyValue(ctx, logger, result, pf, value, propValue))
+                                if(ValueSatifiesConstraint(facet, value))
                                 {
                                     satisfiedValue = true;
-                                    if(ValidateMeasure(ctx, result, propValue, pf.Measure))
+                                    if(ValidateMeasure(ctx, result, propValue, facet.Measure))
                                     {
                                         // We found a match
                                         break;
@@ -176,10 +176,10 @@ namespace Xbim.IDS.Validator.Core.Binders
                             {
                                 result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, quant.Name, "No quantity matching", quant));
                             }
-                            ValidateMeasure(ctx, result, propValue, pf.Measure);
+                            ValidateMeasure(ctx, result, propValue, facet.Measure);
                             
 
-                            if(IsAcceptablePropertyValue(ctx, logger, result, pf, value, propValue))
+                            if(ValueSatifiesConstraint(facet, value))
                             {
                                 result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, value, "Value matches", propValue));
                             }
@@ -204,7 +204,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         }
 
-        private IEnumerable<IIfcValue> ExtractPropertyValues(IIfcSimpleProperty prop)
+        private static IEnumerable<IIfcValue> ExtractPropertyValues(IIfcSimpleProperty prop)
         {
             switch(prop)
             {
@@ -237,7 +237,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
         }
 
-        private Expression BindPropertySelection(Expression expression, IfcPropertyFacet psetFacet)
+        private static Expression BindPropertySelection(Expression expression, IfcPropertyFacet psetFacet)
         {
             if (psetFacet is null)
             {
@@ -305,94 +305,6 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         }
 
-
-        // For Selections on instances we don't need to use expressions. When filtering we will
-        /// <summary>
-        /// Gets a specific property for an entity, matching a psetName and property name
-        /// </summary>
-        /// <param name="entityLabel"></param>
-        /// <param name="psetName"></param>
-        /// <param name="propName"></param>
-        /// <returns></returns>
-        public IIfcValue? GetProperty(int entityLabel, string psetName, string propName)
-        {
-            var entity = Model.Instances[entityLabel];
-
-            IIfcPropertySingleValue? psetValue;
-            if (entity is IIfcTypeObject type)
-            {
-                psetValue = type.HasPropertySets.OfType<IIfcPropertySet>()
-                    .Where(p => p.Name == psetName)
-                    .SelectMany(p => p.HasProperties.Where(ps => ps.Name == propName)
-                        .OfType<IIfcPropertySingleValue>())
-                    .FirstOrDefault();
-            }
-            else if (entity is IIfcObject obj)
-            {
-
-                psetValue = obj.IsDefinedBy
-                    .Where(r => r.RelatingPropertyDefinition is IIfcPropertySet ps && ps.Name == psetName)
-                    .SelectMany(p => ((IIfcPropertySet)p.RelatingPropertyDefinition)
-                        .HasProperties.Where(ps => ps.Name == propName)
-                        .OfType<IIfcPropertySingleValue>())
-
-                    .FirstOrDefault();
-                if (psetValue == null)
-                {
-                    if (obj.IsTypedBy?.Any() == true)
-                    {
-                        return GetProperty(obj.IsTypedBy.First().RelatingType.EntityLabel, psetName, propName);
-                    }
-                }
-            }
-            else
-            {
-                return null;
-            }
-
-            return psetValue?.NominalValue;
-
-        }
-
-        public IIfcPhysicalQuantity? GetQuantity(int entityLabel, string psetName, string propName)
-        {
-            var entity = Model.Instances[entityLabel];
-
-            IIfcPhysicalQuantity? psetValue;
-            if (entity is IIfcTypeObject type)
-            {
-                psetValue = type.HasPropertySets.OfType<IIfcElementQuantity>()
-                    .Where(p => p.Name == psetName)
-                    .SelectMany(p => p.Quantities.Where(ps => ps.Name == propName))
-                    .FirstOrDefault();
-            }
-            else if (entity is IIfcObject obj)
-            {
-
-                psetValue = obj.IsDefinedBy
-                       .Where(r => r.RelatingPropertyDefinition is IIfcElementQuantity ps && ps.Name == psetName)
-                       .SelectMany(p => ((IIfcElementQuantity)p.RelatingPropertyDefinition)
-                            .Quantities.Where(q => q.Name == propName))
-                       .FirstOrDefault();
-
-                if (psetValue == null)
-                {
-                    if (obj.IsTypedBy?.Any() == true)
-                    {
-                        return GetQuantity(obj.IsTypedBy.First().RelatingType.EntityLabel, psetName, propName);
-                    }
-                }
-
-            }
-            else
-            {
-                return default;
-            }
-
-            return psetValue;
-
-        }
-
         /// <summary>
         /// Finds all Properties in a pset meeting a constraint
         /// </summary>
@@ -402,7 +314,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <param name="constraint"></param>
         /// <param name="logger"></param>
         /// <returns></returns>
-        public IEnumerable<T> GetPropertiesMatching<T>(int entityLabel, string psetName, ValueConstraint constraint, ILogger? logger = null) where T : IIfcProperty
+        private IEnumerable<T> GetPropertiesMatching<T>(int entityLabel, string psetName, ValueConstraint constraint, ILogger? logger = null) where T: IIfcProperty
         {
             var entity = Model.Instances[entityLabel];
             if (entity is IIfcTypeObject type)
@@ -449,7 +361,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <param name="nameConstraint"></param>
         /// <param name="logger"></param>
         /// <returns></returns>
-        public IEnumerable<IIfcPhysicalQuantity> GetQuantitiesMatching(int entityLabel, string psetName, ValueConstraint nameConstraint, ILogger? logger = null)
+        private IEnumerable<IIfcPhysicalQuantity> GetQuantitiesMatching(int entityLabel, string psetName, ValueConstraint nameConstraint, ILogger? logger = null)
         {
             var entity = Model.Instances[entityLabel];
             if (entity is IIfcTypeObject type)
@@ -486,7 +398,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
 
-        public IEnumerable<IIfcPropertySetDefinition> GetPropertySetsMatching(int entityLabel, ValueConstraint psetConstraint, ILogger? logger = null)
+        private IEnumerable<IIfcPropertySetDefinition> GetPropertySetsMatching(int entityLabel, ValueConstraint psetConstraint, ILogger? logger = null)
         {
             var entity = Model.Instances[entityLabel];
             if (entity is IIfcTypeObject type)
@@ -520,7 +432,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
 
 
-        private bool IsAcceptablePropertyValue(ValidationContext<IfcPropertyFacet> ctx, ILogger logger, IdsValidationResult result, IfcPropertyFacet pf, object? value, IIfcValue ifcValue)
+        private bool ValueSatifiesConstraint(IfcPropertyFacet pf, object? value)
         {
             if (pf.PropertyValue != null)
             {

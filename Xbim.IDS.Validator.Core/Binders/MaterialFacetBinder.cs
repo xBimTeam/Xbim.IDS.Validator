@@ -102,7 +102,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             throw new NotSupportedException("Cannot filter materials on this type " + elementType.Name);
         }
 
-        public override void ValidateEntity(IPersistEntity item, MaterialFacet facet, FacetGroup requirement, IdsValidationResult result)
+        public override void ValidateEntity(IPersistEntity item, MaterialFacet facet, RequirementCardinalityOptions requirement, IdsValidationResult result)
         {
             if (facet is null)
             {

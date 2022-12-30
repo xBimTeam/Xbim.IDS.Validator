@@ -102,7 +102,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
         
-        public override void ValidateEntity(IPersistEntity item, AttributeFacet af, FacetGroup requirement, IdsValidationResult result)
+        public override void ValidateEntity(IPersistEntity item, AttributeFacet af, RequirementCardinalityOptions requirement, IdsValidationResult result)
         {
             if (af is null)
             {
