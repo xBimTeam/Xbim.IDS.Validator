@@ -98,6 +98,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 case ConstraintType.Exact:
                     if (propValue is bool)
                         propFacet.PropertyValue.BaseType = NetTypeName.Boolean;
+                    if (propValue is long)
+                        propFacet.PropertyValue.BaseType = NetTypeName.Integer;
                     propFacet.PropertyValue.AddAccepted(new ExactConstraint(propValue.ToString()));
                     break;
 
@@ -158,7 +160,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData(177, "BaseQuantities", "Height", 2500d/1000)]
         [InlineData(177, "BaseQuantities", "GrossVolume", 129987.0625d)]
         [Theory]
-        public void Can_Select_Quantites(int entityLabel, string psetName, string propName, double expectedquant)
+        public void Can_Validate_Quantites(int entityLabel, string psetName, string propName, double expectedquant)
         {
 
             var entity = Model.Instances[entityLabel];

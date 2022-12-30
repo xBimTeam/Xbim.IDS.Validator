@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
+using System.Xml;
 using Xbim.Common;
 using Xbim.IDS.Validator.Core;
 using Xbim.IDS.Validator.Core.Interfaces;
@@ -79,7 +80,7 @@ class Program
         Console.WriteLine("Validating...");
         var results = idsValidator.ValidateAgainstIds(model, ids, logger);
 
-        foreach(var req in results.ExecutedRequirements)
+        foreach (var req in results.ExecutedRequirements)
         {
 
             var passed = req.ApplicableResults.Count( a=> a.ValidationStatus == ValidationStatus.Success );
@@ -92,9 +93,10 @@ class Program
             Console.ForegroundColor = ConsoleColor.White;
             foreach (var itm in req.ApplicableResults)
             {
-                if(itm.ValidationStatus != ValidationStatus.Success)
+                if((req.Specification.Cardinality.ExpectsRequirements && itm.ValidationStatus != ValidationStatus.Success) ||
+                    (req.Specification.Cardinality.NoMatchingEntities && itm.ValidationStatus != ValidationStatus.Failed))
                 {
-                    WriteColored(req.Status, "    " + req.Status.ToString());
+                    WriteColored(itm.ValidationStatus, "    " + itm.ValidationStatus.ToString());
                     WriteColored($":{itm.Requirement?.Name} - {itm.Requirement?.Description}", ConsoleColor.Red);
                     WriteColored($": {itm.Entity}\n", ConsoleColor.White);
                     foreach(var msg in itm.Messages.Where(m=> m.Status != ValidationStatus.Success))
