@@ -2,7 +2,7 @@
 
 
 Xbim.IDS.Validator is a library to help validate IFC models against the 
-BuildingSMART (Information Delivery Specification)[https://github.com/buildingSMART/IDS/tree/master/Documentation] (IDS) schema.
+BuildingSMART [Information Delivery Specification](https://github.com/buildingSMART/IDS/tree/master/Documentation) (IDS) schema.
 
 Powered by xbim Tookit, this library can be used to translate IDS files into an executable specification, 
 which can be run against any IFC2x3 or IFC4 model and provide a detailed breakdown of the results.
@@ -10,7 +10,7 @@ which can be run against any IFC2x3 or IFC4 model and provide a detailed breakdo
 
 ## How do I use it?
 
-Given an IDS file such as (example.ids)[https://raw.githubusercontent.com/andyward/Xbim.IDS.Validator/master/Xbim.IDS.Validator.Core.Tests/TestModels/Example.ids?token=GHSAT0AAAAAABYNDJ4NB3E6GAGY7ZR7QFNQY5O2P3Q]
+Given an IDS file such as [example.ids](https://raw.githubusercontent.com/andyward/Xbim.IDS.Validator/master/Xbim.IDS.Validator.Core.Tests/TestModels/Example.ids?token=GHSAT0AAAAAABYNDJ4NB3E6GAGY7ZR7QFNQY5O2P3Q])
 
 
 ```csharp
@@ -53,26 +53,41 @@ dotnet add package Xbim.IDS.Validator.Core
 
 It currently supports:
 - Applicability and Requirements of the following
-    - Entity
-    - Attributes
-    - Classifications
-    - Properties
-    - Materials
-- (Complex Restrictions)[https://github.com/buildingSMART/IDS/blob/master/Documentation/restrictions.md]:
-    - Enumerations
-    - Patterns (Regex)
-    - Bounds
-    - Structure (Min/Max length)
+    - [x] Entities & Predefined Types
+    - [x] Attributes
+    - [x] Classifications
+        - Includes Classification hierarchies/ancestry
+        - Includes inheriting from Type
+    - [x] Properties
+        - Includes inheriting from Type
+        - Support for all IfcSimpleProperty implementations
+        - Support for IfcElementQuantities
+        - Support for Unit conversion
+    - [x] Materials
+    - [ ] PartOf - TODO
+    - [ ] Xbim.IDS custom extensions (Document, IfcRelation)
+- [Complex Restrictions](https://github.com/buildingSMART/IDS/blob/master/Documentation/restrictions.md):
+    - [x] Enumerations
+    - [x] Patterns (Regex)
+    - [x] Bounds
+    - [x] Structure (Min/Max length)
+    - Restrictions can be used in both Applicability filtering and Requirements verification
 - Reading of IDS in v0.6 Schema in Xml and JSON formats
 - Optionality of Facets
+- Cardinality of Specification (Expected, Prohibited, Optional)
+- Support for validating models in following IFC Schemas
+    - [x] IFC2x3
+    - [x] IFC4 schemas
+    - [ ] WIP support for IFC4x3
 
-The library has been tested against the (IDS test suite)[https://github.com/buildingSMART/IDS/blob/master/Documentation/developer-guide.md#checking-ids-against-ifc]
+The library has been tested against the [IDS test suite](https://github.com/buildingSMART/IDS/blob/master/Documentation/developer-guide.md#checking-ids-against-ifc)
 
+Currently only two minor cases are unimplemented. (See Skipped Tests)
 
+## To-do list
 
-## Todo list
-
-- [ ] Support for Document facets
 - [ ] Support for PartOf facets
+- [ ] Support for Xbim.XIDS extensions
+    - [ ] IfcType SubClasses extension
 - [ ] Support for IFC4x3 (Partially implemented)
 - [ ] Support for 1.e-6 precision
