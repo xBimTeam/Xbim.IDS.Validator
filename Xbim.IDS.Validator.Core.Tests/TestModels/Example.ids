@@ -6,7 +6,7 @@
     <ids:date>2022-11-30</ids:date>
   </ids:info>
   <ids:specifications>
-    <ids:specification ifcVersion="IFC2X3 IFC4" name="Check all Doors state Reference, Location and Material" minOccurs="1">
+    <ids:specification ifcVersion="IFC2X3 IFC4" name="All Doors MUST provide Reference, Location properties and have Materials" minOccurs="1">
       <ids:applicability>
         <ids:entity>
           <ids:name>
@@ -14,11 +14,7 @@
               <xs:enumeration value="IFCDOOR" />
             </xs:restriction>
           </ids:name>
-          <ids:predefinedType>
-            <xs:restriction base="xs:string">
-              <xs:enumeration value="DOOR" />
-            </xs:restriction>
-          </ids:predefinedType>
+         
         </ids:entity>
       </ids:applicability>
       <ids:requirements>
@@ -61,7 +57,7 @@
         </ids:material>
       </ids:requirements>
     </ids:specification>
-    <ids:specification ifcVersion="IFC2X3 IFC4X3" name="Windows have Thermal Specification &amp; fire rating" instructions="All external windows to have thermal u-rating and fire rating" minOccurs="0">
+    <ids:specification ifcVersion="IFC2X3 IFC4X3" name="Windows classified as EF_25_30_97 MUST have u-rating &amp; and any fire rating SHOULD be valid" instructions="All external windows to have thermal u-rating and fire rating" minOccurs="0">
       <ids:applicability>
         <ids:entity>
           <ids:name>
@@ -78,7 +74,7 @@
             </xs:restriction>
           </ids:value>
           <ids:system>
-            <ids:simpleValue>Uniclass2015</ids:simpleValue>
+            <ids:simpleValue>Uniclass</ids:simpleValue>
           </ids:system>
         </ids:classification>
       </ids:applicability>
@@ -97,7 +93,7 @@
             </xs:restriction>
           </ids:value>
         </ids:property>
-        <ids:property minOccurs="1" maxOccurs="unbounded" uri="http://identifier.buildingsmart.org/uri/dummy-example/FireRating" measure="IfcText">
+        <ids:property minOccurs="0" maxOccurs="1" uri="http://identifier.buildingsmart.org/uri/dummy-example/FireRating" measure="IfcText">
           <ids:propertySet>
             <ids:simpleValue>Pset_Fire</ids:simpleValue>
           </ids:propertySet>
@@ -114,7 +110,7 @@
         </ids:property>
       </ids:requirements>
     </ids:specification>
-    <ids:specification ifcVersion="IFC4" name="All Doors -&gt; Should have u-rating &amp; Firerating" minOccurs="1">
+    <ids:specification ifcVersion="IFC4" name="All Doors MUST have u-rating &amp; a valid fire rating" minOccurs="1">
       <ids:applicability>
         <ids:entity>
           <ids:name>
@@ -162,7 +158,7 @@
       </ids:requirements>
     </ids:specification>
 
-    <ids:specification ifcVersion="IFC2X3 IFC4" name="Should Not have Useless properties" minOccurs="1">
+    <ids:specification ifcVersion="IFC2X3 IFC4" name="Entities MUST NOT contain irrelevant properties" minOccurs="0" maxOccurs="0">
       <ids:applicability>
         <ids:entity>
           <ids:name>
@@ -173,7 +169,7 @@
         </ids:entity>
       </ids:applicability>
       <ids:requirements>
-        <ids:property minOccurs="0" maxOccurs="0">
+        <ids:property minOccurs="1">
           <ids:propertySet>
             <xs:restriction base="xs:string">
               <xs:pattern value="Pset_Revit.*" />
