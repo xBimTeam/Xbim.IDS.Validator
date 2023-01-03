@@ -265,7 +265,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             return Expression.Call(null, propsMethod, new[] { expression, facetExpr });
 
-
+          
         }
 
 
