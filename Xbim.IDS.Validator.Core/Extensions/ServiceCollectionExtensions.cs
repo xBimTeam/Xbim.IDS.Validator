@@ -16,8 +16,8 @@ namespace Xbim.IDS.Validator.Core
         public static IServiceCollection AddIdsValidation(this IServiceCollection services)
         {
 
-            services.AddScoped<IIdsModelBinder, IdsModelBinder>();
-            services.AddScoped<IIdsModelValidator, IdsModelValidator>();
+            services.AddTransient<IIdsModelBinder, IdsModelBinder>();
+            services.AddTransient<IIdsModelValidator, IdsModelValidator>();
             services.AddScoped<BinderContext>();
             services.AddSingleton<IIdsFacetBinderFactory, IdsFacetBinderFactory>();
 

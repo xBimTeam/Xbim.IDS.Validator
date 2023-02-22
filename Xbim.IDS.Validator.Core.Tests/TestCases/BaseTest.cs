@@ -17,6 +17,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
         private readonly IServiceProvider provider;
 
+        //private static ILoggerProvider xunitLoggerProvider = null;
+
+
         public BaseTest(ITestOutputHelper output)
         {
             this.output = output;
@@ -37,7 +40,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
         static BaseTest()
         {
-            IfcStore.ModelProviderFactory.UseHeuristicModelProvider();
+            //IfcStore.ModelProviderFactory.UseHeuristicModelProvider();
         }
 
         internal ILogger GetXunitLogger()
@@ -55,7 +58,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             ILogger<BaseTest> logger = provider.GetRequiredService<ILogger<BaseTest>>();
             Assert.NotNull(logger);
             ILoggerFactory logFactory = provider.GetRequiredService<ILoggerFactory>();
-            Xbim.Common.XbimLogging.LoggerFactory = logFactory;
+            //Xbim.Common.XbimLogging.LoggerFactory = logFactory;
             return logger;
         }
 
