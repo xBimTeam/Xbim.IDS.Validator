@@ -6,12 +6,13 @@ using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Tests
 {
+    [Collection(nameof(TestEnvironment))]
     public class ServicesTests
     {
-        private readonly ServiceProvider provider;
-        public ServicesTests()
+        private static readonly IServiceProvider provider;
+        static ServicesTests()
         {
-            provider = BuildServiceProvider();
+            provider = TestEnvironment.ServiceProvider;
         }
 
         [Fact]
@@ -53,15 +54,5 @@ namespace Xbim.IDS.Validator.Core.Tests
             modelValidator.Should().NotBeNull();
         }
 
-        private static ServiceProvider BuildServiceProvider()
-        {
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.AddLogging();
-
-            serviceCollection.AddIdsValidation();
-
-            var provider = serviceCollection.BuildServiceProvider();
-            return provider;
-        }
     }
 }

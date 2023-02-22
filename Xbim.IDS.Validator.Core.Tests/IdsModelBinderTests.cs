@@ -10,6 +10,7 @@ using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests
 {
+    [Collection(nameof(TestEnvironment))]
     public class IdsModelBinderTests
     {
         
@@ -19,10 +20,8 @@ namespace Xbim.IDS.Validator.Core.Tests
         public IdsModelBinderTests(ITestOutputHelper output)
         {
             this.output = output;
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.AddLogging().AddIdsValidation();
 
-            provider = serviceCollection.BuildServiceProvider();
+            provider = TestEnvironment.ServiceProvider;
         }
 
 
@@ -36,7 +35,7 @@ namespace Xbim.IDS.Validator.Core.Tests
         {
             var model = BuildModel(ifcFile);
             var modelBinder = provider.GetRequiredService<IIdsModelBinder>();
-            var logger = GetXunitLogger();
+            var logger = TestEnvironment.GetXunitLogger<IdsModelBinderTests>(output);
 
             var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idcFile, logger);
             
@@ -100,15 +99,5 @@ namespace Xbim.IDS.Validator.Core.Tests
             return IfcStore.Open(ifcFile);
         }
 
-        internal ILogger<IdsModelBinderTests> GetXunitLogger()
-        {
-            var services = new ServiceCollection()
-                        .AddLogging((builder) => builder.AddXunit(output, 
-                        new Divergic.Logging.Xunit.LoggingConfig { LogLevel=LogLevel.Debug }));
-            IServiceProvider provider = services.BuildServiceProvider();
-            var logger = provider.GetRequiredService<ILogger<IdsModelBinderTests>>();
-            Assert.NotNull(logger);
-            return logger;
-        }
     }
 }

@@ -9,6 +9,7 @@ using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.TestCases
 {
+    [Collection(nameof(TestEnvironment))]
     public abstract class BaseTest
     {
         protected readonly ITestOutputHelper output;
@@ -17,49 +18,21 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
         private readonly IServiceProvider provider;
 
-        //private static ILoggerProvider xunitLoggerProvider = null;
+        
 
 
         public BaseTest(ITestOutputHelper output)
         {
             this.output = output;
             logger = GetXunitLogger();
-            provider = BuildServiceProvider();
+            provider = TestEnvironment.ServiceProvider;
+            TestEnvironment.InitialiseXunitLogger(output);
         }
 
-        private static ServiceProvider BuildServiceProvider()
-        {
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.AddLogging();
-
-            serviceCollection.AddIdsValidation();
-
-            var provider = serviceCollection.BuildServiceProvider();
-            return provider;
-        }
-
-        static BaseTest()
-        {
-            //IfcStore.ModelProviderFactory.UseHeuristicModelProvider();
-        }
-
+        
         internal ILogger GetXunitLogger()
         {
-            IServiceCollection services = new ServiceCollection().AddLogging(builder =>
-            {
-                builder.SetMinimumLevel(LogLevel.Debug);
-                builder.AddXunit(output, new LoggingConfig
-                {
-                    //LogLevel = LogLevel.Debug,
-                    IgnoreTestBoundaryException = true
-                });
-            });
-            IServiceProvider provider = services.BuildServiceProvider();
-            ILogger<BaseTest> logger = provider.GetRequiredService<ILogger<BaseTest>>();
-            Assert.NotNull(logger);
-            ILoggerFactory logFactory = provider.GetRequiredService<ILoggerFactory>();
-            //Xbim.Common.XbimLogging.LoggerFactory = logFactory;
-            return logger;
+            return TestEnvironment.GetXunitLogger<BaseTest>(output);
         }
 
         protected XbimSchemaVersion[] GetSchemas(XbimSchemaVersion[] schemaVersions)

@@ -8,6 +8,7 @@ using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.TestModels
 {
+    [Collection(nameof(TestEnvironment))]
     public class IdsModelValidatorTests
     {
         private readonly ITestOutputHelper output;
@@ -17,10 +18,8 @@ namespace Xbim.IDS.Validator.Core.Tests.TestModels
         public IdsModelValidatorTests(ITestOutputHelper output)
         {
             this.output = output;
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.AddLogging().AddIdsValidation();
-
-            provider = serviceCollection.BuildServiceProvider();
+            
+            provider = TestEnvironment.ServiceProvider;
         }
 
         [Fact]
@@ -31,7 +30,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestModels
 
             var model = BuildModel(modelFile);
 
-            var logger = GetXunitLogger();
+            var logger = TestEnvironment.GetXunitLogger<IdsModelValidatorTests>(output);
 
 
             var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
@@ -58,15 +57,5 @@ namespace Xbim.IDS.Validator.Core.Tests.TestModels
             return IfcStore.Open(ifcFile);
         }
 
-        internal ILogger<IdsModelBinderTests> GetXunitLogger()
-        {
-            var services = new ServiceCollection()
-                        .AddLogging((builder) => builder.AddXunit(output,
-                        new Divergic.Logging.Xunit.LoggingConfig { LogLevel = LogLevel.Debug }));
-            IServiceProvider provider = services.BuildServiceProvider();
-            var logger = provider.GetRequiredService<ILogger<IdsModelBinderTests>>();
-            Assert.NotNull(logger);
-            return logger;
-        }
     }
 }

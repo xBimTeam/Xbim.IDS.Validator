@@ -15,7 +15,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         private static Lazy<IModel> lazyIfc2x3Model = new Lazy<IModel>(() => BuildIfc2x3Model());
 
         private BinderContext _context = new BinderContext();
-        private readonly IServiceProvider provider;
+        
        
 
 
@@ -56,11 +56,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             this.output = output;
             _schema = schema;
             query = new IfcQuery();
-            var services = new ServiceCollection()
-                        .AddLogging((builder) => builder.AddXunit(output,
-                        new Divergic.Logging.Xunit.LoggingConfig { LogLevel = LogLevel.Debug }));
-            provider = services.BuildServiceProvider();
-            logger = GetXunitLogger();
+            
+            logger = TestEnvironment.GetXunitLogger<BaseModelTester>(output);
         }
 
        
@@ -77,16 +74,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             return IfcStore.Open(filename);
         }
 
-        internal ILogger<IdsModelBinderTests> GetXunitLogger()
-        {
-            var logger = GetLogger<IdsModelBinderTests>();
-            Assert.NotNull(logger);
-            return logger;
-        }
 
         internal ILogger<T> GetLogger<T>()
         {
-            return provider.GetRequiredService<ILogger<T>>();
+            return TestEnvironment.GetXunitLogger<T>(output);
         }
 
 
