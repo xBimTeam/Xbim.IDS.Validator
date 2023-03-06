@@ -45,7 +45,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
 
 
-        [InlineData(@"TestCases/material/fail-a_constituent_set_with_no_data_will_fail_a_value_check.ids")]
+        [InlineData(@"TestCases/material/fail-a_constituent_set_with_no_data_will_fail_a_value_check.ids", XbimSchemaVersion.Ifc4)]
         [InlineData(@"TestCases/material/fail-a_material_list_with_no_data_will_fail_a_value_check.ids")]
         [InlineData(@"TestCases/material/fail-a_prohibited_facet_returns_the_opposite_of_a_required_facet.ids")]
         [InlineData(@"TestCases/material/fail-elements_without_a_material_always_fail.ids")]

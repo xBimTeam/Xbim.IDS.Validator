@@ -34,7 +34,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/attribute/fail-only_specifically_formatted_numbers_are_allowed_2_4.ids")]
         [InlineData(@"TestCases/attribute/fail-specifying_a_float_when_the_value_is_an_integer_will_fail.ids")]
         [InlineData(@"TestCases/attribute/fail-value_checks_always_fail_for_lists.ids")]
-        [InlineData(@"TestCases/attribute/fail-value_checks_always_fail_for_objects.ids")]
+        [InlineData(@"TestCases/attribute/fail-value_checks_always_fail_for_objects.ids", XbimSchemaVersion.Ifc4)]
         [InlineData(@"TestCases/attribute/fail-value_checks_always_fail_for_selects.ids")]
         [InlineData(@"TestCases/attribute/fail-value_restrictions_may_be_used_3_3.ids")]
 
