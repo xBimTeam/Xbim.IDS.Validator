@@ -18,7 +18,11 @@ variables:
 jobs:
 - job: Build
   steps:
-
+# Temp Workaround to Fix https://github.com/dotnet/sdk/issues/30625
+  - task: UseDotNet@2
+    inputs:
+      packageType: 'sdk'
+      version: '7.0.201'
   - task: VersionDotNetCoreAssemblies@3
     displayName: 'Version files'
     inputs:
