@@ -21,13 +21,15 @@ namespace Xbim.IDS.Validator.Core.Tests
 
         public TestEnvironment()
         {
-
-            XbimServices.Current.ConfigureServices(services => 
+            if(XbimServices.Current.IsBuilt == false)
             {
-                services.AddXbimToolkit(/*c => c.AddMemoryModel()*/)
-                    .AddIdsValidation()
-                    .AddLogging();
-            });
+                XbimServices.Current.ConfigureServices(services => 
+                {
+                    services.AddXbimToolkit(/*c => c.AddMemoryModel()*/)
+                        .AddIdsValidation()
+                        .AddLogging(s=> s.SetMinimumLevel(LogLevel.Debug));
+                });
+            }
 
         }
 
