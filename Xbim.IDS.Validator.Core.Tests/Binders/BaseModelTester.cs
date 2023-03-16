@@ -8,6 +8,7 @@ using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
+    [Collection(nameof(TestEnvironment))]
     public abstract class BaseModelTester
     {
 

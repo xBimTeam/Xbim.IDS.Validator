@@ -1,14 +1,10 @@
 ﻿using FluentAssertions;
 using Xbim.Common;
 using Xbim.Ifc;
-using Xbim.Ifc2x3.SharedBldgElements;
-using Xbim.Ifc4.Interfaces;
-using Xbim.Ifc4.UtilityResource;
-using Xbim.Ifc4x3.ProductExtension;
-using Xbim.IO.Memory;
 
 namespace Xbim.IDS.Validator.Core.Tests
 {
+    [Collection(nameof(TestEnvironment))]
     public class ModelGenerator
     {
         [Fact]

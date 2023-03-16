@@ -23,15 +23,14 @@ namespace Xbim.IDS.Validator.Core.Tests
         {
             
             Console.WriteLine("Initialised Test Environment");
-            if(XbimServices.Current.IsBuilt == false)
-            {
+            
                 XbimServices.Current.ConfigureServices(services => 
                 {
                     services.AddXbimToolkit(/*c => c.AddMemoryModel()*/)
                         .AddIdsValidation()
                         .AddLogging(s=> s.SetMinimumLevel(LogLevel.Debug));
                 });
-            }
+            
 
         }
 
@@ -76,6 +75,7 @@ namespace Xbim.IDS.Validator.Core.Tests
             var services = new ServiceCollection()
                         .AddLogging((builder) => builder.AddXunit(output,
                         new Divergic.Logging.Xunit.LoggingConfig { LogLevel = LogLevel.Debug }));
+
             IServiceProvider provider = services.BuildServiceProvider();
             var logger = provider.GetRequiredService<ILogger<T>>();
             Assert.NotNull(logger);
