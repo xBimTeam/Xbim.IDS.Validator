@@ -53,6 +53,7 @@ jobs:
     inputs:
       command: 'test'
       projects: '**/*.Tests.csproj'
+      arguments: '-v normal -l ''console;verbosity=detailed'''
   
   - task: CopyFiles@2
     name: ''

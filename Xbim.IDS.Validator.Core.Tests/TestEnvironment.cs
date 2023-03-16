@@ -21,6 +21,8 @@ namespace Xbim.IDS.Validator.Core.Tests
 
         public TestEnvironment()
         {
+            
+            Console.WriteLine("Initialised Test Environment");
             if(XbimServices.Current.IsBuilt == false)
             {
                 XbimServices.Current.ConfigureServices(services => 
