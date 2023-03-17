@@ -4,6 +4,7 @@ using Xbim.IDS.Validator.Core.Binders;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 using Xunit.Abstractions;
+using static Xbim.InformationSpecifications.PartOfFacet;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
@@ -198,6 +199,40 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
             expression = psetbinder.BindWhereExpression(expression, propertyFacet);
+
+            // Assert
+
+            var result = query.Execute(expression, Model);
+            result.Should().HaveCount(expectedCount);
+
+        }
+
+
+        [InlineData("IfcBuildingElement", PartOfRelation.IfcRelAggregates, "IfcCurtainWall", 2)]
+        [InlineData("IfcSpatialStructureElement", PartOfRelation.IfcRelContainedInSpatialStructure, "IfcBuilding", 1)]
+        // TODO: Additional Relations
+        [Theory]
+        public void Can_Query_By_Ifc_And_PartOf(string ifcType, PartOfRelation partOfRelation, string entityType, int expectedCount)
+        {
+            IfcTypeFacet ifcFacet = new IfcTypeFacet
+            {
+                IfcType = new ValueConstraint(ifcType),
+            };
+
+            PartOfFacet partOfFacet = new PartOfFacet
+            {
+                EntityType = new ValueConstraint(NetTypeName.String)
+            };
+            partOfFacet.SetRelation(partOfRelation);
+            partOfFacet.EntityType.AddAccepted(new ExactConstraint(entityType));
+            
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
+
+            var partOfbinder = new PartOfFacetBinder(BinderContext, GetLogger<PartOfFacetBinder>());
+
+            // Act
+            var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
+            expression = partOfbinder.BindWhereExpression(expression, partOfFacet);
 
             // Assert
 

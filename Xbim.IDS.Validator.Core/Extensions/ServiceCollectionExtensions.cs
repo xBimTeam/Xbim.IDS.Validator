@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using System.Reflection;
 using Xbim.IDS.Validator.Core.Binders;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.InformationSpecifications;
@@ -27,6 +28,7 @@ namespace Xbim.IDS.Validator.Core
             services.RegisterIdsBinder<IfcClassificationFacet, IfcClassificationFacetBinder>();
             services.RegisterIdsBinder<MaterialFacet, MaterialFacetBinder>();
             services.RegisterIdsBinder<IfcPropertyFacet, PsetFacetBinder>();
+            services.RegisterIdsBinder<PartOfFacet, PartOfFacetBinder>();
             return services;
         }
 

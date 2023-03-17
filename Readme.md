@@ -64,7 +64,7 @@ It currently supports:
         - Support for IfcElementQuantities
         - Support for Unit conversion
     - [x] Materials
-    - [ ] PartOf - TODO
+    - [x] PartOf
     - [ ] Xbim.IDS custom extensions (Document, IfcRelation)
 - [Complex Restrictions](https://github.com/buildingSMART/IDS/blob/master/Documentation/restrictions.md):
     - [x] Enumerations
@@ -72,7 +72,7 @@ It currently supports:
     - [x] Bounds
     - [x] Structure (Min/Max length)
     - Restrictions can be used in both Applicability filtering and Requirements verification
-- Reading of IDS in v0.6 Schema in Xml and JSON formats
+- Reading of IDS in v0.9 Schema in Xml and JSON formats
 - Optionality of Facets
 - Cardinality of Specification (Expected, Prohibited, Optional)
 - Support for validating models in following IFC Schemas
@@ -82,12 +82,12 @@ It currently supports:
 
 The library has been tested against the [IDS test suite](https://github.com/buildingSMART/IDS/blob/master/Documentation/developer-guide.md#checking-ids-against-ifc)
 
-Currently only two minor cases are unimplemented. (See Skipped Tests)
+Currently only two minor cases are unimplemented. (See Skipped Tests). Plus 2 PartOf tests covering PredefinedType 
 
 ## To-do list
 
-- [ ] Support for PartOf facets
+- [x] Support for PartOf facets
 - [ ] Support for Xbim.XIDS extensions
     - [ ] IfcType SubClasses extension
-- [ ] Support for IFC4x3 (Partially implemented)
+- [x] Support for IFC4x3 (Partially implemented)
 - [ ] Support for 1.e-6 precision
