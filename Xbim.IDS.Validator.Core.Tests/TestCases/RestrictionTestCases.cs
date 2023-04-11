@@ -26,7 +26,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
             var outcome = VerifyIdsFile(idsFile);
 
-            outcome.Status.Should().Be(ValidationStatus.Success);
+            outcome.Status.Should().Be(ValidationStatus.Pass);
         }
 
 
@@ -47,7 +47,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
             var outcome = VerifyIdsFile(idsFile);
 
-            outcome.Status.Should().Be(ValidationStatus.Failed);
+            outcome.Status.Should().Be(ValidationStatus.Fail);
         }
     }
 }

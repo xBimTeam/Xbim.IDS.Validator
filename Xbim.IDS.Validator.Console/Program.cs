@@ -83,7 +83,7 @@ class Program
         foreach (var req in results.ExecutedRequirements)
         {
 
-            var passed = req.ApplicableResults.Count( a=> a.ValidationStatus == ValidationStatus.Success );
+            var passed = req.ApplicableResults.Count( a=> a.ValidationStatus == ValidationStatus.Pass );
             WriteColored(req.Status, req.Status.ToString());
             WriteColored($" : {req.Specification.Name} [{passed}/{req.ApplicableResults.Count}]", ConsoleColor.Gray);
             WriteColored($" {req.Specification.Cardinality.Description} Requirement\n", ConsoleColor.Cyan);
@@ -93,17 +93,26 @@ class Program
             Console.ForegroundColor = ConsoleColor.White;
             foreach (var itm in req.ApplicableResults)
             {
-                if((req.Specification.Cardinality.ExpectsRequirements && itm.ValidationStatus != ValidationStatus.Success) ||
-                    (req.Specification.Cardinality.NoMatchingEntities && itm.ValidationStatus != ValidationStatus.Failed))
+                if((req.Specification.Cardinality.ExpectsRequirements && itm.ValidationStatus != ValidationStatus.Pass) ||
+                    (req.Specification.Cardinality.NoMatchingEntities && itm.ValidationStatus != ValidationStatus.Fail))
                 {
                     WriteColored(itm.ValidationStatus, "    " + itm.ValidationStatus.ToString());
                     WriteColored($":{itm.Requirement?.Name} - {itm.Requirement?.Description}", ConsoleColor.Red);
                     WriteColored($": {itm.Entity}\n", ConsoleColor.White);
-                    foreach(var msg in itm.Messages.Where(m=> m.Status != ValidationStatus.Success))
+                    foreach(var msg in itm.Messages.Where(m=> m.Status != ValidationStatus.Pass))
                     {
                         WriteColored($"                [{msg?.Clause?.GetType().Name}.{msg?.ValidatedField}] {msg?.Expectation} to match {msg?.ExpectedResult} - but actually found '{msg?.ActualResult}'\n", ConsoleColor.DarkGray);
                     }
                 }
+                //else
+                //{
+                //    WriteColored($":{itm.Requirement?.Name} - {itm.Requirement?.Description}", ConsoleColor.DarkGray);
+                //    WriteColored($": {itm.Entity}\n", ConsoleColor.White);
+                //    foreach (var msg in itm.Messages.Where(m => m.Status == ValidationStatus.Success))
+                //    {
+                //        WriteColored($"                [{msg?.Clause?.GetType().Name}.{msg?.ValidatedField}] {msg?.Expectation} to match {msg?.ExpectedResult} - and found '{msg?.ActualResult}'\n", ConsoleColor.Gray);
+                //    }
+                //}
                 //Console.Write(".");
             }
             Console.WriteLine();
@@ -117,13 +126,13 @@ class Program
         
         switch(status)
         {
-            case ValidationStatus.Success:
+            case ValidationStatus.Pass:
                 WriteColored(text,ConsoleColor.Green);
                 break;
             case ValidationStatus.Inconclusive:
                 WriteColored(text, ConsoleColor.Yellow);
                 break;
-            case ValidationStatus.Failed:
+            case ValidationStatus.Fail:
             default:
                 WriteColored(text, ConsoleColor.Red);
                 break;

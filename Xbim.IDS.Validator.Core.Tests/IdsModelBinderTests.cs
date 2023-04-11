@@ -90,7 +90,7 @@ namespace Xbim.IDS.Validator.Core.Tests
             level = LogLevel.Information;
             pad = 0;
             if (status == ValidationStatus.Inconclusive) { level = LogLevel.Warning; pad = 4; }
-            if (status == ValidationStatus.Failed) { level = LogLevel.Error; pad = 6; }
+            if (status == ValidationStatus.Fail) { level = LogLevel.Error; pad = 6; }
         }
 
 

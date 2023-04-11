@@ -90,7 +90,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             foreach(var message in validationResult.Messages) 
             {
                 var level = LogLevel.Information;
-                if(message.Status == ValidationStatus.Failed)
+                if(message.Status == ValidationStatus.Fail)
                     level = LogLevel.Warning;
                 logger.Log(level, "Message: {message}", message);
             }
@@ -123,7 +123,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             foreach (var message in validationResult.Messages)
             {
                 var level = LogLevel.Information;
-                if (message.Status == ValidationStatus.Failed)
+                if (message.Status == ValidationStatus.Fail)
                     level = LogLevel.Warning;
                 logger.Log(level, "Message: {message}", message);
             }

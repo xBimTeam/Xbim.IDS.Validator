@@ -18,7 +18,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
             var outcome = VerifyIdsFile(idsFile);
 
-            outcome.Status.Should().Be(ValidationStatus.Success);
+            outcome.Status.Should().Be(ValidationStatus.Pass);
         }
 
         [InlineData(@"TestCases/xbim/pass-ifc4x3_models_work.ids")]
@@ -28,7 +28,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
             var outcome = VerifyIdsFile(idsFile, false, XbimSchemaVersion.Ifc4x3);
 
-            outcome.Status.Should().Be(ValidationStatus.Success);
+            outcome.Status.Should().Be(ValidationStatus.Pass);
         }
     }
 }

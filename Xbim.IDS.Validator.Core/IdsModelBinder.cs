@@ -105,12 +105,12 @@ namespace Xbim.IDS.Validator.Core
             }
             if (result.Failures.Any())
             {
-                result.ValidationStatus = ValidationStatus.Failed;
+                result.ValidationStatus = ValidationStatus.Fail;
             }
-            else if (result.Messages.Any(m => m.Status != ValidationStatus.Failed))
+            else if (result.Messages.Any(m => m.Status != ValidationStatus.Fail))
             {
                 // Success and Inconclusive all count as success
-                result.ValidationStatus = ValidationStatus.Success;
+                result.ValidationStatus = ValidationStatus.Pass;
             }
             return result;
         }

@@ -42,11 +42,11 @@ namespace Xbim.IDS.Validator.Core
         /// <summary>
         /// The set of all success messages for this entity
         /// </summary>
-        public IEnumerable<string?> Successful { get => Messages.Where(m => m.Status == ValidationStatus.Success).Select(m => m.ToString()); } 
+        public IEnumerable<string?> Successful { get => Messages.Where(m => m.Status == ValidationStatus.Pass).Select(m => m.ToString()); } 
         /// <summary>
         /// The set of all failure messages for this entity
         /// </summary>
-        public IEnumerable<string?> Failures { get => Messages.Where(m => m.Status == ValidationStatus.Failed).Select(m=> m.ToString()); }
+        public IEnumerable<string?> Failures { get => Messages.Where(m => m.Status == ValidationStatus.Fail).Select(m=> m.ToString()); }
         /// <summary>
         /// The requirement the entity is tested against
         /// </summary>
@@ -64,10 +64,10 @@ namespace Xbim.IDS.Validator.Core
             switch (expectation)
             {
                 case RequirementCardinalityOptions.Expected:
-                    return success == true ? ValidationStatus.Success : success == false ? ValidationStatus.Failed : ValidationStatus.Inconclusive;
+                    return success == true ? ValidationStatus.Pass : success == false ? ValidationStatus.Fail : ValidationStatus.Inconclusive;
 
                 case RequirementCardinalityOptions.Prohibited:
-                    return success == true ? ValidationStatus.Failed : success == false ? ValidationStatus.Success : ValidationStatus.Inconclusive;
+                    return success == true ? ValidationStatus.Fail : success == false ? ValidationStatus.Pass : ValidationStatus.Inconclusive;
 
                 case RequirementCardinalityOptions.Optional:
                 default:
@@ -80,7 +80,7 @@ namespace Xbim.IDS.Validator.Core
 
         public override string ToString()
         {
-            if(Status == ValidationStatus.Failed)
+            if(Status == ValidationStatus.Fail)
             {
                 return $"[{Status}] {Expectation} {Clause?.GetType().Name}.{ValidatedField} : {Reason}. Constrained to \"{ExpectedResult}\" but found \"{ActualResult}\" at {Entity}";
             }
@@ -151,8 +151,8 @@ namespace Xbim.IDS.Validator.Core
 
     public enum ValidationStatus
     {
-        Success,
-        Failed,
+        Pass,
+        Fail,
         Inconclusive
     }
 

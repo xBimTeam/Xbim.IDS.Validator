@@ -34,7 +34,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             // Can't test IFC2x3 Classifications in our harness due to schema changes
             var outcome = VerifyIdsFile(idsFile, specialCase, XbimSchemaVersion.Ifc4);
 
-            outcome.Status.Should().Be(ValidationStatus.Success);
+            outcome.Status.Should().Be(ValidationStatus.Pass);
             
         }
 
@@ -51,7 +51,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             
             var outcome = VerifyIdsFile(idsFile);
 
-            outcome.Status.Should().Be(ValidationStatus.Failed);
+            outcome.Status.Should().Be(ValidationStatus.Fail);
             
         }
     }

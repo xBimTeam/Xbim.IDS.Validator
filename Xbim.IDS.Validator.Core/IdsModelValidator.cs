@@ -79,15 +79,13 @@ namespace Xbim.IDS.Validator.Core
                     foreach (var item in items)
                     {
                         var i = item as IIfcRoot;
-                        logger.LogInformation("          * {entity}", item);
-
 
                         var result = ModelBinder.ValidateRequirement(item, spec.Requirement, logger);
                         LogLevel level;
                         int pad;
                         GetLogLevel(result.ValidationStatus, out level, out pad);
-                        logger.Log(level, "{pad}           {result}: Checking {short}", "".PadLeft(pad, ' '), 
-                            result.ValidationStatus.ToString().ToUpperInvariant(), spec.Requirement.Short());
+                        logger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '), 
+                            result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Requirement.Short());
                         foreach (var message in result.Messages)
                         {
                             GetLogLevel(message.Status, out level, out pad, LogLevel.Debug);
@@ -105,13 +103,13 @@ namespace Xbim.IDS.Validator.Core
                 }
             }
 
-            if (outcome.ExecutedRequirements.Any(r => r.Status == ValidationStatus.Failed))
+            if (outcome.ExecutedRequirements.Any(r => r.Status == ValidationStatus.Fail))
             {
-                outcome.Status = ValidationStatus.Failed;
+                outcome.Status = ValidationStatus.Fail;
             }
-            else if (outcome.ExecutedRequirements.Any(r => r.Status == ValidationStatus.Success))
+            else if (outcome.ExecutedRequirements.Any(r => r.Status == ValidationStatus.Pass))
             {
-                outcome.Status = ValidationStatus.Success;
+                outcome.Status = ValidationStatus.Pass;
             }
             // TODO: Consider Inconclusive
             return outcome;
@@ -122,7 +120,7 @@ namespace Xbim.IDS.Validator.Core
             level = defaultLevel;
             pad = 0;
             if (status == ValidationStatus.Inconclusive) { level = LogLevel.Warning; pad = 4; }
-            if (status == ValidationStatus.Failed) { level = LogLevel.Error; pad = 6; }
+            if (status == ValidationStatus.Fail) { level = LogLevel.Error; pad = 6; }
         }
 
         private static void SetResults(Specification specification, ValidationRequirement validation)
@@ -132,35 +130,35 @@ namespace Xbim.IDS.Validator.Core
             {
                 if (simpleCard.ExpectsRequirements) // Required or Optional
                 {
-                    if (validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Failed))
+                    if (validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Fail))
                     {
-                        validation.Status = ValidationStatus.Failed;
+                        validation.Status = ValidationStatus.Fail;
                     }
                     else
                     {
                         if (simpleCard.IsModelConstraint) // Definitely required
                         {
-                            validation.Status = validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Success)
-                                ? ValidationStatus.Success
-                                : ValidationStatus.Failed;
+                            validation.Status = validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Pass)
+                                ? ValidationStatus.Pass
+                                : ValidationStatus.Fail;
                         }
                         else
                         {
                             // Optional
-                            validation.Status = ValidationStatus.Success;
+                            validation.Status = ValidationStatus.Pass;
                         }
                     }
 
                 }
                 if (simpleCard.NoMatchingEntities)  // Prohibited
                 {
-                    if (validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Success))
+                    if (validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Pass))
                     {
-                        validation.Status = ValidationStatus.Failed;
+                        validation.Status = ValidationStatus.Fail;
                     }
                     else
                     {
-                        validation.Status = ValidationStatus.Success;
+                        validation.Status = ValidationStatus.Pass;
                     }
                 }
             }
@@ -170,33 +168,33 @@ namespace Xbim.IDS.Validator.Core
                 {
                     if (cardinality.IsModelConstraint)
                     {
-                        var successes = validation.ApplicableResults.Count(r => r.ValidationStatus == ValidationStatus.Success);
+                        var successes = validation.ApplicableResults.Count(r => r.ValidationStatus == ValidationStatus.Pass);
                         // If None have failed and we have the number expected successful is within bounds of min-max we succeed
                         validation.Status = cardinality.IsSatisfiedBy(successes) &&
-                            !validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Failed)
-                            ? ValidationStatus.Success
-                            : ValidationStatus.Failed;
+                            !validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Fail)
+                            ? ValidationStatus.Pass
+                            : ValidationStatus.Fail;
 
                     }
                     else
                     {
-                        validation.Status = ValidationStatus.Success;
+                        validation.Status = ValidationStatus.Pass;
                     }
                 }
                 if (cardinality.NoMatchingEntities)
                 {
                     if (cardinality.IsModelConstraint)
                     {
-                        var failures = validation.ApplicableResults.Count(r => r.ValidationStatus == ValidationStatus.Failed);
+                        var failures = validation.ApplicableResults.Count(r => r.ValidationStatus == ValidationStatus.Fail);
                         // If None have suceeded and we have the number expected failed is within bounds of min-max we succeed
                         validation.Status = (cardinality.MinOccurs <= failures && cardinality.MaxOccurs >= failures) &&
-                            !validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Success)
-                            ? ValidationStatus.Success
-                            : ValidationStatus.Failed;
+                            !validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Pass)
+                            ? ValidationStatus.Pass
+                            : ValidationStatus.Fail;
                     }
                     else
                     {
-                        validation.Status = ValidationStatus.Success;
+                        validation.Status = ValidationStatus.Pass;
                     }
                 }
             }
@@ -228,7 +226,7 @@ namespace Xbim.IDS.Validator.Core
 
         internal void MarkFailed(string mesg)
         {
-            Status = ValidationStatus.Failed;
+            Status = ValidationStatus.Fail;
             Message = mesg;
         }
     }

@@ -33,7 +33,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                 var schema = XbimSchemaVersion.Ifc4;
                 var outcome = VerifyIdsFile(idsFile, schemaVersion: XbimSchemaVersion.Ifc4);
 
-                outcome.Status.Should().Be(ValidationStatus.Success, schema.ToString());
+                outcome.Status.Should().Be(ValidationStatus.Pass, schema.ToString());
             }
         }
 
@@ -50,7 +50,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                 var schema = XbimSchemaVersion.Ifc4;
                 var outcome = VerifyIdsFile(idsFile, schemaVersion: XbimSchemaVersion.Ifc4);
 
-                outcome.Status.Should().Be(ValidationStatus.Success, schema.ToString());
+                outcome.Status.Should().Be(ValidationStatus.Pass, schema.ToString());
             }
         }
 
@@ -77,7 +77,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                 var schema = XbimSchemaVersion.Ifc4;
                 var outcome = VerifyIdsFile(idsFile, schemaVersion: schema);
 
-                outcome.Status.Should().Be(ValidationStatus.Failed, schema.ToString());
+                outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());
             }
         }
 
@@ -94,7 +94,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                 var schema = XbimSchemaVersion.Ifc4;
                 var outcome = VerifyIdsFile(idsFile, schemaVersion: schema);
 
-                outcome.Status.Should().Be(ValidationStatus.Failed, schema.ToString());
+                outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());
             }
         }
 

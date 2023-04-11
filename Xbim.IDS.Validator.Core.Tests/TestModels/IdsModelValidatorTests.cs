@@ -39,12 +39,12 @@ namespace Xbim.IDS.Validator.Core.Tests.TestModels
 
             results.Should().NotBeNull();
 
-            results.Status.Should().Be(ValidationStatus.Failed);
+            results.Status.Should().Be(ValidationStatus.Fail);
             results.ExecutedRequirements.Should().NotBeEmpty();
 
             results.ExecutedRequirements.Count().Should().Be(4);
 
-            results.ExecutedRequirements[0].Status.Should().Be(ValidationStatus.Success); 
+            results.ExecutedRequirements[0].Status.Should().Be(ValidationStatus.Pass); 
             results.ExecutedRequirements[0].ApplicableResults.Should().NotBeEmpty();
 
 
