@@ -2,8 +2,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
-using System.Xml;
 using Xbim.Common;
+using Xbim.IDS.Validator.Console;
 using Xbim.IDS.Validator.Core;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc;
@@ -83,12 +83,14 @@ class Program
         foreach (var req in results.ExecutedRequirements)
         {
 
-            var passed = req.ApplicableResults.Count( a=> a.ValidationStatus == ValidationStatus.Pass );
+            var passed = req.Specification.Cardinality.NoMatchingEntities ? req.ApplicableResults.Count(a => a.ValidationStatus == ValidationStatus.Fail) 
+                :  req.ApplicableResults.Count( a=> a.ValidationStatus == ValidationStatus.Pass );
+            
             WriteColored(req.Status, req.Status.ToString());
-            WriteColored($" : {req.Specification.Name} [{passed}/{req.ApplicableResults.Count}]", ConsoleColor.Gray);
+            WriteColored($" : {req.Specification.Name} [{passed} passed from {req.ApplicableResults.Count}]", ConsoleColor.Gray);
             WriteColored($" {req.Specification.Cardinality.Description} Requirement\n", ConsoleColor.Cyan);
-            WriteColored($"  --Where {req.Specification.Applicability.Short()}\n", ConsoleColor.Blue);
-            WriteColored($"  --Check {req.Specification.Requirement?.Short()}\n",ConsoleColor.Gray);
+            WriteColored($"  -- For {req.Specification.Applicability.GetApplicabilityDescription().SplitClauses()}\n", ConsoleColor.Blue);
+            WriteColored($"  -- It is {req.Specification.Cardinality.Description} that elements {req.Specification.Requirement?.GetRequirementDescription().SplitClauses()}\n",ConsoleColor.DarkGreen);
 
             Console.ForegroundColor = ConsoleColor.White;
             foreach (var itm in req.ApplicableResults)
@@ -159,4 +161,5 @@ class Program
     {
         return IfcStore.Open(ifcFile);
     }
+
 }
