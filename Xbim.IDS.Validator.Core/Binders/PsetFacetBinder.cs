@@ -199,7 +199,14 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             else
             {
-                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertySetName!, null, "No Psets matching", item));
+                if(facet.PropertyName?.IsEmpty()== false)
+                {
+                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, "No Property matching", item));
+                }
+                else
+                {
+                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertySetName!, null, "No Psets matching", item));
+                }
             }
 
 

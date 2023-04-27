@@ -7,6 +7,7 @@ using Xbim.IDS.Validator.Console;
 using Xbim.IDS.Validator.Core;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc;
+using Xbim.InformationSpecifications;
 
 class Program
 {
@@ -103,19 +104,19 @@ class Program
                     WriteColored($": {itm.Entity}\n", ConsoleColor.White);
                     foreach(var msg in itm.Messages.Where(m=> m.Status != ValidationStatus.Pass))
                     {
-                        WriteColored($"                [{msg?.Clause?.GetType().Name}.{msg?.ValidatedField}] {msg?.Expectation} to match {msg?.ExpectedResult} - but actually found '{msg?.ActualResult}'\n", ConsoleColor.DarkGray);
+                        WriteColored($"               {msg?.Expectation} {msg?.Clause?.GetType().Name}.{msg?.ValidatedField} to be {msg?.ExpectedResult} - but actually found '{msg?.ActualResult}'\n", ConsoleColor.DarkGray);
                     }
                 }
                 //else
                 //{
                 //    WriteColored($":{itm.Requirement?.Name} - {itm.Requirement?.Description}", ConsoleColor.DarkGray);
                 //    WriteColored($": {itm.Entity}\n", ConsoleColor.White);
-                //    foreach (var msg in itm.Messages.Where(m => m.Status == ValidationStatus.Success))
+                //    foreach (var msg in itm.Messages.Where(m => m.Status == ValidationStatus.Pass))
                 //    {
-                //        WriteColored($"                [{msg?.Clause?.GetType().Name}.{msg?.ValidatedField}] {msg?.Expectation} to match {msg?.ExpectedResult} - and found '{msg?.ActualResult}'\n", ConsoleColor.Gray);
+                //        WriteColored($"                [{msg?.Clause?.GetType().Name}.{msg?.ValidatedField}] {msg?.Expectation} to find {msg?.ExpectedResult} - and found '{msg?.ActualResult}'\n", ConsoleColor.Gray);
                 //    }
                 //}
-                //Console.Write(".");
+                Console.Write(".");
             }
             Console.WriteLine();
             Console.WriteLine("------------------------------");
