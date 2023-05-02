@@ -1,0 +1,10 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION (('ViewDefinition [CoordinationView]'), '2;1');
+FILE_NAME ('pass-subclass_type_may_be_identified.ifc', '2023-04-28T16:20:57', ('Andy Ward'), ('xbim Ltd'), 'xbim Toolkit', 'xbim IDS Unit tests', 'n/a');
+FILE_SCHEMA (('IFC4'));
+ENDSEC;
+DATA;
+#1=IFCWALLSTANDARDCASE($,$,'Test','Long Name',$,$,$,$,.STANDARD.);
+ENDSEC;
+END-ISO-10303-21;

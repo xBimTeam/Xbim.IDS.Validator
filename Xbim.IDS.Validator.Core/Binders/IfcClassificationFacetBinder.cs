@@ -46,7 +46,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             if (expression.Type.IsInterface && typeof(IEntityCollection).IsAssignableFrom(expression.Type))
             {
-                expression = BindIfcExpressType(expression, Model.Metadata.ExpressType(nameof(IfcRelAssociatesClassification).ToUpperInvariant()));
+                expression = BindIfcExpressType(expression, Model.Metadata.ExpressType(nameof(IfcRelAssociatesClassification).ToUpperInvariant()), false);
                 // Apply the Classification filter
                 expression = BindClassificationSelection(expression, facet);
                 return expression;

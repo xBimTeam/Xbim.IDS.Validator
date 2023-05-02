@@ -1,19 +1,13 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Xbim.IDS.Validator.Core.Binders;
-using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
-using Xbim.InformationSpecifications.Cardinality;
 using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
     public class PsetFacetBinderTests : BaseModelTester
     {
-
-
-        
-    
 
         public PsetFacetBinderTests(ITestOutputHelper output) : base(output)
         {
@@ -144,17 +138,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         }
 
-        private static FacetGroup BuildGroup(IfcPropertyFacet propFacet)
-        {
-#pragma warning disable CS0618 // Type or member is obsolete
-            var group = new FacetGroup();
-#pragma warning restore CS0618 // Type or member is obsolete
-            group.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>();
-            group.RequirementOptions.Add(RequirementCardinalityOptions.Expected);
-            group.Facets.Add(propFacet);
-            return group;
-        }
-
+        
 
         [InlineData(177, "BaseQuantities", "GrossFloorArea", 51.9948250000001d)]
         [InlineData(177, "BaseQuantities", "Height", 2500d/1000)]

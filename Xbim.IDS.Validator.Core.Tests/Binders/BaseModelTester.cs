@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Xbim.Common;
 using Xbim.Common.Step21;
 using Xbim.IDS.Validator.Core.Binders;
 using Xbim.Ifc;
+using Xbim.InformationSpecifications;
 using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
@@ -17,8 +17,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         private BinderContext _context = new BinderContext();
         
-       
-
+      
 
         public IModel Model
         {
@@ -79,6 +78,17 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         internal ILogger<T> GetLogger<T>()
         {
             return TestEnvironment.GetXunitLogger<T>(output);
+        }
+
+        protected static FacetGroup BuildGroup(IFacet facet)
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+            var group = new FacetGroup();
+#pragma warning restore CS0618 // Type or member is obsolete
+            group.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>();
+            group.RequirementOptions.Add(RequirementCardinalityOptions.Expected);
+            group.Facets.Add(facet);
+            return group;
         }
 
 

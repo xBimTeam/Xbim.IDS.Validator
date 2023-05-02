@@ -23,12 +23,15 @@ namespace Xbim.IDS.Validator.Core
 
         public IIdsModelBinder ModelBinder { get; }
 
-        public ValidationOutcome ValidateAgainstIds(IModel model, string idsFile, ILogger logger)
+        /// <inheritdoc/>
+        public ValidationOutcome ValidateAgainstIds(IModel model, string idsFile, ILogger logger, VerificationOptions? options = default)
         {
             if (logger is null)
             {
                 throw new ArgumentNullException(nameof(logger));
             }
+
+            ModelBinder.SetOptions(options);
 
             var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idsFile, logger);
             var outcome = new ValidationOutcome(idsSpec);

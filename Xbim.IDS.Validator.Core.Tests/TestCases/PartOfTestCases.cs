@@ -86,7 +86,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/partof/fail-an_aggregate_may_specify_the_predefined_type_of_the_whole_2_2.ids")]
         [InlineData(@"TestCases/partof/fail-the_container_predefined_type_must_match_exactly_1_2.ids")]
 
-        [Theory(Skip ="Needs PredefinedType Support")]
+        [Theory(Skip ="Needs Partof PredefinedType Support in v0.9")]
         public void EntityTestFailures_PreDefined(string idsFile, params XbimSchemaVersion[] schemas)
         {
             //foreach (var schema in GetSchemas(schemas))

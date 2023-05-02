@@ -65,7 +65,10 @@ namespace Xbim.IDS.Validator.Core.Binders
                     {
                         rootTypes = SchemaInfo.SchemaIfc2x3.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
                     }
-                    // TODO: IFC4x3 types once IDS supports Schema meta data
+                    else if(IsIfc4x3Model())
+                    {
+                        rootTypes = SchemaInfo.SchemaIfc4x3.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
+                    }
                     else
                     {
                         rootTypes = SchemaInfo.SchemaIfc4.GetAttributeClasses((string)attributeName, onlyTopClasses: true);

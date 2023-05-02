@@ -16,8 +16,16 @@ namespace Xbim.IDS.Validator.Core.Helpers
 
     internal class ExpressionHelperMethods
     {
+
+
+        private static MethodInfo _getTypeMethod = typeof(object).GetMethod(nameof(Object.GetType));
+
+        private static MethodInfo _enumerableOfXbimTypeMethod = typeof(IReadOnlyEntityCollection).GetMethods().First(m =>
+            m.Name == nameof(IReadOnlyEntityCollection.OfType) &&
+            m.IsGenericMethod &&
+            m.GetParameters().Length == 0 &&
+            m.ReturnType.GetGenericTypeDefinition() == typeof(IEnumerable<>));
         
-        private static MethodInfo _entityCollectionofTypeMethod = typeof(IReadOnlyEntityCollection).GetMethod(nameof(IReadOnlyEntityCollection.OfType), new Type[] { typeof(string), typeof(bool) });
         private static MethodInfo _enumerableIfcObjectsWithPropertiesMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcObjectsWithProperties), new Type[] { typeof(IEnumerable<IIfcRelDefinesByProperties>), typeof(IfcPropertyFacet)});
         private static MethodInfo _enumerableIfcMaterialSelectorMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcObjectsUsingMaterials), new Type[] { typeof(IEnumerable<IIfcRelAssociatesMaterial>), typeof(MaterialFacet) });
         private static MethodInfo _enumerableIfcAssociatesClassificationMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcObjectsUsingClassification), new Type[] { typeof(IEnumerable<IIfcRelAssociatesClassification>), typeof(IfcClassificationFacet) });
@@ -43,15 +51,21 @@ namespace Xbim.IDS.Validator.Core.Helpers
         private static MethodInfo _enumerableConcatMethod = GenericMethodOf(_ => Enumerable.Concat<int>(default(IEnumerable<int>), default(IEnumerable<int>)));
 
 
+        public static MethodInfo GetTypeMethod
+        {
+            get { return _getTypeMethod; }
+        }
+
         public static MethodInfo EnumerableWhereGeneric
         {
             get { return _enumerableWhereMethod; }
         }
 
-        public static MethodInfo EntityCollectionOfType
+        public static MethodInfo EntityCollectionOfGenericType
         {
-            get { return _entityCollectionofTypeMethod; }
+            get { return _enumerableOfXbimTypeMethod; }
         }
+
 
         public static MethodInfo IdsValidationIsSatisifiedMethod
         {

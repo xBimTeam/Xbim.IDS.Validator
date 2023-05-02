@@ -88,7 +88,8 @@ Currently only two minor cases are unimplemented. (See Skipped Tests). Plus 2 Pa
 ## To-do list
 
 - [x] Support for PartOf facets
-- [ ] Support for Xbim.XIDS extensions
+    - [ ] Latest IDS 0.9 PartOf feature [See Issue](https://github.com/CBenghi/Xbim.Xids/issues/3)
+- [ ] Support for Xbim.XIDS extensions (Documents)
     - [ ] IfcType SubClasses extension
 - [x] Support for IFC4x3 (Partially implemented)
 - [ ] Support for 1.e-6 precision

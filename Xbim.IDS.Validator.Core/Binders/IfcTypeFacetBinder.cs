@@ -65,7 +65,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             foreach (var expressType in expressTypes)
             {
                 var rightExpr = baseExpression;
-                rightExpr = BindIfcExpressType(rightExpr, expressType);
+                rightExpr = BindIfcExpressType(rightExpr, expressType, ifcFacet.IncludeSubtypes);
                 if (ifcFacet.PredefinedType != null)
                     rightExpr = BindPredefinedTypeFilter(ifcFacet, rightExpr, expressType);
 
@@ -96,28 +96,52 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         public override void ValidateEntity(IPersistEntity item, IfcTypeFacet f, RequirementCardinalityOptions requirement, IdsValidationResult result)
         {
+            if (f is null)
+            {
+                throw new ArgumentNullException(nameof(f));
+            }
+
             var ctx = CreateValidationContext(requirement, f);
             var entityType = Model.Metadata.ExpressType(item);
             if (entityType == null)
             {
                 result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.IfcType!, null, "Invalid IFC Type", item));
             }
-            var actual = entityType?.Name.ToUpperInvariant();
+            var currentEntityType = entityType;
 
-            if (f?.IfcType?.IsSatisfiedBy(actual, logger) == true)
+            
+            // We can't easily get IfcType Subtypes since the constraint could be complex
+            // Instead when IncludeSubtypes = true, we get the supertypes and see if any of them satisfy
+            while(currentEntityType != null)
             {
-                result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.IfcType!, actual, "Correct IFC Type", item));
+                var actualName = currentEntityType?.Name.ToUpperInvariant();
+                if (f?.IfcType?.IsSatisfiedBy(actualName, logger) == true)
+                {
+                    result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.IfcType!, actualName, "Correct IFC Type", item));
+                    break;
+                }
+                else
+                {
+                    if (f!.IncludeSubtypes && currentEntityType!.SuperType != null)
+                    {
+                        // Get entity's supertype and test that
+                        currentEntityType = currentEntityType?.SuperType;
+                    } 
+                    else
+                    {
+                        result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.IfcType!, actualName, "IFC Type incorrect", item));
+                        break;
+                    }
+                }
             }
-            else
-            {
-                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.IfcType!, actual, "IFC Type incorrect", item));
-            }
+            
+           
             if (f?.PredefinedType?.HasAnyAcceptedValue() == true)
             {
                 var preDefValue = GetPredefinedType(item);
                 if (f!.PredefinedType.IsSatisfiedBy(preDefValue, logger) == true)
                 {
-                    result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PredefinedType!, actual, "Correct Predefined Type", item));
+                    result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PredefinedType!, preDefValue, "Correct Predefined Type", item));
                 }
                 else
                 {

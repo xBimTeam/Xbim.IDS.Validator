@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xbim.Common.Step21;
 using Xbim.IDS.Validator.Core.Binders;
+using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 using Xunit.Abstractions;
 using static Xbim.InformationSpecifications.PartOfFacet;

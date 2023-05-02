@@ -21,18 +21,31 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData("IfcProject", 1, typeof(IIfcProject))]
         [InlineData("IFCPROJECT", 1, typeof(IIfcProject))]
         [InlineData("ifcbuilding", 1, typeof(IIfcBuilding))]
-        [InlineData("IfcWall", 5, typeof(IIfcWall))]
+        [InlineData("IfcWall", 5, typeof(IIfcWall))]    // Includes Standardcase
+        [InlineData("IfcWallStandardCase", 2, typeof(IIfcWallStandardCase))]
         [InlineData("IfcSpace", 4, typeof(IIfcSpace))]
-        [InlineData("IfcBuildingElement", 46, typeof(IIfcBuildingElement))] // Abstract
+        [InlineData("IfcBuildingElement", 46, typeof(IIfcBuildingElement))] // Abstract Supertype
         [InlineData("IfcFlowTerminal", 0, typeof(IIfcFlowTerminal))]
         [InlineData("IfcFurnitureType", 9, typeof(IIfcFurnitureType))]
         [InlineData("IfcFurniture", 14, typeof(IIfcFurniture))]
+        [InlineData("IfcFurnishingElement", 14, typeof(IIfcFurnishingElement))]
         [InlineData("IfcFurniture,IfcFurnitureType", 9 + 14, typeof(IIfcFurniture), typeof(IIfcFurnitureType))]
         [InlineData("IfcDoor,IfcWindow,IfcWall", 12, typeof(IIfcWall), typeof(IIfcWindow), typeof(IIfcDoor))]
         [Theory]
         public void Can_Query_Exact_IfcType(string ifcType, int expectedCount, params Type[] expectedTypes)
         {
             AssertIfcTypeFacetQuery(ifcType, expectedCount, expectedTypes, ifcTypeConstraint: ConstraintType.Exact);
+        }
+
+
+        
+        [InlineData("IfcWall", 3, typeof(IIfcWall))]
+        [InlineData("IfcBuildingElement", 0, typeof(IIfcBuildingElement))] //
+        [InlineData("IfcFurnishingElement", 0, typeof(IIfcFurnishingElement))]
+        [Theory]
+        public void Can_Query_Exact_IfcType_WithoutSubtypes(string ifcType, int expectedCount, params Type[] expectedTypes)
+        {
+            AssertIfcTypeFacetQuery(ifcType, expectedCount, expectedTypes, ifcTypeConstraint: ConstraintType.Exact, includeSubTypes: false);
         }
 
         [InlineData("IfcWall.*", 9, typeof(IIfcWall), typeof(IIfcWallType))]
@@ -97,10 +110,52 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         }
 
 
-        private void AssertIfcTypeFacetQuery(string ifcType, int expectedCount, Type[] expectedTypes, string predefinedType = "",
-            ConstraintType ifcTypeConstraint = ConstraintType.Exact, ConstraintType preConstraint = ConstraintType.Exact)
+
+        [InlineData(10993, "IFCDOOR", "DOOR")]
+        [InlineData(10993, "IFCDOOR", null)]
+        [InlineData(4705, "IFCWALLSTANDARDCASE", "PARTITIONING")] // Matches exact Type
+        [InlineData(4705, "IFCWALL", "PARTITIONING", true)] // Matches Subtype
+        [InlineData(4705, "IFCACTOR", null, true, false)] // Won't match as nota subtype
+        [Theory]
+        public void Can_Validate_Types(int entityLabel, string expectedType, string expectedPredefined, bool allowSubType = false, bool shouldPass = true)
         {
-            IfcTypeFacet facet = BuildIfcTypeFacetFromCsv(ifcType, predefinedType, ifcTypeConstraint, preDefConstraint: preConstraint);
+
+            var entity = Model.Instances[entityLabel];
+            var propFacet = new IfcTypeFacet
+            {
+                IfcType = expectedType,
+                IncludeSubtypes = allowSubType
+            };
+            if(expectedPredefined != null)
+            {
+                propFacet.PredefinedType = expectedPredefined;
+            }
+            
+            FacetGroup group = BuildGroup(propFacet);
+            var result = new IdsValidationResult(entity, group);
+            Binder.ValidateEntity(entity, propFacet, RequirementCardinalityOptions.Expected, result);
+
+            // Assert
+            if(shouldPass)
+            {
+
+                result.Successful.Should().NotBeEmpty();
+                result.Failures.Should().BeEmpty();
+            }
+            else
+            {
+                result.Successful.Should().BeEmpty();
+                result.Failures.Should().NotBeEmpty();
+            }
+
+        }
+
+
+
+        private void AssertIfcTypeFacetQuery(string ifcType, int expectedCount, Type[] expectedTypes, string predefinedType = "",
+            ConstraintType ifcTypeConstraint = ConstraintType.Exact, ConstraintType preConstraint = ConstraintType.Exact, bool includeSubTypes = true)
+        {
+            IfcTypeFacet facet = BuildIfcTypeFacetFromCsv(ifcType, predefinedType, includeSubTypes, ifcTypeConstraint, preDefConstraint: preConstraint);
 
             // Act
             var expression = Binder.BindSelectionExpression(query.InstancesExpression, facet);
@@ -108,6 +163,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             // Assert
 
             var result = query.Execute(expression, Model);
+            
             result.Should().HaveCount(expectedCount);
 
             if (expectedCount > 0)
@@ -120,13 +176,14 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         }
 
 
-        private static IfcTypeFacet BuildIfcTypeFacetFromCsv(string ifcTypeCsv, string predefinedTypeCsv = "",
+        private static IfcTypeFacet BuildIfcTypeFacetFromCsv(string ifcTypeCsv, string predefinedTypeCsv = "", bool includeSubTypes = false,
             ConstraintType ifcConstraint = ConstraintType.Exact, ConstraintType preDefConstraint = ConstraintType.Exact)
         {
             IfcTypeFacet facet = new IfcTypeFacet
             {
                 IfcType = new ValueConstraint(NetTypeName.String),
                 PredefinedType = new ValueConstraint(NetTypeName.String),
+                IncludeSubtypes = includeSubTypes,
             };
 
             var ifcValues = ifcTypeCsv.Split(',');

@@ -71,7 +71,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
 
         [InlineData(@"TestCases/property/pass-predefined_properties_are_supported_but_discouraged_1_2.ids")]
-        [Theory(Skip ="To do")]
+        [Theory(Skip = "To implement IFCDOORPANELPROPERTIES edgecase")]
         public void PassesToImplement(string idsFile)
         {
             var outcome = VerifyIdsFile(idsFile);
@@ -126,7 +126,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         }
 
         [InlineData(@"TestCases/property/fail-predefined_properties_are_supported_but_discouraged_2_2.ids")]
-        [Theory(Skip="Todo")]
+        [Theory(Skip= "Implement IFCDOORPANELPROPERTIES edge case")]
         public void FailuresToImplement(string idsFile)
         {
             var outcome = VerifyIdsFile(idsFile);

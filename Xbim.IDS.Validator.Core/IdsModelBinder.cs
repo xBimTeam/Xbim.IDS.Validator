@@ -19,6 +19,7 @@ namespace Xbim.IDS.Validator.Core
         
         private readonly BinderContext binderContext;
         private IfcQuery? ifcQuery;
+        private VerificationOptions? options;
 
         public IIdsFacetBinderFactory FacetBinderFactory { get; }
 
@@ -55,6 +56,9 @@ namespace Xbim.IDS.Validator.Core
                 throw new ArgumentNullException(nameof(spec));
             }
             Initialise(model);
+           
+            ApplyOptions(spec);
+            
     
 
             var facets = spec.Applicability.Facets;
@@ -81,6 +85,36 @@ namespace Xbim.IDS.Validator.Core
             }
 
             return ifcQuery.Execute(expression, model);
+        }
+
+        private void ApplyOptions(Specification spec)
+        {
+            if (options == null)
+            {
+                return;
+            }
+            if(options.IncludeSubtypes)
+            {
+                foreach(var facet in spec.Applicability.Facets)
+                {
+                    if(facet is IfcTypeFacet ifc)
+                    {
+                        ifc.IncludeSubtypes = true;
+                    }
+                }
+                if(spec.Requirement != null)
+                {
+                    foreach (var facet in spec.Requirement!.Facets)
+                    {
+                        if (facet is IfcTypeFacet ifc)
+                        {
+                            ifc.IncludeSubtypes = true;
+                        }
+                    }
+                }
+
+
+            }
         }
 
 
@@ -134,6 +168,11 @@ namespace Xbim.IDS.Validator.Core
         {
             var binder = FacetBinderFactory.Create(facet);
             return binder.BindWhereExpression(baseExpression, facet);
+        }
+
+        public void SetOptions(VerificationOptions options)
+        {
+            this.options = options;
         }
     }
 }

@@ -57,7 +57,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             if (expression.Type.IsInterface && typeof(IEntityCollection).IsAssignableFrom(expression.Type))
             {
-                expression = BindIfcExpressType(expression, Model.Metadata.ExpressType(typeof(IfcRelDefinesByProperties)));
+                expression = BindIfcExpressType(expression, Model.Metadata.ExpressType(typeof(IfcRelDefinesByProperties)), false);
                 expression = BindPropertySelection(expression, psetFacet);
                 return expression;
             }

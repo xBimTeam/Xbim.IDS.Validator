@@ -103,7 +103,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
         [InlineData(@"TestCases/attribute/pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_1_4.ids")]
         [InlineData(@"TestCases/attribute/pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_2_4.ids")]
-        [Theory(Skip = "To fix")]
+        [Theory(Skip = "Awaiting implementation of 1e_6 tollerance in XIDS")]
         public void ToFix(string idsFile)
         {
             var outcome = VerifyIdsFile(idsFile);

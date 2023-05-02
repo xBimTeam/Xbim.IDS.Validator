@@ -89,23 +89,52 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <param name="expression"></param>
         /// <param name="expressType"></param>
         /// <returns></returns>
-        protected Expression BindIfcExpressType(Expression expression, ExpressType expressType)
+        protected Expression BindIfcExpressType(Expression expression, ExpressType expressType, bool includeSubTypes = false)
         {
             if (expressType is null)
             {
                 throw new ArgumentNullException(nameof(expressType));
             }
 
-            var ofTypeMethod = ExpressionHelperMethods.EntityCollectionOfType;
 
-            var entityTypeName = Expression.Constant(expressType.Name, typeof(string));
-            var activate = Expression.Constant(true, typeof(bool));
-            // call .OfType("IfcWall", true)
-            expression = Expression.Call(expression, ofTypeMethod, entityTypeName, activate);   // TODO: switch to Generic sig
+            var ofTypeMethod = ExpressionHelperMethods.EntityCollectionOfGenericType.MakeGenericMethod(expressType.Type);
 
-            // Currently required just to pass the Type downstream for other Facets
-            // call .Cast<EntityType>()
-            expression = Expression.Call(null, ExpressionHelperMethods.EnumerableCastGeneric.MakeGenericMethod(expressType.Type), expression);
+            // call .OfType<IfcWall>()
+            expression = Expression.Call(expression, ofTypeMethod); 
+            // Now we've found all Ifc Types implementing the Type, cast to the type
+            // This will include subclasses. 
+            if(!includeSubTypes)
+            {
+                // Build expression `.Where(e => e.GetType() == expression.Type)`
+
+                // Get underlying collection type for generic
+                var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
+
+                // build IEnumerable.Where<TEntity>(...)
+                var whereMethod = ExpressionHelperMethods.EnumerableWhereGeneric.MakeGenericMethod(collectionType);
+
+                // build lambda param 'ent => ...'
+                ParameterExpression ifcTypeParam = Expression.Parameter(collectionType, "ent");
+
+                // build 'ent.GetType()'
+                var getTypeMethod = ExpressionHelperMethods.GetTypeMethod;
+                Expression entityTypeProperty = Expression.Call(ifcTypeParam, getTypeMethod);
+
+                // 
+                ConstantExpression expectedTypeExpression = Expression.Constant(expressType.Type);
+
+                // e.GetType() == expression.Type
+                Expression queryBody = Expression.Equal(entityTypeProperty, expectedTypeExpression);
+
+                // Build Lambda expression for filter predicate (Func<T,bool>)
+                var filterExpression = Expression.Lambda(queryBody, ifcTypeParam);
+
+                // Bind Lambda to Where method
+                expression =  Expression.Call(null, whereMethod, new[] { expression, filterExpression });
+
+            }
+            
+
 
             return expression;
         }
@@ -123,7 +152,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             foreach (var expressType in expressTypes)
             {
                 //var rightExpr = expression;
-                var rightExpr = BindIfcExpressType(expression, expressType);
+                var rightExpr = BindIfcExpressType(expression, expressType, true);
                
 
                 // Union to main expression.

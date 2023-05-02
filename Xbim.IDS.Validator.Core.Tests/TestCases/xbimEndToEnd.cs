@@ -30,5 +30,18 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
             outcome.Status.Should().Be(ValidationStatus.Pass);
         }
+
+
+
+        [InlineData(@"TestCases/xbim/pass-subclass_type_may_be_identified_with_subtype_extension_1_2.ids")]
+        [InlineData(@"TestCases/xbim/pass-subclass_type_may_be_identified_with_subtype_extension_2_2.ids")]
+
+        [Theory]
+        public void Xbim_Proprietary_Extensions(string idsFile)
+        {
+            var outcome = VerifyIdsFile(idsFile, false, XbimSchemaVersion.Ifc4, new VerificationOptions { IncludeSubtypes = true });
+
+            outcome.Status.Should().Be(ValidationStatus.Pass);
+        }
     }
 }

@@ -50,7 +50,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             if (expression.Type.IsInterface && typeof(IEntityCollection).IsAssignableFrom(expression.Type))
             {
-                expression = BindIfcExpressType(expression, expressType);
+                expression = BindIfcExpressType(expression, expressType, false);
                 return BindPartOfSelection(expression, facet);
             }
 
