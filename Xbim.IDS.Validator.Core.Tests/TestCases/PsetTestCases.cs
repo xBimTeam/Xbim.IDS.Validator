@@ -58,11 +58,11 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/property/pass-unit_conversions_shall_take_place_to_ids_nominated_standard_units_2_2.ids")]
 
         [Theory]
-        public void EntityTestPass(string idsFile, params XbimSchemaVersion[] schemas)
+        public async Task EntityTestPass(string idsFile, params XbimSchemaVersion[] schemas)
         {
             foreach(var schema in GetSchemas(schemas))
             {
-                var outcome = VerifyIdsFile(idsFile, schemaVersion: schema);
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
                 outcome.Status.Should().Be(ValidationStatus.Pass, schema.ToString());
             }
@@ -72,9 +72,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
         [InlineData(@"TestCases/property/pass-predefined_properties_are_supported_but_discouraged_1_2.ids")]
         [Theory(Skip = "To implement IFCDOORPANELPROPERTIES edgecase")]
-        public void PassesToImplement(string idsFile)
+        public async Task PassesToImplement(string idsFile)
         {
-            var outcome = VerifyIdsFile(idsFile);
+            var outcome = await VerifyIdsFile(idsFile);
 
             outcome.Status.Should().Be(ValidationStatus.Pass);
         }
@@ -115,11 +115,11 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/property/fail-specifying_a_value_performs_a_case_sensitive_match_2_2.ids")]
         [InlineData(@"TestCases/property/fail-unit_conversions_shall_take_place_to_ids_nominated_standard_units_1_2.ids")]
         [Theory]
-        public void EntityTestFailures(string idsFile, params XbimSchemaVersion[] schemas)
+        public async Task EntityTestFailures(string idsFile, params XbimSchemaVersion[] schemas)
         {
             foreach (var schema in GetSchemas(schemas))
             {
-                var outcome = VerifyIdsFile(idsFile);
+                var outcome = await VerifyIdsFile(idsFile);
 
                 outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());
             }
@@ -127,9 +127,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
         [InlineData(@"TestCases/property/fail-predefined_properties_are_supported_but_discouraged_2_2.ids")]
         [Theory(Skip= "Implement IFCDOORPANELPROPERTIES edge case")]
-        public void FailuresToImplement(string idsFile)
+        public async Task FailuresToImplement(string idsFile)
         {
-            var outcome = VerifyIdsFile(idsFile);
+            var outcome = await VerifyIdsFile(idsFile);
 
             outcome.Status.Should().Be(ValidationStatus.Pass);
         }

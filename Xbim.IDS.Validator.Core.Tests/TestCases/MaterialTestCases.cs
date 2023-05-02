@@ -33,11 +33,11 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/material/pass-occurrences_can_inherit_materials_from_their_types.ids")]
         [InlineData(@"TestCases/material/pass-occurrences_can_override_materials_from_their_types.ids")]
         [Theory]
-        public void EntityTestPass(string idsFile, params XbimSchemaVersion[] schemas)
+        public async Task EntityTestPass(string idsFile, params XbimSchemaVersion[] schemas)
         {
             foreach (var schema in GetSchemas(schemas))
             {
-                var outcome = VerifyIdsFile(idsFile, schemaVersion: schema);
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
                 outcome.Status.Should().Be(ValidationStatus.Pass, schema.ToString());
             }
@@ -51,11 +51,11 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/material/fail-elements_without_a_material_always_fail.ids")]
         [InlineData(@"TestCases/material/fail-material_with_no_data_will_fail_a_value_check.ids")]
         [Theory]
-        public void EntityTestFailures(string idsFile, params XbimSchemaVersion[] schemas)
+        public async Task EntityTestFailures(string idsFile, params XbimSchemaVersion[] schemas)
         {
             foreach (var schema in GetSchemas(schemas))
             {
-                var outcome = VerifyIdsFile(idsFile, schemaVersion: schema);
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
                 outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());
             }

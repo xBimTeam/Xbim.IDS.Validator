@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Xbim.Common;
 using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Interfaces;
@@ -26,12 +28,19 @@ namespace Xbim.IDS.Validator.Core
         /// <inheritdoc/>
         public ValidationOutcome ValidateAgainstIds(IModel model, string idsFile, ILogger logger, VerificationOptions? options = default)
         {
+            // Plan to obsolete the Synchronous
+            return ValidateAgainstIdsAsync(model, idsFile, logger, null, options).Result;
+        }
+
+        /// <inheritdoc/>
+        public Task<ValidationOutcome> ValidateAgainstIdsAsync(IModel model, string idsFile, ILogger logger, Action<ValidationRequirement>? requirementCompleted, VerificationOptions? verificationOptions = null)
+        {
             if (logger is null)
             {
                 throw new ArgumentNullException(nameof(logger));
             }
 
-            ModelBinder.SetOptions(options);
+            ModelBinder.SetOptions(verificationOptions);
 
             var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idsFile, logger);
             var outcome = new ValidationOutcome(idsSpec);
@@ -39,7 +48,7 @@ namespace Xbim.IDS.Validator.Core
             {
                 outcome.MarkFailed($"Unable to open IDS file '{idsFile}'");
                 logger.LogError("Unable to open IDS file '{idsFile}", idsFile);
-                return outcome;
+                return Task.FromResult(outcome);
             }
 
 
@@ -49,7 +58,7 @@ namespace Xbim.IDS.Validator.Core
                 foreach (var spec in group.Specifications)
                 {
                     var requirementResult = new ValidationRequirement(spec);
-                    outcome.ExecutedRequirements.Add(requirementResult);
+                    
 
                     logger.LogInformation(" -- {cardinality} Spec '{spec}' : versions {ifcVersions}", spec.Cardinality.Description, spec.Name, spec.IfcVersion);
                     var applicableIfc = spec.Applicability.Facets.OfType<IfcTypeFacet>().FirstOrDefault();
@@ -87,7 +96,7 @@ namespace Xbim.IDS.Validator.Core
                         LogLevel level;
                         int pad;
                         GetLogLevel(result.ValidationStatus, out level, out pad);
-                        logger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '), 
+                        logger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '),
                             result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Requirement.Short());
                         foreach (var message in result.Messages)
                         {
@@ -101,7 +110,12 @@ namespace Xbim.IDS.Validator.Core
                     SetResults(spec, requirementResult);
                     // else inconclusive
 
-
+                    if (requirementCompleted != null)
+                    {
+                        // report progress
+                        requirementCompleted(requirementResult);
+                    }
+                    outcome.ExecutedRequirements.Add(requirementResult);
 
                 }
             }
@@ -115,7 +129,7 @@ namespace Xbim.IDS.Validator.Core
                 outcome.Status = ValidationStatus.Pass;
             }
             // TODO: Consider Inconclusive
-            return outcome;
+            return Task.FromResult(outcome);
         }
 
         private static void GetLogLevel(ValidationStatus status, out LogLevel level, out int pad, LogLevel defaultLevel = LogLevel.Information)
@@ -202,6 +216,7 @@ namespace Xbim.IDS.Validator.Core
                 }
             }
         }
+
     }
 
     /// <summary>

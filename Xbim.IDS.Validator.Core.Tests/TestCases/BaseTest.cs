@@ -45,7 +45,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             return schemaVersions;//.Except(except).ToArray();
         }
 
-        protected ValidationOutcome VerifyIdsFile(string idsFile, bool spotfix = false, XbimSchemaVersion schemaVersion = XbimSchemaVersion.Ifc4,
+        protected async Task <ValidationOutcome> VerifyIdsFile(string idsFile, bool spotfix = false, XbimSchemaVersion schemaVersion = XbimSchemaVersion.Ifc4,
             VerificationOptions options = default
             )
         {
@@ -102,7 +102,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                 }
 
                 var validator = provider.GetRequiredService<IIdsModelValidator>();
-                var outcome = validator.ValidateAgainstIds(model, idsFile, logger, options);
+                var outcome = await validator.ValidateAgainstIdsAsync(model, idsFile, logger, null, options);
 
                 return outcome;
             }

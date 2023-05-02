@@ -40,11 +40,11 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
 
         [Theory]
-        public void EntityTestFailures(string idsFile, params XbimSchemaVersion[] schemas)
+        public async Task EntityTestFailures(string idsFile, params XbimSchemaVersion[] schemas)
         {
             foreach (var schema in GetSchemas(schemas))
             {
-                var outcome = VerifyIdsFile(idsFile, schemaVersion: schema);
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
                 outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());
             }
@@ -90,11 +90,11 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/attribute/pass-value_restrictions_may_be_used_1_3.ids")]
         [InlineData(@"TestCases/attribute/pass-value_restrictions_may_be_used_2_3.ids")]
         [Theory]
-        public void EntityTestPass(string idsFile, params XbimSchemaVersion[] schemas)
+        public async Task EntityTestPass(string idsFile, params XbimSchemaVersion[] schemas)
         {
             foreach (var schema in GetSchemas(schemas))
             {
-                var outcome = VerifyIdsFile(idsFile, schemaVersion: schema);
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
                 outcome.Status.Should().Be(ValidationStatus.Pass, schema.ToString());
             }
@@ -104,9 +104,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/attribute/pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_1_4.ids")]
         [InlineData(@"TestCases/attribute/pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_2_4.ids")]
         [Theory(Skip = "Awaiting implementation of 1e_6 tollerance in XIDS")]
-        public void ToFix(string idsFile)
+        public async Task ToFix(string idsFile)
         {
-            var outcome = VerifyIdsFile(idsFile);
+            var outcome = await VerifyIdsFile(idsFile);
 
             outcome.Status.Should().Be(ValidationStatus.Pass);
 

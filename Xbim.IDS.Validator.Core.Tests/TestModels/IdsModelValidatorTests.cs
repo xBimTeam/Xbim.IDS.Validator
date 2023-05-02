@@ -23,7 +23,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestModels
         }
 
         [Fact]
-        public void Can_ValidateModels()
+        public async Task Can_ValidateModels()
         {
             string modelFile = @"TestModels\SampleHouse4.ifc";
             string idsScript = @"TestModels\Example.ids";
@@ -35,7 +35,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestModels
 
             var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
 
-            var results = idsValidator.ValidateAgainstIds(model, idsScript, logger);
+            var results = await idsValidator.ValidateAgainstIdsAsync(model, idsScript, logger);
 
             results.Should().NotBeNull();
 

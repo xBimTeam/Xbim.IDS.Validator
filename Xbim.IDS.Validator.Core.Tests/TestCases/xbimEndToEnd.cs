@@ -14,9 +14,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         
 
         [Theory]
-        public void IFC2x3_Supported(string idsFile)
+        public async Task IFC2x3_Supported(string idsFile)
         {
-            var outcome = VerifyIdsFile(idsFile);
+            var outcome = await VerifyIdsFile(idsFile);
 
             outcome.Status.Should().Be(ValidationStatus.Pass);
         }
@@ -24,9 +24,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/xbim/pass-ifc4x3_models_work.ids")]
         [InlineData(@"TestCases/xbim/pass-ifc4x3_new_attributes_available.ids")]
         [Theory]
-        public void IFC4x3_Supported(string idsFile)
+        public async Task IFC4x3_Supported(string idsFile)
         {
-            var outcome = VerifyIdsFile(idsFile, false, XbimSchemaVersion.Ifc4x3);
+            var outcome = await VerifyIdsFile(idsFile, false, XbimSchemaVersion.Ifc4x3);
 
             outcome.Status.Should().Be(ValidationStatus.Pass);
         }
@@ -37,9 +37,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/xbim/pass-subclass_type_may_be_identified_with_subtype_extension_2_2.ids")]
 
         [Theory]
-        public void Xbim_Proprietary_Extensions(string idsFile)
+        public async Task Xbim_Proprietary_Extensions(string idsFile)
         {
-            var outcome = VerifyIdsFile(idsFile, false, XbimSchemaVersion.Ifc4, new VerificationOptions { IncludeSubtypes = true });
+            var outcome = await VerifyIdsFile(idsFile, false, XbimSchemaVersion.Ifc4, new VerificationOptions { IncludeSubtypes = true });
 
             outcome.Status.Should().Be(ValidationStatus.Pass);
         }

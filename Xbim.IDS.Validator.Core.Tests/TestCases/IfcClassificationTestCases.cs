@@ -29,10 +29,10 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData("TestCases/class/pass-values_match_subreferences_if_full_classifications_are_used__e_g__ef_25_10_should_match_ef_25_10_25__ef_25_10_30__etc_.ids", false)]
         [InlineData("TestCases/class/pass-values_should_match_exactly_if_lightweight_classifications_are_used.ids")]
         [Theory]
-        public void EntityTestPass(string idsFile, bool specialCase = false)
+        public async Task EntityTestPass(string idsFile, bool specialCase = false)
         {
             // Can't test IFC2x3 Classifications in our harness due to schema changes
-            var outcome = VerifyIdsFile(idsFile, specialCase, XbimSchemaVersion.Ifc4);
+            var outcome = await VerifyIdsFile(idsFile, specialCase, XbimSchemaVersion.Ifc4);
 
             outcome.Status.Should().Be(ValidationStatus.Pass);
             
@@ -46,10 +46,10 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData("TestCases/class/fail-restrictions_can_be_used_for_values_3_3.ids")]
         [InlineData("TestCases/class/fail-systems_should_match_exactly_2_5.ids")]
         [Theory]
-        public void EntityTestFailures(string idsFile)
+        public async Task EntityTestFailures(string idsFile)
         {
             
-            var outcome = VerifyIdsFile(idsFile);
+            var outcome = await VerifyIdsFile(idsFile);
 
             outcome.Status.Should().Be(ValidationStatus.Fail);
             

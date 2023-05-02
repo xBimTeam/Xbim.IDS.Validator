@@ -22,9 +22,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/restriction/pass-regex_patterns_can_be_used_2_3.ids")]
 
         [Theory]
-        public void EntityTestPass(string idsFile)
+        public async Task EntityTestPass(string idsFile)
         {
-            var outcome = VerifyIdsFile(idsFile);
+            var outcome = await VerifyIdsFile(idsFile);
 
             outcome.Status.Should().Be(ValidationStatus.Pass);
         }
@@ -43,9 +43,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/restriction/fail-patterns_only_work_on_strings_and_nothing_else.ids")]
         [InlineData(@"TestCases/restriction/fail-regex_patterns_can_be_used_3_3.ids")]
         [Theory]
-        public void EntityTestFailures(string idsFile)
+        public async Task EntityTestFailures(string idsFile)
         {
-            var outcome = VerifyIdsFile(idsFile);
+            var outcome = await VerifyIdsFile(idsFile);
 
             outcome.Status.Should().Be(ValidationStatus.Fail);
         }

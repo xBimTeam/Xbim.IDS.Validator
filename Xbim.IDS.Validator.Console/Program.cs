@@ -60,15 +60,15 @@ class Program
 
 
      
-        rootCommand.SetHandler((ids, model) =>
+        rootCommand.SetHandler(async (ids, model) =>
         {
-            RunIDSValidation(ids, model);
+            await RunIDSValidation(ids, model);
 
         }, idsOption, modelOption);
         return rootCommand;
     }
 
-    private static void RunIDSValidation(string ids, string modelFile)
+    private static async Task RunIDSValidation(string ids, string modelFile)
     {
         Console.WriteLine("IDS File: {0}", ids);
         Console.WriteLine("IFC File: {0}", modelFile);
@@ -79,49 +79,49 @@ class Program
         var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
 
         Console.WriteLine("Validating...");
-        var results = idsValidator.ValidateAgainstIds(model, ids, logger);
+        var results = await idsValidator.ValidateAgainstIdsAsync(model, ids, logger, OutputRequirement);
+        
 
-        foreach (var req in results.ExecutedRequirements)
+    }
+
+    private static void OutputRequirement(ValidationRequirement req)
+    {
+        var passed = req.Specification.Cardinality.NoMatchingEntities ? req.ApplicableResults.Count(a => a.ValidationStatus == ValidationStatus.Fail)
+                        : req.ApplicableResults.Count(a => a.ValidationStatus == ValidationStatus.Pass);
+
+        WriteColored(req.Status, req.Status.ToString());
+        WriteColored($" : {req.Specification.Name} [{passed} passed from {req.ApplicableResults.Count}]", ConsoleColor.Gray);
+        WriteColored($" {req.Specification.Cardinality.Description} Requirement\n", ConsoleColor.Cyan);
+        WriteColored($"  -- For {req.Specification.Applicability.GetApplicabilityDescription().SplitClauses()}\n", ConsoleColor.Blue);
+        WriteColored($"  -- It is {req.Specification.Cardinality.Description} that elements {req.Specification.Requirement?.GetRequirementDescription().SplitClauses()}\n", ConsoleColor.DarkGreen);
+
+        Console.ForegroundColor = ConsoleColor.White;
+        foreach (var itm in req.ApplicableResults)
         {
-
-            var passed = req.Specification.Cardinality.NoMatchingEntities ? req.ApplicableResults.Count(a => a.ValidationStatus == ValidationStatus.Fail) 
-                :  req.ApplicableResults.Count( a=> a.ValidationStatus == ValidationStatus.Pass );
-            
-            WriteColored(req.Status, req.Status.ToString());
-            WriteColored($" : {req.Specification.Name} [{passed} passed from {req.ApplicableResults.Count}]", ConsoleColor.Gray);
-            WriteColored($" {req.Specification.Cardinality.Description} Requirement\n", ConsoleColor.Cyan);
-            WriteColored($"  -- For {req.Specification.Applicability.GetApplicabilityDescription().SplitClauses()}\n", ConsoleColor.Blue);
-            WriteColored($"  -- It is {req.Specification.Cardinality.Description} that elements {req.Specification.Requirement?.GetRequirementDescription().SplitClauses()}\n",ConsoleColor.DarkGreen);
-
-            Console.ForegroundColor = ConsoleColor.White;
-            foreach (var itm in req.ApplicableResults)
+            if ((req.Specification.Cardinality.ExpectsRequirements && itm.ValidationStatus != ValidationStatus.Pass) ||
+                (req.Specification.Cardinality.NoMatchingEntities && itm.ValidationStatus != ValidationStatus.Fail))
             {
-                if((req.Specification.Cardinality.ExpectsRequirements && itm.ValidationStatus != ValidationStatus.Pass) ||
-                    (req.Specification.Cardinality.NoMatchingEntities && itm.ValidationStatus != ValidationStatus.Fail))
+                WriteColored(itm.ValidationStatus, "    " + itm.ValidationStatus.ToString());
+                WriteColored($":{itm.Requirement?.Name} - {itm.Requirement?.Description}", ConsoleColor.Red);
+                WriteColored($": {itm.Entity}\n", ConsoleColor.White);
+                foreach (var msg in itm.Messages.Where(m => m.Status != ValidationStatus.Pass))
                 {
-                    WriteColored(itm.ValidationStatus, "    " + itm.ValidationStatus.ToString());
-                    WriteColored($":{itm.Requirement?.Name} - {itm.Requirement?.Description}", ConsoleColor.Red);
-                    WriteColored($": {itm.Entity}\n", ConsoleColor.White);
-                    foreach(var msg in itm.Messages.Where(m=> m.Status != ValidationStatus.Pass))
-                    {
-                        WriteColored($"               {msg?.Expectation} {msg?.Clause?.GetType().Name}.{msg?.ValidatedField} to be {msg?.ExpectedResult} - but actually found '{msg?.ActualResult}'\n", ConsoleColor.DarkGray);
-                    }
+                    WriteColored($"               {msg?.Expectation} {msg?.Clause?.GetType().Name}.{msg?.ValidatedField} to be {msg?.ExpectedResult} - but actually found '{msg?.ActualResult}'\n", ConsoleColor.DarkGray);
                 }
-                //else
-                //{
-                //    WriteColored($":{itm.Requirement?.Name} - {itm.Requirement?.Description}", ConsoleColor.DarkGray);
-                //    WriteColored($": {itm.Entity}\n", ConsoleColor.White);
-                //    foreach (var msg in itm.Messages.Where(m => m.Status == ValidationStatus.Pass))
-                //    {
-                //        WriteColored($"                [{msg?.Clause?.GetType().Name}.{msg?.ValidatedField}] {msg?.Expectation} to find {msg?.ExpectedResult} - and found '{msg?.ActualResult}'\n", ConsoleColor.Gray);
-                //    }
-                //}
-                Console.Write(".");
             }
-            Console.WriteLine();
-            Console.WriteLine("------------------------------");
+            //else
+            //{
+            //    WriteColored($":{itm.Requirement?.Name} - {itm.Requirement?.Description}", ConsoleColor.DarkGray);
+            //    WriteColored($": {itm.Entity}\n", ConsoleColor.White);
+            //    foreach (var msg in itm.Messages.Where(m => m.Status == ValidationStatus.Pass))
+            //    {
+            //        WriteColored($"                [{msg?.Clause?.GetType().Name}.{msg?.ValidatedField}] {msg?.Expectation} to find {msg?.ExpectedResult} - and found '{msg?.ActualResult}'\n", ConsoleColor.Gray);
+            //    }
+            //}
+            Console.Write(".");
         }
-
+        Console.WriteLine();
+        Console.WriteLine("------------------------------");
     }
 
     private static void WriteColored(ValidationStatus status, string text)

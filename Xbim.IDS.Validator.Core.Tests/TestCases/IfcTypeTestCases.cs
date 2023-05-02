@@ -25,11 +25,11 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/entity/fail-user_defined_types_are_checked_case_sensitively.ids")]
 
         [Theory]
-        public void EntityTestFailures(string idsFile, params XbimSchemaVersion[] schemas)
+        public async Task EntityTestFailures(string idsFile, params XbimSchemaVersion[] schemas)
         {
             foreach (var schema in GetSchemas(schemas))
             {
-                var outcome = VerifyIdsFile(idsFile, schemaVersion: schema);
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
                 outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());
             }
@@ -49,11 +49,11 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData("TestCases/entity/pass-restrictions_an_be_specified_for_the_predefined_type_1_3.ids", XbimSchemaVersion.Ifc4)]
         [InlineData("TestCases/entity/pass-restrictions_an_be_specified_for_the_predefined_type_2_3.ids", XbimSchemaVersion.Ifc4)]
         [Theory]
-        public void EntityTestPass(string idsFile, params XbimSchemaVersion[] schemas)
+        public async Task EntityTestPass(string idsFile, params XbimSchemaVersion[] schemas)
         {
             foreach (var schema in GetSchemas(schemas))
             {
-                var outcome = VerifyIdsFile(idsFile, schemaVersion:schema);
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion:schema);
 
                 outcome.Status.Should().Be(ValidationStatus.Pass, schema.ToString());
             }
