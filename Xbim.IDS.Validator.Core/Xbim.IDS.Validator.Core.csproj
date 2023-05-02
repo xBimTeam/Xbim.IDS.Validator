@@ -4,10 +4,22 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <ImplicitUsings>false</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Version>1.0.1</Version>
+    <VersionSuffix>Beta</VersionSuffix>
+    <Description>Enables validation of IFC models using BuildingSmart IDS</Description>
+    <Copyright>xbim Ltd</Copyright>
+    <PackageReadmeFile>Readme.md</PackageReadmeFile>
+    <PackageTags>xbim ifc ids bim validation</PackageTags>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <PackageLicenseExpression>CDDL-1.0</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
+    <None Include="..\Readme.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

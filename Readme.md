@@ -23,6 +23,7 @@ serviceCollection.AddIdsValidation();
 
 IModel model = IfcStore.Open(ifcModelFile);
 
+// Get IdsModelValidator from DI provider / or inject to your service
 var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
 
 ValidationOutcome outcome = idsValidator.ValidateAgainstIds(model, "example.ids", logger)
@@ -31,7 +32,7 @@ foreach (ValidationRequirement requirement in results.ExecutedRequirements)
 {
     // ApplicableResults contains details of the applicable IFC entities tested
     var entitiesTested = requirement.ApplicableResults.Count();
-    var entitiesPassed = requirement.ApplicableResults.Count(e => e.ValidationStatus == ValidationStatus.Success);
+    var entitiesPassed = requirement.ApplicableResults.Count(e => e.ValidationStatus == ValidationStatus.Pass);
     Console.WriteLine("[{0,-8}] : [{1}/{2}] met {3} specification > '{4}' ", 
         requirement.Status, 
         entitiesPassed, entitiesTested,
@@ -78,7 +79,7 @@ It currently supports:
 - Support for validating models in following IFC Schemas
     - [x] IFC2x3
     - [x] IFC4 schemas
-    - [ ] WIP support for IFC4x3
+    - [x] WIP support for IFC4x3
 
 The library has been tested against the [IDS test suite](https://github.com/buildingSMART/IDS/blob/master/Documentation/developer-guide.md#checking-ids-against-ifc)
 
