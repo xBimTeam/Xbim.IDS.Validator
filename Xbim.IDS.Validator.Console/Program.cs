@@ -79,15 +79,15 @@ class Program
         var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
 
         Console.WriteLine("Validating...");
-        var results = await idsValidator.ValidateAgainstIdsAsync(model, ids, logger, OutputRequirement);
+        var options = new VerificationOptions { IncludeSubtypes = true };
+        var results = await idsValidator.ValidateAgainstIdsAsync(model, ids, logger, OutputRequirement, options);
         
 
     }
 
     private static void OutputRequirement(ValidationRequirement req)
     {
-        var passed = req.Specification.Cardinality.NoMatchingEntities ? req.ApplicableResults.Count(a => a.ValidationStatus == ValidationStatus.Fail)
-                        : req.ApplicableResults.Count(a => a.ValidationStatus == ValidationStatus.Pass);
+        var passed = req.PassedResults.Count();
 
         WriteColored(req.Status, req.Status.ToString());
         WriteColored($" : {req.Specification.Name} [{passed} passed from {req.ApplicableResults.Count}]", ConsoleColor.Gray);
@@ -98,8 +98,7 @@ class Program
         Console.ForegroundColor = ConsoleColor.White;
         foreach (var itm in req.ApplicableResults)
         {
-            if ((req.Specification.Cardinality.ExpectsRequirements && itm.ValidationStatus != ValidationStatus.Pass) ||
-                (req.Specification.Cardinality.NoMatchingEntities && itm.ValidationStatus != ValidationStatus.Fail))
+            if(req.IsFailure(itm))
             {
                 WriteColored(itm.ValidationStatus, "    " + itm.ValidationStatus.ToString());
                 WriteColored($":{itm.Requirement?.Name} - {itm.Requirement?.Description}", ConsoleColor.Red);

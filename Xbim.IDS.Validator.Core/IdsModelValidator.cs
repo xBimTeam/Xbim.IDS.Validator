@@ -275,5 +275,55 @@ namespace Xbim.IDS.Validator.Core
         /// The results of testing this specification against applicable entities in the model
         /// </summary>
         public IList<IdsValidationResult> ApplicableResults { get; private set; } = new List<IdsValidationResult>();
+
+        /// <summary>
+        /// Gets the results where the requirement failed, accounting for Prohibited requirements
+        /// </summary>
+        public IEnumerable<IdsValidationResult> FailedResults 
+        { 
+            get
+            {
+                return Specification.Cardinality.NoMatchingEntities ?
+                    ApplicableResults.Where(a => a.ValidationStatus == ValidationStatus.Pass)
+                    : ApplicableResults.Where(a => a.ValidationStatus == ValidationStatus.Fail);
+            }
+
+        }
+
+        /// <summary>
+        /// Gets the results where the requirement passed, accounting for Prohibited requirements
+        /// </summary>
+        public IEnumerable<IdsValidationResult> PassedResults
+        {
+            get
+            {
+                return Specification.Cardinality.NoMatchingEntities ?
+                    ApplicableResults.Where(a => a.ValidationStatus == ValidationStatus.Fail)
+                    : ApplicableResults.Where(a => a.ValidationStatus == ValidationStatus.Pass);
+            }
+
+        }
+
+        /// <summary>
+        /// Indicates if the result has failed the requirements
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public bool IsFailure(IdsValidationResult result)
+        {
+            return (Specification.Cardinality.ExpectsRequirements && result.ValidationStatus != ValidationStatus.Pass) ||
+                (Specification.Cardinality.NoMatchingEntities && result.ValidationStatus != ValidationStatus.Fail);
+        }
+
+        /// <summary>
+        /// Indicates if the result has met the requirements
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public bool IsSuccess(IdsValidationResult result)
+        {
+            return !IsFailure(result);
+        }
+
     }
 }

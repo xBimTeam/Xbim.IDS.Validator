@@ -82,11 +82,11 @@ namespace Xbim.IDS.Validator.Core
         {
             if(Status == ValidationStatus.Fail)
             {
-                return $"[{Status}] {Expectation} {Clause?.GetType().Name}.{ValidatedField} : {Reason}. Constrained to \"{ExpectedResult}\" but found \"{ActualResult}\" at {Entity}";
+                return $"[{Status}] {Expectation} {Clause?.GetType().Name}.{ValidatedField} to be {ExpectedResult} - but actually found '{ActualResult}'";
             }
             else
             {
-                return $"[{Status}] {Expectation} {Clause?.GetType().Name}.{ValidatedField} : {Reason} Constraint \"{ExpectedResult}\" with \"{ActualResult}\" at {Entity}";
+                return $"[{Status}] {Expectation} {Clause?.GetType().Name}.{ValidatedField} to be {ExpectedResult} and found '{ActualResult}'";
             }
         }
 
@@ -194,7 +194,7 @@ namespace Xbim.IDS.Validator.Core
             }
 
             // decode the field we're validating from the expression
-            return memberField!.Compile().Invoke(Clause)?.ToString() ?? "";
+            return memberField!.Compile().Invoke(Clause)?.ToString() ?? "<any>";
         }
 
         public string GetMember(Expression<Func<T, object>> memberField)
