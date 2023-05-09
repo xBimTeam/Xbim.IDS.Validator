@@ -121,6 +121,16 @@ namespace Xbim.IDS.Validator.Core
             };
         }
 
+        public static ValidationMessage Error(string reason)
+        {
+            return new ValidationMessage
+            {
+                Status = ValidationStatus.Error,
+                Reason = reason,
+                Expectation = RequirementCardinalityOptions.Expected
+            };
+        }
+
         public ValidationMessage()
         {
         }
@@ -149,11 +159,27 @@ namespace Xbim.IDS.Validator.Core
      
     }
 
+    /// <summary>
+    /// Represents the validation status of a specification or one of its requirements
+    /// </summary>
     public enum ValidationStatus
     {
+        /// <summary>
+        /// All applicable items passed the requirements
+        /// </summary>
         Pass,
+        /// <summary>
+        /// One or more applicable items did not meet the requirement
+        /// </summary>
         Fail,
-        Inconclusive
+        /// <summary>
+        /// A result could not be determined
+        /// </summary>
+        Inconclusive,
+        /// <summary>
+        /// A system or configuration failure prevented the specification from being checked
+        /// </summary>
+        Error
     }
 
     public enum Expectation

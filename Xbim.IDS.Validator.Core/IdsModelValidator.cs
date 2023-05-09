@@ -46,7 +46,7 @@ namespace Xbim.IDS.Validator.Core
             var outcome = new ValidationOutcome(idsSpec);
             if (idsSpec == null)
             {
-                outcome.MarkFailed($"Unable to open IDS file '{idsFile}'");
+                outcome.MarkCompletelyFailed($"Unable to open IDS file '{idsFile}'");
                 logger.LogError("Unable to open IDS file '{idsFile}", idsFile);
                 return Task.FromResult(outcome);
             }
@@ -57,57 +57,15 @@ namespace Xbim.IDS.Validator.Core
                 logger.LogInformation("opening '{group}'", group.Name);
                 foreach (var spec in group.Specifications)
                 {
-                    var requirementResult = new ValidationRequirement(spec);
+
+                    var requirementResult = ValidateRequirement(spec, model, logger);
+                    
                     
 
-                    logger.LogInformation(" -- {cardinality} Spec '{spec}' : versions {ifcVersions}", spec.Cardinality.Description, spec.Name, spec.IfcVersion);
-                    var applicableIfc = spec.Applicability.Facets.OfType<IfcTypeFacet>().FirstOrDefault();
-                    if (applicableIfc == null)
+                    if(requirementResult.Status != ValidationStatus.Error)
                     {
-                        logger.LogWarning("Spec {spec} has no Applicability facets", spec.Name);
-                        continue;
+                        SetResults(spec, requirementResult);
                     }
-
-                    logger.LogInformation("    Applicable to : {entity} with PredefinedType {predefined}", applicableIfc.IfcType.SingleValue(), applicableIfc.PredefinedType?.SingleValue());
-                    foreach (var applicableFacet in spec.Applicability.Facets)
-                    {
-                        logger.LogDebug("       - {facetType}: where {description} ", applicableFacet.GetType().Name, applicableFacet.Short());
-                    }
-                    var facetReqs = string.Join(',', spec.Requirement?.RequirementOptions?.Select(r => r.ToString() != null ? r.ToString() : "") ?? new[] { "" });
-                    logger.LogInformation("    Requirements {reqCount}: {expectation}", spec.Requirement?.Facets.Count, facetReqs);
-                    int idx = 1;
-                    if (spec.Requirement?.Facets == null)
-                    {
-                        logger.LogWarning("Spec {spec} has no Requirement facets", spec.Name);
-                        continue;
-                    }
-
-                    foreach (var reqFacet in spec.Requirement.Facets)
-                    {
-                        logger.LogInformation("       [r{i}] {facetType}: check {description} ", idx++, reqFacet.GetType().Name, reqFacet.Short());
-                    }
-                    IEnumerable<IPersistEntity> items = ModelBinder.SelectApplicableEntities(model, spec);
-                    logger.LogInformation("          Checking {count} applicable items", items.Count());
-                    foreach (var item in items)
-                    {
-                        var i = item as IIfcRoot;
-
-                        var result = ModelBinder.ValidateRequirement(item, spec.Requirement, logger);
-                        LogLevel level;
-                        int pad;
-                        GetLogLevel(result.ValidationStatus, out level, out pad);
-                        logger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '),
-                            result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Requirement.Short());
-                        foreach (var message in result.Messages)
-                        {
-                            GetLogLevel(message.Status, out level, out pad, LogLevel.Debug);
-                            logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
-                        }
-                        requirementResult.ApplicableResults.Add(result);
-
-                    }
-
-                    SetResults(spec, requirementResult);
                     // else inconclusive
 
                     if (requirementCompleted != null)
@@ -130,6 +88,74 @@ namespace Xbim.IDS.Validator.Core
             }
             // TODO: Consider Inconclusive
             return Task.FromResult(outcome);
+        }
+
+        private ValidationRequirement ValidateRequirement(Specification spec, IModel model, ILogger logger)
+        {
+            if (spec is null)
+            {
+                throw new ArgumentNullException(nameof(spec));
+            }
+
+            var requirementResult = new ValidationRequirement(spec);
+
+            try
+            {
+                logger.LogInformation(" -- {cardinality} Spec '{spec}' : versions {ifcVersions}", spec.Cardinality.Description, spec.Name, spec.IfcVersion);
+                var applicableIfc = spec.Applicability.Facets.OfType<IfcTypeFacet>().FirstOrDefault();
+                if (applicableIfc == null)
+                {
+                    throw new ArgumentException($"Spec {spec.Name} has no Applicability facets");
+                }
+
+                logger.LogInformation("    Applicable to : {entity} with PredefinedType {predefined}", applicableIfc.IfcType.SingleValue(), applicableIfc.PredefinedType?.SingleValue());
+                foreach (var applicableFacet in spec.Applicability.Facets)
+                {
+                    logger.LogDebug("       - {facetType}: where {description} ", applicableFacet.GetType().Name, applicableFacet.Short());
+                }
+                var facetReqs = string.Join(',', spec.Requirement?.RequirementOptions?.Select(r => r.ToString() != null ? r.ToString() : "") ?? new[] { "" });
+                logger.LogInformation("    Requirements {reqCount}: {expectation}", spec.Requirement?.Facets.Count, facetReqs);
+                int idx = 1;
+                if (spec.Requirement?.Facets == null)
+                {
+                    throw new ArgumentException($"Spec {spec.Name} has no Requirement facets");
+                }
+
+                foreach (var reqFacet in spec.Requirement!.Facets)
+                {
+                    logger.LogInformation("       [r{i}] {facetType}: check {description} ", idx++, reqFacet.GetType().Name, reqFacet.Short());
+                }
+                IEnumerable<IPersistEntity> items = ModelBinder.SelectApplicableEntities(model, spec);
+                logger.LogInformation("          Checking {count} applicable items", items.Count());
+                foreach (var item in items)
+                {
+                    var i = item as IIfcRoot;
+
+                    var result = ModelBinder.ValidateRequirement(item, spec.Requirement, logger);
+                    GetLogLevel(result.ValidationStatus, out LogLevel level, out int pad);
+                    logger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '),
+                        result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Requirement.Short());
+                    foreach (var message in result.Messages)
+                    {
+                        GetLogLevel(message.Status, out level, out pad, LogLevel.Debug);
+                        logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
+                    }
+                    requirementResult.ApplicableResults.Add(result);
+
+                }
+            }
+            catch(Exception ex)
+            {
+                logger.LogError(ex, "Failed to run specification: {reason}", ex.Message);
+                requirementResult.Status = ValidationStatus.Error;
+                var errorResult = new IdsValidationResult(null, null);
+                errorResult.Messages.Add(ValidationMessage.Error(ex.Message));
+                errorResult.ValidationStatus = ValidationStatus.Error;
+                requirementResult.ApplicableResults.Add(errorResult);
+            }
+            
+
+            return requirementResult;
         }
 
         private static void GetLogLevel(ValidationStatus status, out LogLevel level, out int pad, LogLevel defaultLevel = LogLevel.Information)
@@ -242,9 +268,9 @@ namespace Xbim.IDS.Validator.Core
 
         public string? Message { get; private set; }
 
-        internal void MarkFailed(string mesg)
+        internal void MarkCompletelyFailed(string mesg)
         {
-            Status = ValidationStatus.Fail;
+            Status = ValidationStatus.Error;
             Message = mesg;
         }
     }
