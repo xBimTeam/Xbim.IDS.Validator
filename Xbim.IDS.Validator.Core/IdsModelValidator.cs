@@ -96,9 +96,12 @@ namespace Xbim.IDS.Validator.Core
             {
                 throw new ArgumentNullException(nameof(spec));
             }
-
+            
             var requirementResult = new ValidationRequirement(spec);
 
+            using var entityCache = model.BeginEntityCaching();
+            // If Supported?
+            //using var inverseCache = model.BeginInverseCaching();
             try
             {
                 logger.LogInformation(" -- {cardinality} Spec '{spec}' : versions {ifcVersions}", spec.Cardinality.Description, spec.Name, spec.IfcVersion);
