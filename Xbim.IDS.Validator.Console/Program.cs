@@ -98,7 +98,17 @@ class Program
         Console.ForegroundColor = ConsoleColor.White;
         foreach (var itm in req.ApplicableResults)
         {
-            if(req.IsFailure(itm))
+            if(req.Status == ValidationStatus.Error)
+            {
+                WriteColored(itm.ValidationStatus, "    " + itm.ValidationStatus.ToString());
+                foreach(var msg in itm.Messages.Where(m => m.Status != ValidationStatus.Pass))
+                {
+                    WriteColored(ValidationStatus.Error, $": {msg?.Reason}\n");
+                    WriteColored($"               {msg?.Expectation} {msg?.Clause?.GetType().Name}.{msg?.ValidatedField} to be {msg?.ExpectedResult} - but actually found '{msg?.ActualResult}'\n", ConsoleColor.DarkGray);
+                }
+
+            }
+            else if(req.IsFailure(itm))
             {
                 WriteColored(itm.ValidationStatus, "    " + itm.ValidationStatus.ToString());
                 WriteColored($":{itm.Requirement?.Name} - {itm.Requirement?.Description}", ConsoleColor.Red);
