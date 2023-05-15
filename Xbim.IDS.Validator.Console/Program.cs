@@ -81,6 +81,12 @@ class Program
         Console.WriteLine("Validating...");
         var options = new VerificationOptions { IncludeSubtypes = true };
         var results = await idsValidator.ValidateAgainstIdsAsync(model, ids, logger, OutputRequirement, options);
+        if(results.Status == ValidationStatus.Error)
+        {
+            Console.Error.WriteLine($"Validation failed to run: {results.Message}");
+            return;
+        }
+        Console.WriteLine($"Model Validated in {sw.ElapsedMilliseconds}ms");
         
 
     }

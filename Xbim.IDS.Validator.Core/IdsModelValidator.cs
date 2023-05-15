@@ -40,54 +40,66 @@ namespace Xbim.IDS.Validator.Core
                 throw new ArgumentNullException(nameof(logger));
             }
 
-            ModelBinder.SetOptions(verificationOptions);
-
-            var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idsFile, logger);
-            var outcome = new ValidationOutcome(idsSpec);
-            if (idsSpec == null)
+            try
             {
-                outcome.MarkCompletelyFailed($"Unable to open IDS file '{idsFile}'");
-                logger.LogError("Unable to open IDS file '{idsFile}", idsFile);
+
+
+                ModelBinder.SetOptions(verificationOptions);
+
+                var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idsFile, logger);
+                var outcome = new ValidationOutcome(idsSpec);
+                if (idsSpec == null)
+                {
+                    outcome.MarkCompletelyFailed($"Unable to open IDS file '{idsFile}'");
+                    logger.LogError("Unable to open IDS file '{idsFile}", idsFile);
+                    return Task.FromResult(outcome);
+                }
+
+
+                foreach (var group in idsSpec.SpecificationsGroups)
+                {
+                    logger.LogInformation("opening '{group}'", group.Name);
+                    foreach (var spec in group.Specifications)
+                    {
+
+                        var requirementResult = ValidateRequirement(spec, model, logger);
+
+
+
+                        if (requirementResult.Status != ValidationStatus.Error)
+                        {
+                            SetResults(spec, requirementResult);
+                        }
+                        // else inconclusive
+
+                        if (requirementCompleted != null)
+                        {
+                            // report progress
+                            requirementCompleted(requirementResult);
+                        }
+                        outcome.ExecutedRequirements.Add(requirementResult);
+
+                    }
+                }
+
+                if (outcome.ExecutedRequirements.Any(r => r.Status == ValidationStatus.Fail))
+                {
+                    outcome.Status = ValidationStatus.Fail;
+                }
+                else if (outcome.ExecutedRequirements.Any(r => r.Status == ValidationStatus.Pass))
+                {
+                    outcome.Status = ValidationStatus.Pass;
+                }
+                // TODO: Consider Inconclusive
                 return Task.FromResult(outcome);
             }
-
-
-            foreach (var group in idsSpec.SpecificationsGroups)
+            catch(Exception ex)
             {
-                logger.LogInformation("opening '{group}'", group.Name);
-                foreach (var spec in group.Specifications)
-                {
-
-                    var requirementResult = ValidateRequirement(spec, model, logger);
-                    
-                    
-
-                    if(requirementResult.Status != ValidationStatus.Error)
-                    {
-                        SetResults(spec, requirementResult);
-                    }
-                    // else inconclusive
-
-                    if (requirementCompleted != null)
-                    {
-                        // report progress
-                        requirementCompleted(requirementResult);
-                    }
-                    outcome.ExecutedRequirements.Add(requirementResult);
-
-                }
+                logger.LogError(ex, "Failed to complete validation");
+                var badOutcome = new ValidationOutcome(new Xids());
+                badOutcome.MarkCompletelyFailed(ex.Message);
+                return Task.FromResult(badOutcome);
             }
-
-            if (outcome.ExecutedRequirements.Any(r => r.Status == ValidationStatus.Fail))
-            {
-                outcome.Status = ValidationStatus.Fail;
-            }
-            else if (outcome.ExecutedRequirements.Any(r => r.Status == ValidationStatus.Pass))
-            {
-                outcome.Status = ValidationStatus.Pass;
-            }
-            // TODO: Consider Inconclusive
-            return Task.FromResult(outcome);
         }
 
         private ValidationRequirement ValidateRequirement(Specification spec, IModel model, ILogger logger)
