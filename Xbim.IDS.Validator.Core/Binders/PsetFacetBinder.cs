@@ -192,14 +192,22 @@ namespace Xbim.IDS.Validator.Core.Binders
                     }
                     else
                     {
-                        result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, "No properties matching", pset));
+                        if (facet.PropertySetName?.IsEmpty() ?? true)
+                        {
+                            continue;
+                            // else we found a propertyset but it has no matching property. Another pset may
+                        }
+                        else 
+                        { 
+                            result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, "No properties matching", pset));
+                        }
                     }
                 }
             }
 
             else
             {
-                if(facet.PropertyName?.IsEmpty()== false)
+                if(facet.PropertyName?.IsEmpty() == false)
                 {
                     result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, "No Property matching", item));
                 }
@@ -412,7 +420,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             if (entity is IIfcTypeObject type)
             {
                 var typeProperties = type.HasPropertySets.OfType<IIfcPropertySetDefinition>()
-                    .Where(p => psetConstraint.IsSatisfiedBy(p.Name.ToString(), true, logger));
+                    .Where(p => psetConstraint?.IsSatisfiedBy(p.Name.ToString(), true, logger) == true);
                 return typeProperties;
 
             }
@@ -420,7 +428,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             {
 
                 var entityProperties = obj.IsDefinedBy
-                    .Where(t => t.RelatingPropertyDefinition is IIfcPropertySetDefinition ps && psetConstraint.IsSatisfiedBy(ps.Name.ToString(), true, logger))
+                    .Where(t => t.RelatingPropertyDefinition is IIfcPropertySetDefinition ps && psetConstraint?.IsSatisfiedBy(ps.Name.ToString(), true, logger) != false)
                     .Select(p => (IIfcPropertySetDefinition)p.RelatingPropertyDefinition);
 
 
