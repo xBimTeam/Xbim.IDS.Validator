@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Xml.Linq;
 using Xbim.Common;
 using Xbim.Common.Metadata;
 using Xbim.Ifc4.Interfaces;
@@ -107,6 +108,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             {
                 result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.IfcType!, null, "Invalid IFC Type", item));
             }
+            var actualEntityType = entityType!.Name.ToUpperInvariant();
             var currentEntityType = entityType;
 
             
@@ -129,7 +131,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                     } 
                     else
                     {
-                        result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.IfcType!, actualName, "IFC Type incorrect", item));
+                        result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.IfcType!, actualEntityType, "IFC Type incorrect", item));
                         break;
                     }
                 }
