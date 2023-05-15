@@ -111,7 +111,11 @@ namespace Xbim.IDS.Validator.Core.Binders
             {
                 foreach (var pset in psets)
                 {
-                    result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PropertySetName!, pset.Name, "Pset Matched", pset));
+                    if (facet.PropertySetName?.IsEmpty() ?? true == false)
+                    {
+                        // If a constraint was defined acknowledge it, but otherwise this is not yet 'success'
+                        result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PropertySetName!, pset.Name, "Pset Matched", pset));
+                    }
                     var props = GetPropertiesMatching<IIfcSimpleProperty>(item.EntityLabel, pset.Name, facet.PropertyName);
                     var quants = GetQuantitiesMatching(item.EntityLabel, pset.Name, facet.PropertyName);
                     if (props.Any() || quants.Any())
@@ -195,13 +199,18 @@ namespace Xbim.IDS.Validator.Core.Binders
                         if (facet.PropertySetName?.IsEmpty() ?? true)
                         {
                             continue;
-                            // else we found a propertyset but it has no matching property. Another pset may
+                            // we found a propertyset but it has no matching property. Another pset may though
                         }
                         else 
                         { 
                             result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, "No properties matching", pset));
                         }
                     }
+                }
+                // If no matching value found after all the psets checked, mark as failed
+                if(!(result.Successful.Any() || result.Failures.Any()))
+                {
+                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, "No properties matching", item));
                 }
             }
 
