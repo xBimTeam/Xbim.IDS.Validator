@@ -123,7 +123,7 @@ namespace Xbim.IDS.Validator.Core
                     throw new ArgumentException($"Spec {spec.Name} has no Applicability facets");
                 }
 
-                logger.LogInformation("    Applicable to : {entity} with PredefinedType {predefined}", applicableIfc.IfcType.SingleValue(), applicableIfc.PredefinedType?.SingleValue());
+                logger.LogInformation("    Applicable to : {entity} with PredefinedType {predefined}", applicableIfc.IfcType.Short(), applicableIfc.PredefinedType?.Short());
                 foreach (var applicableFacet in spec.Applicability.Facets)
                 {
                     logger.LogDebug("       - {facetType}: where {description} ", applicableFacet.GetType().Name, applicableFacet.Short());
