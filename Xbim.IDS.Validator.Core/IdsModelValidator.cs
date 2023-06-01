@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Xbim.Common;
 using Xbim.IDS.Validator.Core.Extensions;
@@ -33,7 +34,8 @@ namespace Xbim.IDS.Validator.Core
         }
 
         /// <inheritdoc/>
-        public Task<ValidationOutcome> ValidateAgainstIdsAsync(IModel model, string idsFile, ILogger logger, Action<ValidationRequirement>? requirementCompleted, VerificationOptions? verificationOptions = null)
+        public Task<ValidationOutcome> ValidateAgainstIdsAsync(IModel model, string idsFile, ILogger logger, Action<ValidationRequirement>? requirementCompleted, VerificationOptions? verificationOptions = null,
+            CancellationToken token = default)
         {
             if (logger is null)
             {
@@ -62,7 +64,7 @@ namespace Xbim.IDS.Validator.Core
                     foreach (var spec in group.Specifications)
                     {
 
-                        var requirementResult = ValidateRequirement(spec, model, logger);
+                        var requirementResult = ValidateRequirement(spec, model, logger, token);
 
 
 
@@ -102,7 +104,7 @@ namespace Xbim.IDS.Validator.Core
             }
         }
 
-        private ValidationRequirement ValidateRequirement(Specification spec, IModel model, ILogger logger)
+        private ValidationRequirement ValidateRequirement(Specification spec, IModel model, ILogger logger, CancellationToken token)
         {
             if (spec is null)
             {
@@ -117,30 +119,19 @@ namespace Xbim.IDS.Validator.Core
             try
             {
                 logger.LogInformation(" -- {cardinality} Spec '{spec}' : versions {ifcVersions}", spec.Cardinality.Description, spec.Name, spec.IfcVersion);
-                var applicableIfc = spec.Applicability.Facets.OfType<IfcTypeFacet>().FirstOrDefault();
-                if (applicableIfc == null)
-                {
-                    throw new ArgumentException($"Spec {spec.Name} has no Applicability facets");
-                }
-
-                logger.LogInformation("    Applicable to : {entity} with PredefinedType {predefined}", applicableIfc.IfcType.Short(), applicableIfc.PredefinedType?.Short());
+               
+                logger.LogInformation("    Applicable to : {applicable}", spec.Applicability.GetApplicabilityDescription());
                 foreach (var applicableFacet in spec.Applicability.Facets)
                 {
                     logger.LogDebug("       - {facetType}: where {description} ", applicableFacet.GetType().Name, applicableFacet.Short());
                 }
-                var facetReqs = string.Join(',', spec.Requirement?.RequirementOptions?.Select(r => r.ToString() != null ? r.ToString() : "") ?? new[] { "" });
+                var facetReqs = spec.Requirement?.GetRequirementDescription();
                 logger.LogInformation("    Requirements {reqCount}: {expectation}", spec.Requirement?.Facets.Count, facetReqs);
-                int idx = 1;
-                if (spec.Requirement?.Facets == null)
-                {
-                    throw new ArgumentException($"Spec {spec.Name} has no Requirement facets");
-                }
+              
 
-                foreach (var reqFacet in spec.Requirement!.Facets)
-                {
-                    logger.LogInformation("       [r{i}] {facetType}: check {description} ", idx++, reqFacet.GetType().Name, reqFacet.Short());
-                }
+                // Get the applicable items
                 IEnumerable<IPersistEntity> items = ModelBinder.SelectApplicableEntities(model, spec);
+                token.ThrowIfCancellationRequested();
                 logger.LogInformation("          Checking {count} applicable items", items.Count());
                 foreach (var item in items)
                 {
@@ -156,7 +147,7 @@ namespace Xbim.IDS.Validator.Core
                         logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
                     }
                     requirementResult.ApplicableResults.Add(result);
-
+                    token.ThrowIfCancellationRequested();
                 }
             }
             catch(Exception ex)
