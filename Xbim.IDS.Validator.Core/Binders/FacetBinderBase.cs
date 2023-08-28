@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -7,6 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.Common.Metadata;
+using Xbim.Common.Step21;
 using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.IDS.Validator.Core.Interfaces;
@@ -482,12 +482,12 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         protected bool IsIfc2x3Model()
         {
-            return Model.SchemaVersion == Common.Step21.XbimSchemaVersion.Ifc2X3;
+            return Model.SchemaVersion == XbimSchemaVersion.Ifc2X3;
         }
 
         protected bool IsIfc4x3Model()
         {
-            return Model.SchemaVersion == Common.Step21.XbimSchemaVersion.Ifc4x3;
+            return Model.SchemaVersion == XbimSchemaVersion.Ifc4x3;
         }
 
         protected static object HandleBoolConventions(object attrvalue)

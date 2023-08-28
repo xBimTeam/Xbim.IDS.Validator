@@ -28,7 +28,7 @@ namespace Xbim.IDS.Validator.Core
         /// <summary>
         /// The validation status of an individual entity for a requirement
         /// </summary>
-        public ValidationStatus ValidationStatus { get; internal set; }
+        public ValidationStatus ValidationStatus { get; set; }
         /// <summary>
         /// A model <see cref="IPersistEntity"/> being tested against defined requirements
         /// </summary>

@@ -1,5 +1,7 @@
 ﻿using FluentAssertions;
 using Xbim.Common;
+using Xbim.Common.Enumerations;
+using Xbim.Common.Step21;
 using Xbim.Ifc;
 
 namespace Xbim.IDS.Validator.Core.Tests
@@ -22,7 +24,7 @@ namespace Xbim.IDS.Validator.Core.Tests
                 ApplicationDevelopersName="xbim"
             };
             //new MemoryModel(new Ifc2x3.EntityFactoryIfc2x3());
-            var model = IfcStore.Create(editor, Common.Step21.XbimSchemaVersion.Ifc4x3, IO.XbimStoreType.InMemoryModel);
+            var model = IfcStore.Create(editor, XbimSchemaVersion.Ifc4x3, IO.XbimStoreType.InMemoryModel);
             AddHeaders(model, filename);
             using (var trans = model.BeginTransaction("Create"))
             {
@@ -35,7 +37,7 @@ namespace Xbim.IDS.Validator.Core.Tests
 
 
                 var val = new Xbim.Common.ExpressValidation.Validator();
-                val.ValidateLevel = Common.Enumerations.ValidationFlags.All;
+                val.ValidateLevel = ValidationFlags.All;
 
                 var result = val.Validate(model).ToList();
                 result.Should().BeEmpty();

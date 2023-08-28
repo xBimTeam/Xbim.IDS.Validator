@@ -23,7 +23,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Xbim.IDS.Validator.Common\Xbim.IDS.Validator.Common.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
+    <PackageReference Include="Xbim.Essentials" Version="6.0.414-develop" />
+    <PackageReference Include="Xbim.InformationSpecifications" Version="0.3.32-xbim007" />
+    <PackageReference Include="Xbim.IO.Esent" Version="6.0.414-develop" />
   </ItemGroup>
 
   <ItemGroup>

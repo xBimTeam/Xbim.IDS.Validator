@@ -1,0 +1,117 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Xbim.IDS.Validator.Core;
+using Xbim.InformationSpecifications;
+
+namespace Xbim.IDS.Validator.Common
+{
+    /// <summary>
+    /// Represents the top level outcome of an IDS validation run
+    /// </summary>
+    public class ValidationOutcome
+    {
+        public ValidationOutcome(Xids idsDocument)
+        {
+            IdsDocument = idsDocument;
+        }
+        public Xids IdsDocument { get; private set; }
+
+        /// <summary>
+        /// The high level results of the requirements defined in the executed as part of this validation run
+        /// </summary>
+        public IList<ValidationRequirement> ExecutedRequirements { get; private set; } = new List<ValidationRequirement>();
+
+        /// <summary>
+        /// The overall status of the Validation run
+        /// </summary>
+        public ValidationStatus Status { get; set; } = ValidationStatus.Inconclusive;
+
+        public string? Message { get; private set; }
+
+        public void MarkCompletelyFailed(string mesg)
+        {
+            Status = ValidationStatus.Error;
+            Message = mesg;
+        }
+    }
+
+    /// <summary>
+    /// Represents a requirement result after validation
+    /// </summary>
+    /// <remarks>E.g. all Doors must have a Firerating</remarks>
+    public class ValidationRequirement
+    {
+        public ValidationRequirement(Specification spec)
+        {
+            Specification = spec;
+        }
+
+        /// <summary>
+        ///  The status of this requirement
+        /// </summary>
+        public ValidationStatus Status { get; set; } = ValidationStatus.Inconclusive;
+
+
+        /// <summary>
+        /// The IDS specification of this Requirement
+        /// </summary>
+        public Specification Specification { get; }
+
+        /// <summary>
+        /// The results of testing this specification against applicable entities in the model
+        /// </summary>
+        public IList<IdsValidationResult> ApplicableResults { get; private set; } = new List<IdsValidationResult>();
+
+        /// <summary>
+        /// Gets the results where the requirement failed, accounting for Prohibited requirements
+        /// </summary>
+        public IEnumerable<IdsValidationResult> FailedResults
+        {
+            get
+            {
+                return Specification.Cardinality.NoMatchingEntities ?
+                    ApplicableResults.Where(a => a.ValidationStatus == ValidationStatus.Pass)
+                    : ApplicableResults.Where(a => a.ValidationStatus == ValidationStatus.Fail);
+            }
+
+        }
+
+        /// <summary>
+        /// Gets the results where the requirement passed, accounting for Prohibited requirements
+        /// </summary>
+        public IEnumerable<IdsValidationResult> PassedResults
+        {
+            get
+            {
+                return Specification.Cardinality.NoMatchingEntities ?
+                    ApplicableResults.Where(a => a.ValidationStatus == ValidationStatus.Fail)
+                    : ApplicableResults.Where(a => a.ValidationStatus == ValidationStatus.Pass);
+            }
+
+        }
+
+        /// <summary>
+        /// Indicates if the result has failed the requirements
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public bool IsFailure(IdsValidationResult result)
+        {
+            return (Specification.Cardinality.ExpectsRequirements && result.ValidationStatus != ValidationStatus.Pass) ||
+                (Specification.Cardinality.NoMatchingEntities && result.ValidationStatus != ValidationStatus.Fail);
+        }
+
+        /// <summary>
+        /// Indicates if the result has met the requirements
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public bool IsSuccess(IdsValidationResult result)
+        {
+            return !IsFailure(result);
+        }
+
+    }
+}

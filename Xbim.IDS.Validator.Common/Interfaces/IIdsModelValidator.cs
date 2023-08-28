@@ -3,6 +3,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Xbim.Common;
+using Xbim.IDS.Validator.Common;
 
 namespace Xbim.IDS.Validator.Core.Interfaces
 {
