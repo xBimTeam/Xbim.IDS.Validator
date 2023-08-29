@@ -113,6 +113,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         //[InlineData(421, "Pset_SpaceCommon", "IsExternal", false)]
         [InlineData(323, "Energy Analysis", "Area per Person", 28.5714285714286d)]
         [InlineData(323, "Dimensions", "Area", 15.41678125d)]
+        [InlineData(323, null, "Area", 15.41678125d)]
+        [InlineData(323, "", "Area", 15.41678125d)]
+        [InlineData(323, " ", "Area", 15.41678125d)]
         [InlineData(10942, "Other", "Category", "Doors")] // Type
         [InlineData(3951, "Dimensions", "Thickness", 25d/1000)] // Type Inheritance
         [Theory]
@@ -122,10 +125,14 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             var entity = Model.Instances[entityLabel];
             var propFacet = new IfcPropertyFacet
             {
-                PropertySetName = psetName,
+                
                 PropertyName = propName,
                 PropertyValue = new ValueConstraint()
             };
+            if(psetName != null)
+            {
+                propFacet.PropertySetName = psetName;
+            }
             SetPropertyValue(expectedtext, ConstraintType.Exact, propFacet);
             FacetGroup group = BuildGroup(propFacet);
             var result = new IdsValidationResult(entity, group);

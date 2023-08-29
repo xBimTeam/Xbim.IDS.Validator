@@ -10,6 +10,19 @@ namespace Xbim.IDS.Validator.Core.Extensions
 {
     public static class ValueConstraintExtensions
     {
+        /// <summary>
+        /// Determines if the Constraint is null, empty or otherwise contains a null or empty string
+        /// </summary>
+        /// <param name="constraint"></param>
+        /// <returns></returns>
+        public static bool IsNullOrEmpty(this ValueConstraint? constraint)
+        {
+            if (constraint == null)
+                return true;
+            if (constraint.IsEmpty())
+                return true;
+            return constraint.IsSingleExact(out object? val) && val is string s && string.IsNullOrEmpty(s);
+        }
 
         public static RequirementCardinalityOptions? GetCardinality(this FacetGroup requirement, int idx)
         {

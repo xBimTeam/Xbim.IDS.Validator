@@ -7,6 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Xbim.Common;
+using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4.Kernel;
@@ -196,7 +197,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                     }
                     else
                     {
-                        if (facet.PropertySetName?.IsEmpty() ?? true)
+                        if (facet.PropertySetName.IsNullOrEmpty())
                         {
                             continue;
                             // we found a propertyset but it has no matching property. Another pset may though
@@ -426,6 +427,14 @@ namespace Xbim.IDS.Validator.Core.Binders
         private IEnumerable<IIfcPropertySetDefinition> GetPropertySetsMatching(int entityLabel, ValueConstraint psetConstraint, ILogger? logger = null)
         {
             var entity = Model.Instances[entityLabel];
+
+            // handle edgecase where Pset is not specified. Pset is required but this
+            // allows us to just in time wild-card the psetname, enabling properties to be matched
+            if(psetConstraint.IsNullOrEmpty())
+            {
+                psetConstraint = new ValueConstraint(NetTypeName.String);
+                psetConstraint.AddAccepted(new PatternConstraint(".*"));
+            }
             if (entity is IIfcTypeObject type)
             {
                 var typeProperties = type.HasPropertySets.OfType<IIfcPropertySetDefinition>()
@@ -437,7 +446,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             {
 
                 var entityProperties = obj.IsDefinedBy
-                    .Where(t => t.RelatingPropertyDefinition is IIfcPropertySetDefinition ps && psetConstraint?.IsSatisfiedBy(ps.Name.ToString(), true, logger) != false)
+                    .Where(t => t.RelatingPropertyDefinition is IIfcPropertySetDefinition ps && psetConstraint?.IsSatisfiedBy(ps.Name.ToString(), true, logger) == true)
                     .Select(p => (IIfcPropertySetDefinition)p.RelatingPropertyDefinition);
 
 
