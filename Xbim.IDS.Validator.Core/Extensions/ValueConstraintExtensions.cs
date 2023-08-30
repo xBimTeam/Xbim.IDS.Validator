@@ -24,6 +24,37 @@ namespace Xbim.IDS.Validator.Core.Extensions
             return constraint.IsSingleExact(out object? val) && val is string s && string.IsNullOrEmpty(s);
         }
 
+        /// <summary>
+        /// Determines if the Constraint is just a Regex Wildcard (.*), indicating the field is not important for the specification
+        /// </summary>
+        /// <param name="constraint"></param>
+        /// <returns></returns>
+        public static bool IsWildcard(this ValueConstraint? constraint)
+        {
+            // Handles an edge case where the user does not want to specify the manadatory Pset explicitly
+            // A wild-card is saying I don't care about that field.
+            if (constraint == null)
+                return false;
+            if (constraint.IsEmpty())
+                return false;
+            if (constraint.AcceptedValues == null || constraint.AcceptedValues!.Count != 1)
+            {
+                return false;
+            }
+
+            PatternConstraint? patternConstraint = constraint.AcceptedValues.FirstOrDefault() as PatternConstraint;
+            if (patternConstraint == null)
+            {
+                return false;
+            }
+            if(patternConstraint.Pattern != ".*")
+            {
+                return false;
+            }
+          
+            return true;
+        }
+
         public static RequirementCardinalityOptions? GetCardinality(this FacetGroup requirement, int idx)
         {
             if(requirement.RequirementOptions == null)

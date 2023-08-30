@@ -197,7 +197,15 @@ namespace Xbim.IDS.Validator.Core.Binders
                     }
                     else
                     {
-                        if (facet.PropertySetName.IsNullOrEmpty())
+                        // Our treatment of Wildcard PsetNames is a deviation from the the standard
+                        // The official spec says if we find the property in one matching pset but not another 
+                        // it's a fail.  PSetName is required.
+                        // See fail-all_matching_property_sets_must_satisfy_requirements_2_3.ids
+                        // So this means that a user cannot verify 
+                        // a Property without identifying a unique Pset name. But many examples exist where
+                        // requirement is that an element has, say, a SerialNo - but we don't specify where.
+                        // so IsWildCard is a fudge enabling the user's intenton of "I don't know/care"
+                        if (facet.PropertySetName.IsNullOrEmpty() || facet.PropertySetName.IsWildcard())
                         {
                             continue;
                             // we found a propertyset but it has no matching property. Another pset may though
