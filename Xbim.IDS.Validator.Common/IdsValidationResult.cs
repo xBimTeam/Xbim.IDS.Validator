@@ -21,7 +21,7 @@ namespace Xbim.IDS.Validator.Core
         {
        
             ValidationStatus = ValidationStatus.Inconclusive;
-            Entity = entity;
+            Entity = entity?.EntityLabel;
             Requirement = requirement;
         }
 
@@ -29,10 +29,11 @@ namespace Xbim.IDS.Validator.Core
         /// The validation status of an individual entity for a requirement
         /// </summary>
         public ValidationStatus ValidationStatus { get; set; }
+        
         /// <summary>
-        /// A model <see cref="IPersistEntity"/> being tested against defined requirements
+        /// The Id of the model entity being tested against defined requirements
         /// </summary>
-        public IPersistEntity? Entity { get; internal set; }
+        public int? Entity { get; internal set; }
 
         /// <summary>
         /// The set of messages raised by the validation process against this entity
