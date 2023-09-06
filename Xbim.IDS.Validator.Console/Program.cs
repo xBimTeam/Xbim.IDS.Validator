@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
 using Xbim.Common;
+using Xbim.IDS.Validator.Common;
 using Xbim.IDS.Validator.Console;
 using Xbim.IDS.Validator.Core;
 using Xbim.IDS.Validator.Core.Interfaces;
@@ -86,9 +87,6 @@ class Program
             Console.Error.WriteLine($"Validation failed to run: {results.Message}");
             return;
         }
-        Console.WriteLine($"Model Validated in {sw.ElapsedMilliseconds}ms");
-        
-
     }
 
     private static void OutputRequirement(ValidationRequirement req)
