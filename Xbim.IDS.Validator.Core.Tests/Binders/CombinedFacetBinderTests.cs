@@ -221,10 +221,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             PartOfFacet partOfFacet = new PartOfFacet
             {
-                EntityType = new ValueConstraint(NetTypeName.String)
+                EntityType = new IfcTypeFacet() { IfcType = entityType }
             };
             partOfFacet.SetRelation(partOfRelation);
-            partOfFacet.EntityType.AddAccepted(new ExactConstraint(entityType));
+            
             
             var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
 

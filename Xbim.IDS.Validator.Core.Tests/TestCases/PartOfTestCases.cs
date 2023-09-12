@@ -25,29 +25,28 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/partof/pass-the_container_entity_must_match_exactly_2_2.ids")]
         [InlineData(@"TestCases/partof/pass-the_container_may_be_indirect.ids")]
         [InlineData(@"TestCases/partof/pass-the_nest_entity_must_match_exactly_2_2.ids")]
+        [InlineData(@"TestCases/partof/pass-a_group_predefined_type_must_match_exactly_2_2.ids")]
+        [InlineData(@"TestCases/partof/pass-the_container_predefined_type_must_match_exactly_2_2.ids")]
+        [InlineData(@"TestCases/partof/pass-the_nest_predefined_type_must_match_exactly_2_2.ids")]
         [Theory]
         public async Task EntityTestPass(string idsFile, params XbimSchemaVersion[] schemas)
         {
-            //foreach (var schema in GetSchemas(schemas))
+            foreach (var schema in GetSchemas(schemas))
             {
-                var schema = XbimSchemaVersion.Ifc4;
+                
                 var outcome = await VerifyIdsFile(idsFile, schemaVersion: XbimSchemaVersion.Ifc4);
 
                 outcome.Status.Should().Be(ValidationStatus.Pass, schema.ToString());
             }
         }
 
-        // Not supported in XIDS
-        [InlineData(@"TestCases/partof/pass-a_group_predefined_type_must_match_exactly_2_2.ids")]
+
         [InlineData(@"TestCases/partof/pass-an_aggregate_may_specify_the_predefined_type_of_the_whole_1_2.ids")]
-        [InlineData(@"TestCases/partof/pass-the_container_predefined_type_must_match_exactly_2_2.ids")]
-        [InlineData(@"TestCases/partof/pass-the_nest_predefined_type_must_match_exactly_2_2.ids")]
-        [Theory(Skip ="Needs XIDS 0.9")]
+        [Theory(Skip = "Not Implemented")]
         public async Task EntityTestPass_Predefined(string idsFile, params XbimSchemaVersion[] schemas)
         {
-            //foreach (var schema in GetSchemas(schemas))
+            foreach (var schema in GetSchemas(schemas))
             {
-                var schema = XbimSchemaVersion.Ifc4;
                 var outcome = await VerifyIdsFile(idsFile, schemaVersion: XbimSchemaVersion.Ifc4);
 
                 outcome.Status.Should().Be(ValidationStatus.Pass, schema.ToString());
@@ -63,35 +62,34 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/partof/fail-a_prohibited_facet_returns_the_opposite_of_a_required_facet.ids")]
         [InlineData(@"TestCases/partof/fail-an_aggregate_may_specify_the_entity_of_the_whole_2_2.ids")]
         [InlineData(@"TestCases/partof/fail-any_contained_element_passes_a_containment_relationship_1_2.ids")]
-        [InlineData(@"TestCases/partof/fail-any_nested_whole_fails_a_nest_relationship.ids")]
         [InlineData(@"TestCases/partof/fail-the_aggregated_whole_fails_an_aggregate_relationship.ids")]
         [InlineData(@"TestCases/partof/fail-the_container_entity_must_match_exactly_1_2.ids")]
         [InlineData(@"TestCases/partof/fail-the_container_itself_always_fails.ids")]
-        [InlineData(@"TestCases/partof/fail-the_nest_entity_must_match_exactly_1_2.ids")]
+        [InlineData(@"TestCases/partof/fail-a_group_predefined_type_must_match_exactly_2_2.ids")]
+        [InlineData(@"TestCases/partof/fail-the_container_predefined_type_must_match_exactly_1_2.ids")]
+        [InlineData(@"TestCases/partof/fail-any_nested_whole_fails_a_nest_relationship.ids", XbimSchemaVersion.Ifc4)] // Tests use IFC4 types
+        [InlineData(@"TestCases/partof/fail-the_nest_entity_must_match_exactly_1_2.ids", XbimSchemaVersion.Ifc4)]
+        [InlineData(@"TestCases/partof/fail-the_nest_predefined_type_must_match_exactly_1_2.ids", XbimSchemaVersion.Ifc4)]
 
         [Theory]
         public async Task EntityTestFailures(string idsFile, params XbimSchemaVersion[] schemas)
         {
-            //foreach (var schema in GetSchemas(schemas))
+            foreach (var schema in GetSchemas(schemas))
             {
-                var schema = XbimSchemaVersion.Ifc4;
                 var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
                 outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());
             }
         }
 
-        [InlineData(@"TestCases/partof/fail-a_group_predefined_type_must_match_exactly_2_2.ids")]
-        [InlineData(@"TestCases/partof/fail-the_nest_predefined_type_must_match_exactly_1_2.ids")]
-        [InlineData(@"TestCases/partof/fail-an_aggregate_may_specify_the_predefined_type_of_the_whole_2_2.ids")]
-        [InlineData(@"TestCases/partof/fail-the_container_predefined_type_must_match_exactly_1_2.ids")]
 
-        [Theory(Skip ="Needs Partof PredefinedType Support in v0.9")]
+
+        [InlineData(@"TestCases/partof/fail-an_aggregate_may_specify_the_predefined_type_of_the_whole_2_2.ids")]
+        [Theory(Skip ="Not Implemented")]
         public async Task EntityTestFailures_PreDefined(string idsFile, params XbimSchemaVersion[] schemas)
         {
-            //foreach (var schema in GetSchemas(schemas))
+            foreach (var schema in GetSchemas(schemas))
             {
-                var schema = XbimSchemaVersion.Ifc4;
                 var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
                 outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());

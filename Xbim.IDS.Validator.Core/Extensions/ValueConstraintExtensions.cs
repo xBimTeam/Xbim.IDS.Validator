@@ -21,7 +21,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
                 return true;
             if (constraint.IsEmpty())
                 return true;
-            return constraint.IsSingleExact(out object? val) && val is string s && string.IsNullOrEmpty(s);
+            return constraint.IsSingleExact(out object? val) && val is string s && string.IsNullOrWhiteSpace(s);
         }
 
         /// <summary>

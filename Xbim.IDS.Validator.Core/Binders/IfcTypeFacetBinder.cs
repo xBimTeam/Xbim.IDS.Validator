@@ -208,22 +208,17 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         private string? GetPredefinedType(IPersistEntity entity)
         {
+            string? value = null;
             var expressType = Model.Metadata.ExpressType(entity.GetType());
             var propertyMeta = expressType.Properties.FirstOrDefault(p => p.Value.Name == "PredefinedType").Value;
-            if (propertyMeta == null)
+
+            if (propertyMeta != null)
             {
-                return string.Empty;
+                var ifcAttributePropInfo = propertyMeta.PropertyInfo;
+                value = ifcAttributePropInfo.GetValue(entity)?.ToString();
             }
-            var ifcAttributePropInfo = propertyMeta.PropertyInfo;
-            var value = ifcAttributePropInfo.GetValue(entity)?.ToString();
-            if (value == null && entity is IIfcObject entObj)
-            {
-                if (entObj.IsTypedBy?.Any() == true)
-                {
-                    return GetPredefinedType(entObj.IsTypedBy.First().RelatingType);
-                }
-            }
-            if (value == "USERDEFINED")
+            
+            if (value == "USERDEFINED" || value == null)
             {
                 if (entity is IIfcObject obj)
                     value = obj.ObjectType?.Value.ToString();
@@ -231,6 +226,14 @@ namespace Xbim.IDS.Validator.Core.Binders
                     value = type.ElementType?.Value.ToString();
                 else if (entity is IIfcTypeProcess process)
                     value = process.ProcessType?.Value.ToString();
+            }
+            if (value == null && entity is IIfcObject entObj)
+            {
+                // Check the Type's PredefinedType if it has one
+                if (entObj.IsTypedBy?.Any() == true)
+                {
+                    return GetPredefinedType(entObj.IsTypedBy.First().RelatingType);
+                }
             }
 
             return value;

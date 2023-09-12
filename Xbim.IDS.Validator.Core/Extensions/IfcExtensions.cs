@@ -149,29 +149,36 @@ namespace Xbim.IDS.Validator.Core.Extensions
             }
 
             var innerType = TypeHelper.GetImplementedIEnumerableType(rel.GetType());
-
+            
+            // Note: PredefinedType verification only supports IfcObject.ObjectType
+            // TODO: Support for IfcElementType.ElementType and IfcTypeProcess.ProcesType. Support for intrinsic Predefined Enum. Type Inheritance of PDT
             if (typeof(IIfcRelAggregates).IsAssignableFrom(innerType))
             {
                 var items = rel.Cast<IIfcRelAggregates>();
-                return items.Where(r => facet.EntityType?.IsSatisfiedBy(r.RelatingObject.GetType().Name, true) == true)
+                return items.Where(r => facet.EntityType?.IfcType?.IsSatisfiedBy(r.RelatingObject.GetType().Name, true) == true)
+                    .Where(r => facet.EntityType?.PredefinedType == null || r.RelatingObject is IIfcObject p && facet.EntityType?.PredefinedType?.IsSatisfiedBy(p.ObjectType, true) == true)
                     .SelectMany(r => r.RelatedObjects).OfType<IIfcObjectDefinition>();
             }
             else if (typeof(IIfcRelNests).IsAssignableFrom(innerType))
             {
                 var items = rel.Cast<IIfcRelNests>();
-                return items.Where(r => facet.EntityType?.IsSatisfiedBy(r.RelatingObject.GetType().Name, true) == true)
-                   .SelectMany(r => r.RelatedObjects).OfType<IIfcObjectDefinition>();
+                return items.Where(r => facet.EntityType?.IfcType?.IsSatisfiedBy(r.RelatingObject.GetType().Name, true) == true)
+                    .Where(r => facet.EntityType?.PredefinedType == null || r.RelatingObject is IIfcObject p && facet.EntityType?.PredefinedType?.IsSatisfiedBy(p.ObjectType, true) == true)
+                    .SelectMany(r => r.RelatedObjects).OfType<IIfcObjectDefinition>();
             }
             else if (typeof(IIfcRelAssignsToGroup).IsAssignableFrom(innerType))
             {
+                
                 var items = rel.Cast<IIfcRelAssignsToGroup>();
-                return items.Where(r => facet.EntityType?.IsSatisfiedBy(r.RelatingGroup.GetType().Name, true) == true)
-                   .SelectMany(r => r.RelatedObjects).OfType<IIfcObjectDefinition>();
+                return items.Where(r => facet.EntityType?.IfcType?.IsSatisfiedBy(r.RelatingGroup.GetType().Name, true) == true)
+                    .Where(r => facet.EntityType?.PredefinedType == null || r.RelatingGroup is IIfcObject p && facet.EntityType?.PredefinedType?.IsSatisfiedBy(p.ObjectType, true) == true)
+                    .SelectMany(r => r.RelatedObjects).OfType<IIfcObjectDefinition>();
             }
             else if (typeof(IIfcRelContainedInSpatialStructure).IsAssignableFrom(innerType))
             {
                 var items = rel.Cast<IIfcRelContainedInSpatialStructure>();
-                return items.Where(r => facet.EntityType?.IsSatisfiedBy(r.RelatingStructure.GetType().Name, true) == true)
+                return items.Where(r => facet.EntityType?.IfcType?.IsSatisfiedBy(r.RelatingStructure.GetType().Name, true) == true)
+                    .Where(r => facet.EntityType?.PredefinedType == null || r.RelatingStructure is IIfcObject p && facet.EntityType?.PredefinedType?.IsSatisfiedBy(p.ObjectType, true) == true)
                     .SelectMany(r => r.RelatedElements).OfType<IIfcProduct>();
             }
             else
@@ -184,7 +191,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
         {
             // Where classification matches directly, or an object's Type matches classification
 
-            var filtered = ent.Where(e => facet.EntityType?.IsSatisfiedBy(e.GetType().Name, true) == true);
+            var filtered = ent.Where(e => facet.EntityType?.IfcType?.IsSatisfiedBy(e.GetType().Name, true) == true);
             return (facet.GetRelation()) switch
             {
                 PartOfRelation.IfcRelAggregates => filtered.Where(e => e.IsDecomposedBy.OfType<IIfcRelAggregates>().Any()),
@@ -237,7 +244,10 @@ namespace Xbim.IDS.Validator.Core.Extensions
             {
                 throw new ArgumentNullException(nameof(obj));
             }
-            return (facet.EntityType?.IsSatisfiedBy(obj.GetType().Name, true) == true);
+            // TODO: Limited support for Predefined Type only. Omits complex scenarios, Type Inheritance, Enums etc
+            return (facet.EntityType?.IfcType?.IsSatisfiedBy(obj.GetType().Name, true) == true) &&
+                (facet.EntityType?.PredefinedType == null || obj is IIfcObject p && facet.EntityType?.PredefinedType?.IsSatisfiedBy(p.ObjectType, true) == true)
+                ;
         }
 
         private static IEnumerable<IIfcObjectDefinition> UnionAncestry(this IEnumerable<IIfcObjectDefinition> objs, PartOfRelation relation)
