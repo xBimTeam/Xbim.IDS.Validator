@@ -1,14 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Xbim.Common.Step21;
 using Xbim.IDS.Validator.Core.Binders;
-using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 using Xunit.Abstractions;
 using static Xbim.InformationSpecifications.PartOfFacet;
@@ -46,19 +39,22 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         public void Can_Query_By_PartOf(PartOfRelation relation, string entityType, int expectedCount, 
             ConstraintType sysConType = ConstraintType.Exact)
         {
-
+            var typeFacet = new IfcTypeFacet
+            {
+                IfcType = new ValueConstraint(NetTypeName.String)
+            };
             PartOfFacet facet = new PartOfFacet
             {
-                EntityType = new ValueConstraint(NetTypeName.String)
+               EntityType = typeFacet
             };
             facet.SetRelation(relation);
             switch (sysConType)
             {
                 case ConstraintType.Exact:
-                    if (!string.IsNullOrEmpty(entityType)) facet.EntityType.AddAccepted(new ExactConstraint(entityType)); break;
+                    if (!string.IsNullOrEmpty(entityType)) typeFacet.IfcType.AddAccepted(new ExactConstraint(entityType)); break;
 
                 case ConstraintType.Pattern:
-                    facet.EntityType.AddAccepted(new PatternConstraint(entityType)); break;
+                    typeFacet.IfcType.AddAccepted(new PatternConstraint(entityType)); break;
             }
            
 
@@ -84,11 +80,15 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         {
 
             var entity = Model.Instances[entityLabel];
+            var typeFacet = new IfcTypeFacet
+            {
+                IfcType = new ValueConstraint()
+            };
             var propFacet = new PartOfFacet
             {
-                EntityType = new ValueConstraint(NetTypeName.String)
+                EntityType = typeFacet
             };
-            propFacet.EntityType.AddAccepted(new PatternConstraint(entityType));
+            typeFacet.IfcType.AddAccepted(new PatternConstraint(entityType));
             propFacet.SetRelation(relation);
             FacetGroup group = BuildGroup(propFacet);
             var result = new IdsValidationResult(entity, group);

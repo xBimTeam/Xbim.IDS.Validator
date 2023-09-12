@@ -115,9 +115,16 @@ namespace Xbim.IDS.Validator.Core.Binders
             {
                 throw new ArgumentNullException(nameof(facet));
             }
-            if(facet.EntityType != null)
+            if (facet.EntityType != null)
             {
-                facet.EntityType.BaseType = NetTypeName.String;
+                if(facet.EntityType.IfcType != null)
+                {
+                    facet.EntityType.IfcType.BaseType = NetTypeName.String;
+                }
+                if (facet.EntityType.PredefinedType != null)
+                {
+                    facet.EntityType.PredefinedType.BaseType = NetTypeName.String;
+                }
             }
             var ctx = CreateValidationContext(requirement, facet);
 
