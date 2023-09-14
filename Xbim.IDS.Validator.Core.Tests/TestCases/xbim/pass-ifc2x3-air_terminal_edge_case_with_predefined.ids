@@ -1,0 +1,29 @@
+﻿<ids xmlns="http://standards.buildingsmart.org/IDS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://standards.buildingsmart.org/IDS/ids_05.xsd">
+    <info>
+        <title>IFC2x3 doesn't have AirTerminal instance, but does have AirTerminalType which can be used to infer instance</title>
+    </info>
+    <specifications>
+        <specification name="IFC2x3 doesn't have AirTerminal instance, but does have AirTerminalType which can be used to infer instance" ifcVersion="IFC2X3" minOccurs="1" maxOccurs="unbounded">
+            <applicability>
+                <entity>
+                    <name>
+                        <simpleValue>IFCAIRTERMINAL</simpleValue>
+                    </name>
+                    <predefinedType>
+                        <simpleValue>GRILLE</simpleValue>
+                    </predefinedType>
+                </entity>
+            </applicability>
+            <requirements>
+                <entity>
+                    <name>
+                        <simpleValue>IFCFLOWTERMINAL</simpleValue>
+                    </name>
+                    <predefinedType>
+                        <simpleValue>GRILLE</simpleValue>
+                    </predefinedType>
+                </entity>
+            </requirements>
+        </specification>
+    </specifications>
+</ids>

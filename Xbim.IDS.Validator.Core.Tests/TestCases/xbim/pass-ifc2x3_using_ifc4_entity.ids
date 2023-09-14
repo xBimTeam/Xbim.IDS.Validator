@@ -1,0 +1,23 @@
+<ids xmlns="http://standards.buildingsmart.org/IDS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://standards.buildingsmart.org/IDS/ids_05.xsd">
+    <info>
+        <title>Testing Ifc2x3 models with Ifc4 schema is handled</title>
+    </info>
+    <specifications>
+        <specification name="Testing Ifc2x3 models with Ifc4 schema is handled" ifcVersion="IFC2X3" minOccurs="1" maxOccurs="unbounded">
+            <applicability>
+                <entity>
+                    <name>
+                        <simpleValue>IFCDOORTYPE</simpleValue>
+                    </name>
+                </entity>
+            </applicability>
+          <requirements>
+            <entity>
+              <name>
+                <simpleValue>IFCDOORSTYLE</simpleValue>
+              </name>
+            </entity>
+          </requirements>
+        </specification>
+    </specifications>
+</ids>

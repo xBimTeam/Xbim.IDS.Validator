@@ -1,0 +1,12 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION (('ViewDefinition [CoordinationView]'), '2;1');
+FILE_NAME ('pass-ifc2x3-air_terminal_edge_case.ifc', '2023-05-03T18:17:26', ('Andy Ward'), ('xbim Ltd'), 'xbim Toolkit', 'xbim IDS Unit tests', 'n/a');
+FILE_SCHEMA (('IFC2X3'));
+ENDSEC;
+DATA;
+#1=IFCAIRTERMINALTYPE($,$,'AirTerminalType',$,$,$,$,$,$,.GRILLE.);
+#2=IFCFLOWTERMINAL($,$,'AirTerminal',$,$,$,$,$);
+#3=IFCRELDEFINESBYTYPE($,$,$,$,(#2),#1);
+ENDSEC;
+END-ISO-10303-21;
