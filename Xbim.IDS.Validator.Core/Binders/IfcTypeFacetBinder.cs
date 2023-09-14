@@ -3,9 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Xml.Linq;
+using System.Reflection;
 using Xbim.Common;
 using Xbim.Common.Metadata;
+using Xbim.IDS.Validator.Core.Extensions;
+using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 
@@ -46,29 +48,36 @@ namespace Xbim.IDS.Validator.Core.Binders
             {
                 throw new InvalidOperationException("IfcTypeFacet is not valid");
             }
-            // So we can do case insensitive comparisons
-            ifcFacet.IfcType.BaseType = NetTypeName.String;
-
-            var expressTypes = GetExpressTypes(ifcFacet);
-            if(!ExpressTypesAreValid(expressTypes))
-            {
-                var types = ifcFacet.IfcType.ToString();
-                logger.LogWarning("Unexpected IFC Type: {ifcTypes} for schema {ifcSchema}", types, Model.SchemaVersion);
-                throw new InvalidOperationException($"Invalid IFC Type '{types}' for {Model.SchemaVersion}" );
-            }
-
             var expression = baseExpression;
             if (expression.Type.IsInterface && !typeof(IEntityCollection).IsAssignableFrom(expression.Type))
             {
                 throw new NotSupportedException("Expected an unfiltered set of Instances");
             }
+
+            // So we can do case insensitive comparisons
+            ifcFacet.IfcType.BaseType = NetTypeName.String;
+
+            var selectionCriteria = BuildSelectionCriteria(ifcFacet);
+            if(!ExpressTypesAreValid(selectionCriteria.Select(e => e.ElementExpressType)))
+            {
+                var types = ifcFacet.IfcType.ToString();
+                logger.LogWarning("Unexpected IFC Type: {ifcTypes} for schema {ifcSchema}", types, Model.SchemaVersion);
+                
+                throw new InvalidOperationException($"Invalid IFC Type '{types}' for {Model.SchemaVersion}" );
+            }
+
+           
             bool doConcat = false;
-            foreach (var expressType in expressTypes)
+            foreach (var selection in selectionCriteria)
             {
                 var rightExpr = baseExpression;
-                rightExpr = BindIfcExpressType(rightExpr, expressType, ifcFacet.IncludeSubtypes);
+                rightExpr = BindIfcExpressType(rightExpr, selection.ElementExpressType, ifcFacet.IncludeSubtypes);
+                if(selection.DefiningExpressType != null)
+                {
+                    rightExpr = BindDefiningType(rightExpr, selection);
+                }
                 if (ifcFacet.PredefinedType != null)
-                    rightExpr = BindPredefinedTypeFilter(ifcFacet, rightExpr, expressType);
+                    rightExpr = BindPredefinedTypeFilter(ifcFacet, rightExpr, selection);
 
 
                 // Union to main expression.
@@ -152,8 +161,13 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
         }
 
-
-        private IEnumerable<ExpressType> GetExpressTypes(IfcTypeFacet ifcFacet)
+        /// <summary>
+        /// Given an <see cref="IfcTypeFacet"/> determines the xbim Express types to select matching the constraints. 
+        /// </summary>
+        /// <remarks>Also handles edge-case mapping between schemas where types may be new or deprecated</remarks>
+        /// <param name="ifcFacet"></param>
+        /// <returns></returns>
+        private IEnumerable<EntitySelectionCriteria> BuildSelectionCriteria(IfcTypeFacet ifcFacet)
         {
             if (ifcFacet?.IfcType?.AcceptedValues?.Any() == false)
             {
@@ -163,46 +177,121 @@ namespace Xbim.IDS.Validator.Core.Binders
             if(ifcFacet?.IfcType?.IsSingleExact(out string? ifcTypeName) == true)
             {
                 // Optimise for the typical scenario
-                yield return Model.Metadata.ExpressType(ifcTypeName.ToUpperInvariant());
+                var metaData = Model.Metadata.ExpressType(ifcTypeName.ToUpperInvariant());
+                if(metaData != null) 
+                {
+                    // Found in Schema
+                    yield return new EntitySelectionCriteria(metaData);
+                }
+                else
+                {
+                    
+                    // Check for direct subtitutes E.g. IfcDoorStyle => IfcDoorType
+                    var equivalent = SchemaTypeMap.GetSchemaEquivalent(Model, ifcTypeName.ToUpperInvariant());
+                    if (equivalent != null)
+                    {
+                        metaData = Model.Metadata.ExpressType(equivalent.Name.ToUpperInvariant());
+                        yield return new EntitySelectionCriteria(metaData);
+
+                    }
+
+                    // Attempt subtitution by inference. E.g. 2x3 IfcAirTerminal = FlowTerminals where defined AirTerminalType
+                    // E.g. Handle https://github.com/buildingSMART/IDS/issues/116
+                    var inferred = SchemaTypeMap.InferSchemaForEntity(Model, ifcTypeName.ToUpperInvariant());
+                    if (inferred != null)
+                    {
+                        var element = Model.Metadata.ExpressType(inferred.ElementType.Name.ToUpperInvariant());
+                        var type = Model.Metadata.ExpressType(inferred.DefiningType.Name.ToUpperInvariant());
+                        yield return new EntitySelectionCriteria(element, type);
+                    }
+                }
+               
             }
             else
             {
                 if (Model?.Metadata?.Types() == null) yield break;
                 // It's an enum, Regex, Range or Structure
+                // We don't support inference for these more complex scenarios
                 var types = Model?.Metadata?.Types() ?? Enumerable.Empty<ExpressType>();
                 foreach (var type in types)
                 {
                     if (ifcFacet?.IfcType?.IsSatisfiedBy(type.Name, true) == true)
                     {
-                        yield return type!;
+                        yield return new EntitySelectionCriteria(type!);
                     }
                 }
             }
         }
 
-        private Expression BindPredefinedTypeFilter(IfcTypeFacet ifcFacet, Expression expression, ExpressType expressType)
+        // cloned from Attributes Binder as we need to special case - e.g. for Types
+        private Expression BindPredefinedTypeFilter(IfcTypeFacet ifcFacet, Expression expression, EntitySelectionCriteria selection)
         {
             if (ifcFacet?.PredefinedType?.AcceptedValues?.Any() == false ||
                 ifcFacet?.PredefinedType?.AcceptedValues?.FirstOrDefault()?.IsValid(ifcFacet.PredefinedType) == false) return expression;
 
-            var propertyMeta = expressType.Properties.FirstOrDefault(p => p.Value.Name == "PredefinedType").Value;
-            if (propertyMeta == null)
-            {
-                return expression;
-            }
-            var ifcAttributePropInfo = propertyMeta.PropertyInfo;
-            var ifcAttributeValues = GetPredefinedTypes(ifcFacet);
 
-            return AttributeFacetBinder.BindAttributeSelection(expression, ifcAttributePropInfo, ifcFacet!.PredefinedType); ;
+            // Intent: match on PredefinedType or ObjectType on the instance (where present).
+            // Otherwise we need check the equivalent fields on the Type - which is non-trivial as we don't know the .NET runtime type
+            // We have a rare edge case we do know the Type, when we're infering instance from the Type. E.g. Ifc2x3 AirTerminal use case
+            var objectTypeMetadata = GetMatchingProperty(selection.ElementExpressType, nameof(IIfcObject.ObjectType));
+            var pdtMetadata = GetMatchingProperty(selection.ElementExpressType, "PredefinedType");
+            //var typeObjectTypeMetadata = GetMatchingProperty(selection.DefiningExpressType, nameof(IIfcElementType.ElementType));
+            //var typePdtMetadata = GetMatchingProperty(selection.DefiningExpressType, "PredefinedType");
+            var instanceAttributes = new List<PropertyInfo>();
+            //var typeAttributes = new List<PropertyInfo>();
+            if (pdtMetadata != null) instanceAttributes.Add(pdtMetadata.PropertyInfo);
+            if (objectTypeMetadata != null) instanceAttributes.Add(objectTypeMetadata.PropertyInfo);
+            //if (typePdtMetadata != null) typeAttributes.Add(typePdtMetadata.PropertyInfo);
+            //if (typeObjectTypeMetadata != null) typeAttributes.Add(typeObjectTypeMetadata.PropertyInfo);
+
+            if (!instanceAttributes.Any() /*&& !typeAttributes.Any()*/)
+            {
+                var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
+                return BindNotFound(expression, collectionType);
+            }
+
+
+            return BindPredefinedAttributeSelection(expression, ifcFacet!.PredefinedType, instanceAttributes);
+            // TODO: fallback to any defined Type's PDT and ElementType
 
         }
 
-
-
-
-        private static IEnumerable<IValueConstraintComponent> GetPredefinedTypes(IfcTypeFacet ifcFacet)
+        internal static Expression BindPredefinedAttributeSelection(Expression expression,
+            ValueConstraint constraint, List<PropertyInfo> ifcAttributePropInfos)
         {
-            return ifcFacet?.PredefinedType?.AcceptedValues ?? Enumerable.Empty<IValueConstraintComponent>();
+            if (constraint.AcceptedValues.Any() == false)
+            {
+                return expression;
+            }
+
+            // Get underlying collection type
+            var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
+
+            
+            var x= Enumerable.Empty<Ifc4x3.SharedBldgElements.IfcWall>();
+            x.Where(e => e.IsTypedBy is IIfcElementType et && ValueConstraintExtensions.SatisifesConstraint(constraint, et.ElementType));
+
+
+            // Build IEnumerable<TEntity>().Where(t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName]))
+            // TODO: ||
+            //          ValueConstraintExtensions.SatisfiesConstraint(constraint, t.IsTypedBy?[AttributeName]))
+
+            // build IEnumerable.Where<TEntity>(...)
+            var whereMethod = ExpressionHelperMethods.EnumerableWhereGeneric.MakeGenericMethod(collectionType);
+
+            // build lambda param 'ent => ...'
+            ParameterExpression ifcTypeParam = Expression.Parameter(collectionType, "ent");
+
+            var constraintExpr = Expression.Constant(constraint, typeof(ValueConstraint));
+
+            // build t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName])
+            Expression querybody = AttributeFacetBinder.BuildAttributeQuery(ifcAttributePropInfos.ToArray(), ifcTypeParam, constraintExpr);
+
+            // Build Lambda expression for filter predicate (Func<T,bool>)
+            var filterExpression = Expression.Lambda(querybody, ifcTypeParam);
+            
+            // Bind Lambda to Where method
+            return Expression.Call(null, whereMethod, new[] { expression, filterExpression });
         }
 
 
@@ -241,4 +330,29 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         
     }
+
+    /// <summary>
+    /// Class representing the selection criteria to find applicable IFC Entity types
+    /// </summary>
+    public class EntitySelectionCriteria
+    {
+        public EntitySelectionCriteria(ExpressType elementType, ExpressType? definingType = null)
+        {
+            DefiningExpressType = definingType;
+            ElementExpressType = elementType;
+        }
+        /// <summary>
+        /// The IFC entity type to seek
+        /// </summary>
+        public ExpressType ElementExpressType { get; private set; }
+
+        /// <summary>
+        /// The optional IfcTypeObject the <see cref="ElementExpressType"/> should be DefinedBy
+        /// </summary>
+        /// <remarks>Typically used to handle IFC2x3 concepts of generic FlowTerminals defined by e.g. IfcAirTerminalType in the absence of the IfcAirTerminal product</remarks>
+        public ExpressType? DefiningExpressType { get; private set; }
+
+    }
+
+
 }

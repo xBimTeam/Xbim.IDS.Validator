@@ -218,12 +218,19 @@ namespace Xbim.IDS.Validator.Core.Binders
             {
                 throw new NotSupportedException("Cannot filter on collection properties");
             }
-            return BindAttributeSelection(expression, propertyMeta.PropertyInfo, constraint);
+            return BindAttributeSelection(expression, constraint, propertyMeta.PropertyInfo);
         }
 
 
-        internal static Expression BindAttributeSelection(Expression expression,
-            PropertyInfo ifcAttributePropInfo, ValueConstraint constraint)
+        /// <summary>
+        /// Binds a Expression check an entity attributes satisifiy a constraint
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <param name="ifcAttributePropInfos"></param>
+        /// <param name="constraint"></param>
+        /// <returns></returns>
+        private static Expression BindAttributeSelection(Expression expression,
+            ValueConstraint constraint, params PropertyInfo[] ifcAttributePropInfos)
         {
             // Get underlying collection type
             var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
@@ -238,7 +245,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 return expression;
             }
 
-            // Build IEnumerable<TEntity>().Where(t => Helpers.SatisfiesConstraint(constraint, t.[AttributeName], type))
+            // Build IEnumerable<TEntity>().Where(t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName]))
 
             // build IEnumerable.Where<TEntity>(...)
             var whereMethod = ExpressionHelperMethods.EnumerableWhereGeneric.MakeGenericMethod(collectionType);
@@ -246,18 +253,10 @@ namespace Xbim.IDS.Validator.Core.Binders
             // build lambda param 'ent => ...'
             ParameterExpression ifcTypeParam = Expression.Parameter(collectionType, "ent");
 
-            // build 'ent.AttributeName'
-            Expression nameProperty = Expression.Property(ifcTypeParam, ifcAttributePropInfo);
             var constraintExpr = Expression.Constant(constraint, typeof(ValueConstraint));
 
-            // build params, & unwrap Type
-            //var propType = ifcAttributePropInfo.PropertyType;
-
-
-            var valueExpr = Expression.Convert(nameProperty, typeof(object));
-
-
-            Expression querybody = Expression.Call(null, ExpressionHelperMethods.IdsSatisifiesConstraintMethod, constraintExpr, valueExpr);
+            // build t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName])
+            Expression querybody = BuildAttributeQuery(ifcAttributePropInfos, ifcTypeParam, constraintExpr);
 
             // Build Lambda expression for filter predicate (Func<T,bool>)
             var filterExpression = Expression.Lambda(querybody, ifcTypeParam);
@@ -266,7 +265,24 @@ namespace Xbim.IDS.Validator.Core.Binders
             return Expression.Call(null, whereMethod, new[] { expression, filterExpression });
         }
 
+        internal static Expression BuildAttributeQuery(PropertyInfo[] ifcAttributePropInfo, ParameterExpression ifcTypeParam, ConstantExpression constraintExpr)
+        {
+            Expression body = Expression.Constant(false);
+            foreach(var ifcAttribute in ifcAttributePropInfo)
+            {
+                Expression nameProperty = Expression.Property(ifcTypeParam, ifcAttribute);
 
+                // build params, & unwrap Type
 
+                var valueExpr = Expression.Convert(nameProperty, typeof(object));
+
+                // build: t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName])
+                Expression querybody = Expression.Call(null, ExpressionHelperMethods.IdsSatisifiesConstraintMethod, constraintExpr, valueExpr);
+                // Join into Or statement for multiple attributes - includes parenthesis
+                body = Expression.OrElse(body, querybody);
+            }
+            
+            return body;
+        }
     }
 }

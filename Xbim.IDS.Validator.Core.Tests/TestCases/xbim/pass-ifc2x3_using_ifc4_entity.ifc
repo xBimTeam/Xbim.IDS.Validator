@@ -1,0 +1,10 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION (('ViewDefinition [CoordinationView]'), '2;1');
+FILE_NAME ('pass-ifc2x3_using_ifc4_entity.ifc', '2023-05-03T16:39:22', ('Andy Ward'), ('xbim Ltd'), 'xbim Toolkit', 'xbim IDS Unit tests', 'n/a');
+FILE_SCHEMA (('IFC2X3'));
+ENDSEC;
+DATA;
+#1=IFCDOORSTYLE($,$,'Test',$,$,$,$,$,.SINGLE_SWING_LEFT.,.NOTDEFINED.,.F.,.F.);
+ENDSEC;
+END-ISO-10303-21;

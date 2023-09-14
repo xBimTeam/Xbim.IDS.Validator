@@ -43,5 +43,27 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
             outcome.Status.Should().Be(ValidationStatus.Pass);
         }
+
+
+        [InlineData(@"TestCases/xbim/pass-ifc2x3_using_ifc4_entity.ids", ValidationStatus.Pass)]
+        [InlineData(@"TestCases/xbim/pass-ifc2x3-air_terminal_edge_case.ids", ValidationStatus.Pass)]
+        [Theory]
+        public async Task CrossSchemaHandlingSupported(string idsFile, ValidationStatus expected)
+        {
+            var outcome = await VerifyIdsFile(idsFile);
+
+            outcome.Status.Should().Be(expected);
+        }
+
+        [Theory(Skip ="Needs thought on querying Type's Predefined values via expressions")]
+        [InlineData(@"TestCases/xbim/pass-ifc2x3-air_terminal_edge_case_with_predefined.ids", ValidationStatus.Pass)]
+        [InlineData(@"TestCases/xbim/fail-ifc2x3-air_terminal_edge_case_with_predefined.ids", ValidationStatus.Fail)]
+        public async Task CrossSchemaHandlingNotImplemented(string idsFile, ValidationStatus expected)
+        {
+            var outcome = await VerifyIdsFile(idsFile);
+
+            outcome.Status.Should().Be(expected);
+        }
+
     }
 }
