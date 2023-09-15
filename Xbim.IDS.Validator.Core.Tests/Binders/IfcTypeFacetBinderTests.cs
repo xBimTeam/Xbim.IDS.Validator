@@ -114,6 +114,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
 
         [InlineData(10993, "IFCDOOR", "DOOR")]
+        //[InlineData(10993, "IFCDOOR", "Door")]
+        //[InlineData(10993, "IfcDoor", "DOOR")]
         [InlineData(10993, "IFCDOOR", null)]
         [InlineData(4705, "IFCWALLSTANDARDCASE", "PARTITIONING")] // Matches exact Type
         [InlineData(4705, "IFCWALL", "PARTITIONING", true)] // Matches Subtype
