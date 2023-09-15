@@ -126,7 +126,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             while(currentEntityType != null)
             {
                 var actualName = currentEntityType?.Name.ToUpperInvariant();
-                if (f?.IfcType?.IsSatisfiedBy(actualName, true, logger) == true)
+                if (f?.IfcType?.IsSatisfiedBy(actualName, false, logger) == true)
                 {
                     result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.IfcType!, actualName, "Correct IFC Type", item));
                     break;

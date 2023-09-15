@@ -26,7 +26,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
         /// <summary>
-        /// Binds an IFC property filter to an expression, where propertoes are IFC Pset and Quantity fields
+        /// Binds an IFC property filter to an expression, where properties are IFC Pset and Quantity fields
         /// </summary>
         /// <remarks>e.g Where(p=> p.RelatingPropertyDefinition... )</remarks>
         /// <param name="baseExpression"></param>
