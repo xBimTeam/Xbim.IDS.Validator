@@ -23,7 +23,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
         private static MethodInfo _enumerableOfXbimTypeMethod = typeof(IReadOnlyEntityCollection).GetMethods().First(m =>
             m.Name == nameof(IReadOnlyEntityCollection.OfType) &&
             m.IsGenericMethod &&
-            m.GetParameters().Length == 0 &&
+            m.GetParameters().Length == 1 &&
             m.ReturnType.GetGenericTypeDefinition() == typeof(IEnumerable<>));
         
         private static MethodInfo _enumerableIfcObjectsWithPropertiesMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcObjectsWithProperties), new Type[] { typeof(IEnumerable<IIfcRelDefinesByProperties>), typeof(IfcPropertyFacet)});

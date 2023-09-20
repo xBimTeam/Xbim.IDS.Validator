@@ -2,13 +2,19 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
+using System.Diagnostics;
 using Xbim.Common;
+using Xbim.Common.Model;
+using Xbim.Flex.IO.Db.FlexDb;
+using Xbim.Flex.IO.Db.Interfaces;
 using Xbim.IDS.Validator.Common;
 using Xbim.IDS.Validator.Console;
 using Xbim.IDS.Validator.Core;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc;
+using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
+using Xbim.IO.Memory;
 
 class Program
 {
@@ -55,12 +61,14 @@ class Program
         modelOption.Arity = ArgumentArity.ExactlyOne;
         modelOption.IsRequired= true;
 
-        var rootCommand = new RootCommand();
-        rootCommand.Add(idsOption);
-        rootCommand.Add(modelOption);
+        var rootCommand = new RootCommand
+        {
+            idsOption,
+            modelOption
+        };
 
 
-     
+
         rootCommand.SetHandler(async (ids, model) =>
         {
             await RunIDSValidation(ids, model);
@@ -75,10 +83,14 @@ class Program
         Console.WriteLine("IFC File: {0}", modelFile);
         Console.WriteLine("Loading Model..."); 
         IModel model = BuildModel(modelFile);
-
+        
+        using var ic = model.BeginInverseCaching();
+        using var ec = model.BeginEntityCaching();
+        
         // Normally we'd inject rather than service discovery
         var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
 
+        var w = Stopwatch.StartNew();
         Console.WriteLine("Validating...");
         var options = new VerificationOptions { IncludeSubtypes = true };
         var results = await idsValidator.ValidateAgainstIdsAsync(model, ids, logger, OutputRequirement, options);
@@ -87,6 +99,8 @@ class Program
             Console.Error.WriteLine($"Validation failed to run: {results.Message}");
             return;
         }
+        w.Stop();
+        Console.WriteLine($"Validation executed in {w.Elapsed.TotalSeconds} seconds.");
     }
 
     private static void OutputRequirement(ValidationRequirement req)
@@ -173,7 +187,22 @@ class Program
     }
     private static IModel BuildModel(string ifcFile)
     {
-        return IfcStore.Open(ifcFile);
+        if (ifcFile.EndsWith(".db", StringComparison.OrdinalIgnoreCase))
+        {
+            // return Flex DB
+            var flexdb = new IfcFlexDb();
+            flexdb.Open(ifcFile);
+            flexdb.BeginTypeCaching();
+
+            flexdb.AddActivationDepth<IIfcRelDefinesByProperties>(2);
+            flexdb.AddActivationDepth<IIfcRelDefinesByType>(2);
+            flexdb.AddActivationDepth<IIfcRelAssociatesClassification>(2);
+            flexdb.AddActivationDepth<IIfcRelAggregates>(2);
+
+            return flexdb;
+        }
+
+        return MemoryModel.OpenRead(ifcFile);
     }
 
 }

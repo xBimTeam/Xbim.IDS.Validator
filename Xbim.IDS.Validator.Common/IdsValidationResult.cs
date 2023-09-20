@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -207,6 +208,9 @@ namespace Xbim.IDS.Validator.Core
     /// <typeparam name="T"></typeparam>
     public class ValidationContext<T> where T: IFacet
     {
+        private static readonly Dictionary<Expression<Func<T, object>>, Func<T, object>> compiledCache = 
+            new Dictionary<Expression<Func<T, object>>, Func<T, object>>(new MemberExpressionComparer());
+
         public ValidationContext(T clause, RequirementCardinalityOptions expectationMode)
         {
             ExpectationMode = expectationMode;
@@ -221,7 +225,8 @@ namespace Xbim.IDS.Validator.Core
             }
 
             // decode the field we're validating from the expression
-            return memberField!.Compile().Invoke(Clause)?.ToString() ?? "<any>";
+            var accessor = GetCompiled(memberField);
+            return accessor?.Invoke(Clause)?.ToString() ?? "<any>";
         }
 
         public string GetMember(Expression<Func<T, object>> memberField)
@@ -237,5 +242,32 @@ namespace Xbim.IDS.Validator.Core
 
         public RequirementCardinalityOptions ExpectationMode { get; set; } = RequirementCardinalityOptions.Expected;   // Default to Required, not Prohibited
         public T Clause { get; set; }
+
+        private Func<T, object> GetCompiled([NotNull]Expression<Func<T, object>> expression)
+        {
+            if (compiledCache.TryGetValue(expression, out var compiled))
+                return compiled;
+
+            compiled = expression.Compile();
+            compiledCache.Add(expression, compiled);
+            return compiled;
+        }
+
+        private class MemberExpressionComparer : IEqualityComparer<Expression<Func<T, object>>>
+        {
+            public bool Equals(Expression<Func<T, object>> x, Expression<Func<T, object>> y)
+            {
+                return
+                    (x!.Body as MemberExpression)?.Member?.Name == (y!.Body as MemberExpression)?.Member?.Name &&
+                    (x!.Body as MemberExpression)?.Member?.DeclaringType == (y!.Body as MemberExpression)?.Member?.DeclaringType;
+            }
+
+            public int GetHashCode(Expression<Func<T, object>> obj)
+            {
+                var hash1 = (obj!.Body as MemberExpression)?.Member?.Name?.GetHashCode() ?? 0;
+                var hash2 = (obj!.Body as MemberExpression)?.Member.DeclaringType?.GetHashCode() ?? 0;
+                return HashCode.Combine(hash1, hash2);
+            }
+        }
     }
 }

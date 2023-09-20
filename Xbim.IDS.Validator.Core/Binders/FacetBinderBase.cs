@@ -105,8 +105,8 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             var ofTypeMethod = ExpressionHelperMethods.EntityCollectionOfGenericType.MakeGenericMethod(expressType.Type);
 
-            // call .OfType<IfcWall>()
-            expression = Expression.Call(expression, ofTypeMethod); 
+            // call .OfType<IfcWall>(activated: true)
+            expression = Expression.Call(expression, ofTypeMethod, Expression.Constant(true)); 
             // Now we've found all Ifc Types implementing the Type, cast to the type
             // This will include subclasses. 
             if(!includeSubTypes)
