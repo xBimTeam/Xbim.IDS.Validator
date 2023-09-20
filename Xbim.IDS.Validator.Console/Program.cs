@@ -12,6 +12,7 @@ using Xbim.IDS.Validator.Console;
 using Xbim.IDS.Validator.Core;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc;
+using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 using Xbim.IO.Memory;
 
@@ -192,6 +193,12 @@ class Program
             var flexdb = new IfcFlexDb();
             flexdb.Open(ifcFile);
             flexdb.BeginTypeCaching();
+
+            flexdb.AddActivationDepth<IIfcRelDefinesByProperties>(2);
+            flexdb.AddActivationDepth<IIfcRelDefinesByType>(2);
+            flexdb.AddActivationDepth<IIfcRelAssociatesClassification>(2);
+            flexdb.AddActivationDepth<IIfcRelAggregates>(2);
+
             return flexdb;
         }
 
