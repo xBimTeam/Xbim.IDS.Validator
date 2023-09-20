@@ -50,6 +50,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
         private static MethodInfo _enumerableSelectManyMethod = GenericMethodOf(_ => Enumerable.SelectMany<int, int>(default(IEnumerable<int>), default(Func<int, IEnumerable<int>>)));
         private static MethodInfo _enumerableConcatMethod = GenericMethodOf(_ => Enumerable.Concat<int>(default(IEnumerable<int>), default(IEnumerable<int>)));
 
+        private static MethodInfo _enumerableFirstOrDefaultMethod = GenericMethodOf(_ => Enumerable.FirstOrDefault<int>(default(IEnumerable<int>)));
 
         public static MethodInfo GetTypeMethod
         {
@@ -149,6 +150,11 @@ namespace Xbim.IDS.Validator.Core.Helpers
         public static MethodInfo EnumerableConcatGeneric
         {
             get { return _enumerableConcatMethod; }
+        }
+
+        public static MethodInfo EnumerableFirstOrDefault
+        {
+            get { return _enumerableFirstOrDefaultMethod; }
         }
 
         private static MethodInfo GenericMethodOf<TReturn>(Expression<Func<object, TReturn>> expression)

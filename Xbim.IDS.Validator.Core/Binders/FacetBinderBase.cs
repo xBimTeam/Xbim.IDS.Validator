@@ -83,6 +83,12 @@ namespace Xbim.IDS.Validator.Core.Binders
             return !(expressType == null || expressType.Properties.Count == 0);
         }
 
+        protected ExpressMetaProperty? GetMatchingProperty(ExpressType expressType, string propName)
+        {
+            if (expressType == null) return null;
+            return expressType.Properties.FirstOrDefault(p => p.Value.Name == propName).Value;
+        }
+
         /// <summary>
         /// Filter the supplied expression to return only types matching the supplied <paramref name="expressType"/>
         /// </summary>
@@ -134,6 +140,62 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             }
             
+
+
+            return expression;
+        }
+
+        /// <summary>
+        /// Filter the supplied expression to return only types that are Defined by the supplied selection
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <param name="selection"></param>
+        /// <returns></returns>
+        protected Expression BindDefiningType(Expression expression, EntitySelectionCriteria selection)
+        {
+            if (selection is null)
+            {
+                throw new ArgumentNullException(nameof(selection));
+            }
+
+            if (selection.DefiningExpressType is null)
+            {
+                throw new ArgumentNullException(nameof(selection.DefiningExpressType));
+            }
+
+            // Build expression `.Where(e => e.IsTypedBy != null && e.IsTypedBy.GetType() == selection.DefiningType.Type)`
+
+            // Get underlying collection type for generic
+            var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
+
+            // build IEnumerable.Where<TEntity>(...)
+            var whereMethod = ExpressionHelperMethods.EnumerableWhereGeneric.MakeGenericMethod(collectionType);
+
+            // build lambda param 'ent => ...'
+            ParameterExpression ifcTypeParam = Expression.Parameter(collectionType, "ent");
+
+            // build 'ent.IsTypedBy.GetType()'
+
+            var getTypeMethod = ExpressionHelperMethods.GetTypeMethod;
+            var isTypedByExpr = Expression.Property(ifcTypeParam, "IsTypedBy");
+           
+            Expression entityTypeProperty =  Expression.Call(isTypedByExpr, getTypeMethod);
+
+            // => ent.IsDefinedBy.FirstOrDefault().GetType() == expression.Type
+            Expression queryBody = Expression.Equal(entityTypeProperty, Expression.Constant(selection.DefiningExpressType.Type));
+
+            var nullcheckExpr = Expression.NotEqual(isTypedByExpr, Expression.Constant(null, typeof(object)));
+
+            queryBody = Expression.AndAlso(nullcheckExpr, queryBody);
+
+            // Build Lambda expression for filter predicate (Func<T,bool>)
+            var filterExpression = Expression.Lambda(queryBody, ifcTypeParam);
+
+            // Bind Lambda to Where method
+            expression = Expression.Call(null, whereMethod, new[] { expression, filterExpression });
+
+            
+
 
 
             return expression;

@@ -35,6 +35,13 @@
        <DependentUpon>%(Filename).ids</DependentUpon>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+     <None Update="TestCases\xbim\fail-ifc2x3-air_terminal_edge_case_with_predefined.ids">
+       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+     </None>
+     <None Update="TestCases\xbim\fail-ifc2x3-air_terminal_edge_case_with_predefined.ifc">
+       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+       <DependentUpon>%(Filename).ids</DependentUpon>
+     </None>
      <None Update="TestModels\BasicRequirements.ids">
        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
      </None>

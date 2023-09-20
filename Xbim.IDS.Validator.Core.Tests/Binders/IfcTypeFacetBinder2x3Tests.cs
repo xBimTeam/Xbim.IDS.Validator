@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Xbim.IDS.Validator.Core.Binders;
+using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 using Xunit.Abstractions;
 
@@ -53,6 +54,23 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 result.Failures.Should().NotBeEmpty();
             }
 
+        }
+
+        [InlineData("IFCELECTRICAPPLIANCETYPE", "", 1, typeof(IIfcElectricApplianceType))] // In 2x3
+        [InlineData("IFCELECTRICAPPLIANCE", "", 3, typeof(IIfcFlowTerminal))] // Implicit via Type
+        [InlineData("IFCLIGHTFIXTURE", "", 24, typeof(IIfcFlowTerminal))] // Implicit via Type
+        [InlineData("IFCLAMP", "", 0, typeof(IIfcFlowTerminal))] // Implicit via Type
+        [InlineData("IFCOUTLET", "", 0, typeof(IIfcFlowTerminal))] // Implicit via Type
+        [InlineData("IfcSanitaryTerminal", "", 0, typeof(IIfcFlowTerminal))] // Implicit via Type
+        [InlineData("IFCDOORTYPE", "", 19, typeof(IIfcDoorStyle))] // Using 4x equivalent in 2x3
+        [InlineData("IFCWINDOWTYPE", "", 9, typeof(IIfcWindowStyle))] // Using 4x equivalent in 2x3
+        [InlineData("IFCWINDOWTYPE", "Unknown", 0, typeof(IIfcWindowStyle))] // Using 4x equivalent in 2x3
+        // [InlineData("IFCLIGHTFIXTURE", "NOTDEFINED", 24, typeof(IIfcFlowTerminal))] // Implicit via Type with Predefined TODO: Needs implementation
+        [Theory]
+        public void Ifc2x3_Can_Use_Types_From_Newer_Schemas(string ifcType, string predefinedType, int expectedCount, params Type[] expectedTypes)
+        {
+
+            AssertIfcTypeFacetQuery(Binder, ifcType, expectedCount, expectedTypes, predefinedType, ifcTypeConstraint: ConstraintType.Exact, includeSubTypes: false);
         }
     }
 }
