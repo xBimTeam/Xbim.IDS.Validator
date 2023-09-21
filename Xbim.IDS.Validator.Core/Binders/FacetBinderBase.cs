@@ -67,7 +67,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         {
             if(!expressTypes.Any())
             {
-                throw new InvalidOperationException($"No matching IFC type");
+                return false;
             }
             foreach (var expressType in expressTypes)
             {
