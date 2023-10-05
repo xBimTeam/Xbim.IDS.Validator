@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using Xbim.Common.Step21;
 using Xbim.Ifc4.RepresentationResource;
 using Xunit.Abstractions;
 
@@ -6,39 +7,52 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 {
     public class IdsTestCases : BaseTest
     {
+        private const string TestCaseFolder = "ids";
         public IdsTestCases(ITestOutputHelper output) : base(output)
         {
         }
 
-        [InlineData(@"TestCases/ids/pass-a_minimal_ids_can_check_a_minimal_ifc_2_2.ids")]
-        [InlineData(@"TestCases/ids/pass-a_prohibited_specification_and_a_prohibited_facet_results_in_a_double_negative.ids")]
-        [InlineData(@"TestCases/ids/pass-a_specification_passes_only_if_all_requirements_pass_2_2.ids")]
-        [InlineData(@"TestCases/ids/pass-multiple_specifications_are_independent_of_one_another.ids")]
-        [InlineData(@"TestCases/ids/pass-optional_specifications_may_still_pass_if_nothing_is_applicable.ids")]
-        [InlineData(@"TestCases/ids/pass-prohibited_specifications_fail_if_at_least_one_entity_passes_all_requirements_1_3.ids")]
-        [InlineData(@"TestCases/ids/pass-prohibited_specifications_fail_if_at_least_one_entity_passes_all_requirements_2_3.ids")]
-        [InlineData(@"TestCases/ids/pass-required_specifications_need_at_least_one_applicable_entity_1_2.ids")]
-        [InlineData(@"TestCases/ids/pass-specification_optionality_and_facet_optionality_can_be_combined.ids")]
-        [InlineData(@"TestCases/ids/pass-specification_version_is_purely_metadata_and_does_not_impact_pass_or_fail_result.ids")]
+        
+        [MemberData(nameof(GetPassTestCases))]
         [Theory]
-        public async Task EntityTestPass(string idsFile)
+        public async Task ExpectedPasses(string idsFile, params XbimSchemaVersion[] schemas)
         {
-            var outcome = await VerifyIdsFile(idsFile);
+            foreach (var schema in GetSchemas(schemas))
+            {
+                var outcome = await VerifyIdsFile(idsFile);
 
-            outcome.Status.Should().Be(ValidationStatus.Pass);
+                outcome.Status.Should().Be(ValidationStatus.Pass, schema.ToString());
+            }
         }
 
 
-        [InlineData(@"TestCases/ids/fail-a_minimal_ids_can_check_a_minimal_ifc_1_2.ids")]
-        [InlineData(@"TestCases/ids/fail-a_specification_passes_only_if_all_requirements_pass_1_2.ids")]
-        [InlineData(@"TestCases/ids/fail-prohibited_specifications_fail_if_at_least_one_entity_passes_all_requirements_3_3.ids")]
-        [InlineData(@"TestCases/ids/fail-required_specifications_need_at_least_one_applicable_entity_2_2.ids")]
+        [MemberData(nameof(GetFailureTestCases))]
         [Theory]
-        public async Task EntityTestFailures(string idsFile)
+        public async Task ExpectedFailures(string idsFile, params XbimSchemaVersion[] schemas)
         {
-            var outcome = await VerifyIdsFile(idsFile);
+            foreach (var schema in GetSchemas(schemas))
+            {
+                var outcome = await VerifyIdsFile(idsFile);
 
-            outcome.Status.Should().Be(ValidationStatus.Fail);
+                outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());
+            }
         }
+
+        public static IEnumerable<object[]> GetFailureTestCases()
+        {
+
+            return GetApplicableTestCases(TestCaseFolder, "fail", testExceptions);
+        }
+
+        public static IEnumerable<object[]> GetPassTestCases()
+        {
+            return GetApplicableTestCases(TestCaseFolder, "pass", testExceptions);
+        }
+
+        public static IDictionary<string, XbimSchemaVersion[]> testExceptions = new Dictionary<string, XbimSchemaVersion[]>
+        {
+            // { "fail-durations_are_treated_as_strings_2_2.ids" , new [] { XbimSchemaVersion.Ifc4} },
+
+        };
     }
 }
