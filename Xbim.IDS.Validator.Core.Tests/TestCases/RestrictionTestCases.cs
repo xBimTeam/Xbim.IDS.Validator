@@ -1,53 +1,56 @@
 ﻿using FluentAssertions;
+using Xbim.Common.Step21;
 using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.TestCases
 {
     public class RestrictionTestCases : BaseTest
     {
+        private const string TestCaseFolder = "restriction";
+
         public RestrictionTestCases(ITestOutputHelper output) : base(output)
         {
         }
 
-        [InlineData(@"TestCases/restriction/pass-a_bound_can_be_inclusive_1_4.ids")]
-        [InlineData(@"TestCases/restriction/pass-a_bound_can_be_inclusive_2_3.ids")]
-        [InlineData(@"TestCases/restriction/pass-a_bound_can_be_inclusive_2_4.ids")]
-        [InlineData(@"TestCases/restriction/pass-a_bound_can_be_inclusive_3_4.ids")]
-        [InlineData(@"TestCases/restriction/pass-an_enumeration_matches_case_sensitively_1_3.ids")]
-        [InlineData(@"TestCases/restriction/pass-an_enumeration_matches_case_sensitively_2_3.ids")]
-        [InlineData(@"TestCases/restriction/pass-length_checks_can_be_used_1_2.ids")]
-        [InlineData(@"TestCases/restriction/pass-max_and_min_length_checks_can_be_used_2_3.ids")]
-        [InlineData(@"TestCases/restriction/pass-max_and_min_length_checks_can_be_used_3_3.ids")]
-        [InlineData(@"TestCases/restriction/pass-regex_patterns_can_be_used_1_3.ids")]
-        [InlineData(@"TestCases/restriction/pass-regex_patterns_can_be_used_2_3.ids")]
+        public static IDictionary<string, XbimSchemaVersion[]> testExceptions = new Dictionary<string, XbimSchemaVersion[]>
+        {
+            //{ "fail-durations_are_treated_as_strings_2_2.ids" , new [] { XbimSchemaVersion.Ifc4} },
+            
+        };
+
+        [MemberData(nameof(GetPassTestCases))]
 
         [Theory]
-        public async Task EntityTestPass(string idsFile)
+        public async Task ExpectedPasses(string idsFile, params XbimSchemaVersion[] schemas)
         {
-            var outcome = await VerifyIdsFile(idsFile);
+            foreach (var schema in GetSchemas(schemas))
+            {
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
-            outcome.Status.Should().Be(ValidationStatus.Pass);
+                outcome.Status.Should().Be(ValidationStatus.Pass, schema.ToString());
+            }
         }
 
-
-
-        [InlineData(@"TestCases/restriction/fail-a_bound_can_be_inclusive_1_3.ids")]
-        [InlineData(@"TestCases/restriction/fail-a_bound_can_be_inclusive_3_3.ids")]
-        [InlineData(@"TestCases/restriction/fail-a_bound_can_be_inclusive_4_4.ids")]
-        [InlineData(@"TestCases/restriction/fail-an_enumeration_matches_case_sensitively_1_3.ids")]
-        [InlineData(@"TestCases/restriction/fail-an_enumeration_matches_case_sensitively_3_3.ids")]
-        [InlineData(@"TestCases/restriction/fail-length_checks_can_be_used_1_2.ids")]
-        [InlineData(@"TestCases/restriction/fail-max_and_min_length_checks_can_be_used_1_3.ids")]
-        [InlineData(@"TestCases/restriction/fail-max_and_min_length_checks_can_be_used_4_3.ids")]
-        [InlineData(@"TestCases/restriction/fail-patterns_always_fail_on_any_number.ids")]
-        [InlineData(@"TestCases/restriction/fail-patterns_only_work_on_strings_and_nothing_else.ids")]
-        [InlineData(@"TestCases/restriction/fail-regex_patterns_can_be_used_3_3.ids")]
+        [MemberData(nameof(GetFailureTestCases))]
         [Theory]
-        public async Task EntityTestFailures(string idsFile)
+        public async Task ExpectedFailures(string idsFile, params XbimSchemaVersion[] schemas)
         {
-            var outcome = await VerifyIdsFile(idsFile);
+            foreach (var schema in GetSchemas(schemas))
+            {
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
-            outcome.Status.Should().Be(ValidationStatus.Fail);
+                outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());
+            }
+        }
+
+        public static IEnumerable<object[]> GetFailureTestCases()
+        {
+            return GetApplicableTestCases(TestCaseFolder, "fail", testExceptions);
+        }
+
+        public static IEnumerable<object[]> GetPassTestCases()
+        {
+            return GetApplicableTestCases(TestCaseFolder, "pass", testExceptions);
         }
     }
 }
