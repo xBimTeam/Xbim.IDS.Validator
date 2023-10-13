@@ -49,7 +49,34 @@ namespace Xbim.IDS.Validator.Core.Tests.TestModels
 
 
         }
+        [Fact]
+        public async Task Can_ValidateModelsAganistXids()
+        {
+            string modelFile = @"TestModels\SampleHouse4.ifc";
+            string idsScript = @"TestModels\Example.ids";
 
+            var model = BuildModel(modelFile);
+
+            var logger = TestEnvironment.GetXunitLogger<IdsModelValidatorTests>(output);
+
+
+            var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
+            var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idsScript, logger);
+
+            var results = await idsValidator.ValidateAgainstXidsAsync(model, idsSpec, logger);
+
+            results.Should().NotBeNull();
+
+            results.Status.Should().Be(ValidationStatus.Fail);
+            results.ExecutedRequirements.Should().NotBeEmpty();
+
+            results.ExecutedRequirements.Count().Should().Be(4);
+
+            results.ExecutedRequirements[0].Status.Should().Be(ValidationStatus.Pass);
+            results.ExecutedRequirements[0].ApplicableResults.Should().NotBeEmpty();
+
+
+        }
 
 
         private static IModel BuildModel(string ifcFile)
