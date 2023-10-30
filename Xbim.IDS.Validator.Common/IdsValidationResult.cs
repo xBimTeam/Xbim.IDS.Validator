@@ -18,11 +18,19 @@ namespace Xbim.IDS.Validator.Core
     [DebuggerDisplay("{ValidationStatus}: {Entity}. {Messages.Count} messages")]
     public class IdsValidationResult
     {
-        public IdsValidationResult(IPersistEntity? entity, FacetGroup? requirement)
+        /// <summary>
+        /// Creates a validation result for the supplied Ifc entity and set of requirements.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="requirement"></param>
+        /// <param name="logFullEntity">Determines if the full xbim entity is returned in the result, or just the entityId</param>
+        public IdsValidationResult(IPersistEntity? entity, FacetGroup? requirement, bool logFullEntity = false)
         {
        
             ValidationStatus = ValidationStatus.Inconclusive;
             Entity = entity?.EntityLabel;
+            if(logFullEntity)
+                FullEntity = entity;
             Requirement = requirement;
         }
 
@@ -35,6 +43,11 @@ namespace Xbim.IDS.Validator.Core
         /// The Id of the model entity being tested against defined requirements
         /// </summary>
         public int? Entity { get; internal set; }
+
+        /// <summary>
+        ///  The Full entity being tested against defined requirements
+        /// </summary>
+        public IPersist? FullEntity { get; internal set; }
 
         /// <summary>
         /// The set of messages raised by the validation process against this entity

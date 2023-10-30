@@ -7,7 +7,6 @@ using Xbim.Common;
 using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
-using Xbim.Ifc4.ProductExtension;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Binders
@@ -44,7 +43,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             
             if (expression.Type.IsInterface && typeof(IEntityCollection).IsAssignableFrom(expression.Type))
             {
-                expression = BindIfcExpressType(expression, Model.Metadata.ExpressType(nameof(IfcRelAssociatesMaterial).ToUpperInvariant()), false);
+                expression = BindIfcExpressType(expression, Model.Metadata.GetExpressType(typeof(IIfcRelAssociatesMaterial)), false);
                 return BindMaterialSelection(expression, facet);
             }
 

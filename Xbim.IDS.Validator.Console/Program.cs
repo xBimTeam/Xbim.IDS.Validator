@@ -1,12 +1,12 @@
-﻿
+﻿//#define SqlLite
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
+using System.CommandLine.Parsing;
 using System.Diagnostics;
 using Xbim.Common;
-using Xbim.Common.Model;
+using Xbim.Common.Configuration;
 using Xbim.Flex.IO.Db.FlexDb;
-using Xbim.Flex.IO.Db.Interfaces;
 using Xbim.IDS.Validator.Common;
 using Xbim.IDS.Validator.Console;
 using Xbim.IDS.Validator.Core;
@@ -32,7 +32,10 @@ class Program
     {
         var command = SetupParams();
         logger = provider.GetRequiredService<ILogger<Program>>();
-        return await command.InvokeAsync(args);
+        var result =  await command.InvokeAsync(args);
+        Console.ReadLine();
+
+        return result;
     }
 
     private static ServiceProvider BuildServiceProvider()
@@ -41,6 +44,7 @@ class Program
         serviceCollection.AddLogging(/*o => o.AddConsole()*/);
 
         serviceCollection.AddIdsValidation();
+        serviceCollection.AddXbimToolkit(opt => opt.AddMemoryModel());
 
         var provider = serviceCollection.BuildServiceProvider();
         return provider;
@@ -81,26 +85,90 @@ class Program
     {
         Console.WriteLine("IDS File: {0}", ids);
         Console.WriteLine("IFC File: {0}", modelFile);
-        Console.WriteLine("Loading Model..."); 
+        Console.WriteLine("Loading Model...");
+        var sw = new Stopwatch();
+        sw.Start();
+#if SqlLite
+
+        IModel model = BuildModelSqlLite(modelFile);
+        var ifcFlexDb = model as IfcFlexDb;
+        using var tc = ifcFlexDb!.BeginTypeCaching();
+        using var inverseCache = ifcFlexDb.BeginInverseCaching();
+        using var entityeCache = ifcFlexDb.BeginEntityCaching();
+        OptimiseActivationStrategy(ifcFlexDb);
+#else
         IModel model = BuildModel(modelFile);
-        
         using var ic = model.BeginInverseCaching();
         using var ec = model.BeginEntityCaching();
-        
+#endif
+        Console.WriteLine("Model loaded in {0}s", sw.Elapsed.TotalSeconds);
         // Normally we'd inject rather than service discovery
         var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
 
-        var w = Stopwatch.StartNew();
         Console.WriteLine("Validating...");
-        var options = new VerificationOptions { IncludeSubtypes = true };
+        var options = new VerificationOptions { IncludeSubtypes = true, OutputFullEntity = true };
         var results = await idsValidator.ValidateAgainstIdsAsync(model, ids, logger, OutputRequirement, options);
-        if(results.Status == ValidationStatus.Error)
+
+        sw.Stop();
+        WriteSummary(results, sw, Path.GetFileName(modelFile), Path.GetFileName(ids));
+
+        if (results.Status == ValidationStatus.Error)
         {
             Console.Error.WriteLine($"Validation failed to run: {results.Message}");
             return;
         }
-        w.Stop();
-        Console.WriteLine($"Validation executed in {w.Elapsed.TotalSeconds} seconds.");
+        
+
+        model.Dispose();
+    }
+
+    private static void WriteSummary(ValidationOutcome results, Stopwatch sw, string ifcFile, string idsFile)
+    {
+        WriteColored("IDS Validation summary\n", ConsoleColor.Blue);
+        WriteColored($"IDS:   ", ConsoleColor.Gray);
+        WriteColored(idsFile, ConsoleColor.White);
+        WriteColored($"\nModel: ", ConsoleColor.Gray);
+        WriteColored(ifcFile, ConsoleColor.White);
+        WriteColored("\n---------------------------------------------------------------------------\n", ConsoleColor.Gray);
+        var totalRun = results.ExecutedRequirements.Count;
+        var totalPass = results.ExecutedRequirements.Count(r => r.Status == ValidationStatus.Pass);
+        var totalInconclusive = results.ExecutedRequirements.Count(r => r.Status == ValidationStatus.Inconclusive);
+        var totalFail = results.ExecutedRequirements.Count(r => r.Status == ValidationStatus.Fail);
+        var totalError = results.ExecutedRequirements.Count(r => r.Status == ValidationStatus.Error);
+
+        var totalElementsTested = results.ExecutedRequirements.Sum(r=> r.ApplicableResults.Count());
+        var totalPassedResults = results.ExecutedRequirements.Sum(r => r.PassedResults.Count());
+        var totalPercent = totalElementsTested > 0 ? ((float)totalPassedResults) / totalElementsTested * 100 : 0;
+
+
+        foreach (var req in results.ExecutedRequirements)
+        {
+            var passed = req.PassedResults.Count();
+            var percent = req.ApplicableResults.Count() > 0 ? ((float)passed) / req.ApplicableResults.Count() * 100 : 0;
+            WriteColored(req.Status, req.Status.ToString());
+            WriteColored($" {passed,5}", ConsoleColor.White);
+            WriteColored($" /", ConsoleColor.Gray);
+            WriteColored($"{req.ApplicableResults.Count,5}", ConsoleColor.White);
+            WriteColored($" passed ", ConsoleColor.Gray);
+            WriteColored($"{percent,5:0.0}% ", ConsoleColor.DarkYellow);
+            WriteColored($": {req.Specification.Name}\n", ConsoleColor.Gray);
+            // [{passed} passed from {req.ApplicableResults.Count}]", 
+        }
+        WriteColored("==========================================================================\n", ConsoleColor.White);
+        WriteColored(results.Status, results.Status.ToString());
+        WriteColored($" {totalPassedResults,5}", ConsoleColor.White);
+        WriteColored($" /", ConsoleColor.Gray);
+        WriteColored($"{totalElementsTested,5}", ConsoleColor.White);
+        WriteColored($" tested ", ConsoleColor.Gray);
+        WriteColored($"{totalPercent,5:0.0}% ", ConsoleColor.DarkYellow);
+        WriteColored($" in {sw.Elapsed.TotalSeconds} secs\n\n", ConsoleColor.DarkGreen);
+
+        WriteColored($"Specifications Tested: {totalRun} ", ConsoleColor.White);
+        WriteColored($"Pass: {totalPass} ", ConsoleColor.Green);
+        WriteColored($"Fail: {totalFail} ", ConsoleColor.Red);
+        WriteColored($"Incomplete: {totalInconclusive} ", ConsoleColor.Yellow);
+        WriteColored($"Error: {totalError} \n\n", ConsoleColor.DarkRed);
+
     }
 
     private static void OutputRequirement(ValidationRequirement req)
@@ -130,7 +198,7 @@ class Program
             {
                 WriteColored(itm.ValidationStatus, "    " + itm.ValidationStatus.ToString());
                 WriteColored($":{itm.Requirement?.Name} - {itm.Requirement?.Description}", ConsoleColor.Red);
-                WriteColored($": {itm.Entity}\n", ConsoleColor.White);
+                WriteColored($": {itm.FullEntity}\n", ConsoleColor.White);
                 foreach (var msg in itm.Messages.Where(m => m.Status != ValidationStatus.Pass))
                 {
                     WriteColored($"               {msg?.Expectation} {msg?.Clause?.GetType().Name}.{msg?.ValidatedField} to be {msg?.ExpectedResult} - but actually found '{msg?.ActualResult}' because {msg?.Reason}\n", ConsoleColor.DarkGray);
@@ -145,7 +213,7 @@ class Program
             //        WriteColored($"                [{msg?.Clause?.GetType().Name}.{msg?.ValidatedField}] {msg?.Expectation} to find {msg?.ExpectedResult} - and found '{msg?.ActualResult}'\n", ConsoleColor.Gray);
             //    }
             //}
-            Console.Write(".");
+            //Console.Write(".");
         }
         Console.WriteLine();
         Console.WriteLine("------------------------------");
@@ -205,4 +273,32 @@ class Program
         return MemoryModel.OpenRead(ifcFile);
     }
 
+#if SqlLite
+    private static IModel BuildModelSqlLite(string ifcFile)
+    {
+        if(!File.Exists(ifcFile))
+        {
+            throw new FileNotFoundException(ifcFile);
+        }
+        using (var ifcStream = File.Open(ifcFile, FileMode.Open))
+        {
+            var file = Path.ChangeExtension(ifcFile, "db");
+            var flexDb = new IfcFlexDb(file);
+
+            flexDb.Open(file);
+            flexDb.ImportStep21(ifcStream);
+
+            return flexDb;
+        }
+    }
+
+    private static void OptimiseActivationStrategy(IfcFlexDb model)
+    {
+        model.AddActivationDepth<IIfcRelDefinesByProperties>(2);
+        
+        model.AddActivationDepth<IIfcRelDefinesByType>(2);
+        model.AddActivationDepth<IIfcRelAssociatesClassification>(2);
+        model.AddActivationDepth<IIfcRelAggregates>(2);
+    }
+#endif
 }

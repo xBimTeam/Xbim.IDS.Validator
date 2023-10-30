@@ -10,7 +10,6 @@ using Xbim.Common;
 using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
-using Xbim.Ifc4.Kernel;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Binders
@@ -58,7 +57,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             if (expression.Type.IsInterface && typeof(IEntityCollection).IsAssignableFrom(expression.Type))
             {
-                expression = BindIfcExpressType(expression, Model.Metadata.ExpressType(typeof(IfcRelDefinesByProperties)), false);
+                expression = BindIfcExpressType(expression, Model.Metadata.GetExpressType(typeof(IIfcRelDefinesByProperties)), false);
                 expression = BindPropertySelection(expression, psetFacet);
                 return expression;
             }
@@ -94,10 +93,10 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             // Get underlying collection type
             var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
-            var expressType = Model.Metadata.ExpressType(collectionType);
+            var expressType = Model.Metadata.GetExpressType(collectionType);
             if (!ExpressTypeIsValid(expressType))
             {
-                throw new InvalidOperationException($"Invalid IFC Type '{expression.Type.Name}'");
+                throw new InvalidOperationException($"Invalid IFC Type '{collectionType.Name}'");
             }
 
             expression = BindPropertyFilter(expression, facet);
@@ -327,25 +326,43 @@ namespace Xbim.IDS.Validator.Core.Binders
                 return expression;
             }
 
-            MethodInfo propsMethod;
+            ConstantExpression psetFacetExpr = Expression.Constant(facet, typeof(IfcPropertyFacet));
+
+            MethodInfo objectsMethod = ExpressionHelperMethods.EnumerableObjectWhereAssociatedWithProperty;
+            MethodInfo typesMethod = ExpressionHelperMethods.EnumerableTypeWhereAssociatedWithProperty;
             if (typeof(IIfcObject).IsAssignableFrom(collectionType))
             {
-                propsMethod = ExpressionHelperMethods.EnumerableObjectWhereAssociatedWithProperty;
-
+                return Expression.Call(null, objectsMethod, new[] { expression, psetFacetExpr });
             }
             else if (typeof(IIfcTypeObject).IsAssignableFrom(collectionType))
             {
-                propsMethod = ExpressionHelperMethods.EnumerableTypeWhereAssociatedWithProperty;
+                return Expression.Call(null, typesMethod, new[] { expression, psetFacetExpr });
+            }
+            else if (typeof(IIfcObjectDefinition).IsAssignableFrom(collectionType))
+            {
+                // We could have a mixture of Objects and Types. (e.g. when starting IfcRelDefinesByProperties).
+                // So have to cast and check objects and Types separately and concat the results.
+                // Use case, all elements with IsExternal=True which are also LoadBearing, could be a mix of Objects and Types
+
+                Expression objectsExpr = Expression.Call(null, ExpressionHelperMethods.EnumerableOfTypeGeneric.MakeGenericMethod(typeof(IIfcObject)), expression);
+                Expression typesExpr = Expression.Call(null, ExpressionHelperMethods.EnumerableOfTypeGeneric.MakeGenericMethod(typeof(IIfcTypeObject)), expression);
+
+                MethodCallExpression filteredObjects = Expression.Call(null, objectsMethod, new[] { objectsExpr, psetFacetExpr });
+                MethodCallExpression filteredTypes = Expression.Call(null, typesMethod, new[] { typesExpr, psetFacetExpr });
+
+                return BindConcat(filteredObjects, filteredTypes);
             }
             else
             {
-                logger.LogWarning("Property sets can only be filtered on Types and Objects, but this is {collectionType} ", collectionType.Name);
-                // Not applicable
-                return BindNotFound(expression, collectionType);
+                // Edge case - if we have Materials etc
+                // TODO: implement IfcMaterial.HasProperties.
+                logger.LogWarning("Cannot apply property filter on this type: {collectionType} ", collectionType.Name);
+                throw new NotImplementedException($"Cannot apply property filter on this type: {collectionType}");
+                
+                // return BindNotFound(expression, collectionType);
             }
-            ConstantExpression psetFacetExpr = Expression.Constant(facet, typeof(IfcPropertyFacet));
 
-            return Expression.Call(null, propsMethod, new[] { expression, psetFacetExpr });
+            
 
 
         }

@@ -128,8 +128,7 @@ namespace Xbim.IDS.Validator.Core
         public IdsValidationResult ValidateRequirement(IPersistEntity item, FacetGroup requirement, ILogger? logger)
         {
 
-            var result = new IdsValidationResult(item, requirement);
-
+            var result = new IdsValidationResult(item, requirement, options?.OutputFullEntity ?? false);
 
             foreach (var facet in requirement.Facets)
             {

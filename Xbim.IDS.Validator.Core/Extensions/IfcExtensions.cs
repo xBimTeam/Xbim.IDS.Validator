@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Numerics;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
-using Xbim.Ifc4x3.PortsAndWaterwaysDomain;
 using Xbim.InformationSpecifications;
-using Xbim.IO;
 using static Xbim.InformationSpecifications.PartOfFacet;
 
 namespace Xbim.IDS.Validator.Core.Extensions

@@ -1,8 +1,6 @@
 ﻿using FluentAssertions;
-using Microsoft.Extensions.Logging;
 using Xbim.Common.Step21;
 using Xbim.IDS.Validator.Core.Binders;
-
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 using Xunit.Abstractions;
@@ -92,6 +90,53 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         }
 
+
+        [InlineData("Pset_WallCommon", "IsExternal", "True", 
+            "Pset_WallCommon", "LoadBearing", "False", 129)]
+        [InlineData("Pset_WallCommon", "IsExternal", "True",
+            "Pset_WallCommon", "LoadBearing", "True", 7)]
+        [InlineData("Pset_WallCommon", "IsExternal", "False",
+            "Pset_WallCommon", "LoadBearing", "False", 130)]
+        [Theory]
+        public void Can_Query_By_Multiple_Properties(string psetName, string propName, object value,
+            string psetName2, string propName2, object value2, int expectedCount)
+        {
+            IfcPropertyFacet propertyFacet = new IfcPropertyFacet
+            {
+                PropertySetName = new ValueConstraint(NetTypeName.String),
+                PropertyName = new ValueConstraint(NetTypeName.String),
+                PropertyValue = new ValueConstraint(),
+            };
+            IfcPropertyFacet propertyFacet2 = new IfcPropertyFacet
+            {
+                PropertySetName = new ValueConstraint(NetTypeName.String),
+                PropertyName = new ValueConstraint(NetTypeName.String),
+                PropertyValue = new ValueConstraint(),
+            };
+            propertyFacet.PropertySetName.AddAccepted(new ExactConstraint(psetName));
+            propertyFacet.PropertyName.AddAccepted(new ExactConstraint(propName));
+            if (value != null)
+                propertyFacet.PropertyValue.AddAccepted(new ExactConstraint(value?.ToString()));
+
+            propertyFacet2.PropertySetName.AddAccepted(new ExactConstraint(psetName2));
+            propertyFacet2.PropertyName.AddAccepted(new ExactConstraint(propName2));
+            if (value2 != null)
+                propertyFacet2.PropertyValue.AddAccepted(new ExactConstraint(value2?.ToString()));
+
+            var psetbinder = new PsetFacetBinder(BinderContext, GetLogger<PsetFacetBinder>());
+            var psetbinder2 = new PsetFacetBinder(BinderContext, GetLogger<PsetFacetBinder>());
+
+            // Act
+            var expression = psetbinder.BindSelectionExpression(query.InstancesExpression, propertyFacet);
+            expression = psetbinder2.BindWhereExpression(expression, propertyFacet2);
+
+            // Assert
+
+            var result = query.Execute(expression, Model);
+            result.Should().HaveCount(expectedCount);
+
+        }
+
         [InlineData("IfcWall", "Cement_Render_White", 12)]
         [InlineData("IfcDoor", "Metal_Steel_Stainless", 7)]
         [InlineData("IfcWall", "Vapor Retarder", 0)]
@@ -123,6 +168,22 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             result.Should().HaveCount(expectedCount);
 
         }
+
+        [InlineData("Pset_WallCommon", "LoadBearing", false, 259)]
+        [InlineData("Pset_WallCommon", "LoadBearing", true, 7)]
+        [InlineData("BaseQuantities", "Width", null, 0)]
+        [Theory]
+        public void Can_Select_By_Properties(string psetName, string propName, object propValue, int expectedCount,
+           ConstraintType psetConstraint = ConstraintType.Exact,
+           ConstraintType propConstraint = ConstraintType.Exact,
+           ConstraintType valueConstraint = ConstraintType.Exact
+           )
+        {
+            var psetbinder = new PsetFacetBinder(BinderContext, GetLogger<PsetFacetBinder>());
+            AssertIfcPropertyFacetQuery(psetbinder, psetName, propName, propValue, expectedCount, psetConstraint, propConstraint, valueConstraint);
+
+        }
+
 
     }
 }

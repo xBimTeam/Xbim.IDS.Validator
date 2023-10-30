@@ -210,11 +210,12 @@ namespace Xbim.IDS.Validator.Core.Binders
                 throw new InvalidOperationException($"Invalid IFC Types '{types}'");
             }
 
+            var baseExpression = expression;
             bool doConcat = false;
             foreach (var expressType in expressTypes)
             {
-                //var rightExpr = expression;
-                var rightExpr = BindIfcExpressType(expression, expressType, true);
+                
+                var rightExpr = BindIfcExpressType(baseExpression, expressType, true);
                
 
                 // Union to main expression.

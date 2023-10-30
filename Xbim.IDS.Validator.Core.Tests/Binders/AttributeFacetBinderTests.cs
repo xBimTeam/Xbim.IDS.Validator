@@ -23,6 +23,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData(nameof(IIfcFurniture.ObjectType), "Chair - Dining", 6)]
         [InlineData(nameof(IIfcSite.CompositionType), "ELEMENT", 8)]
         [InlineData(nameof(IIfcSite.RefElevation), "0", 1)]
+        [InlineData(nameof(IIfcRoot.GlobalId), "2ru7YPT4T9MuTpOS4FRzxX", 1)]    // A WallType
+        [InlineData(nameof(IIfcObject.ObjectType), null, 68)]    // Any object with an ObjectType defined (any IfcObject)
+        [InlineData(nameof(IIfcRoot.GlobalId), null, 95)]    // Any object with an GlobalID (any object or Type)
+        [InlineData(nameof(IIfcRoot.Description), null, 1)] // Any Object with a description
         [Theory]
         public void Can_Query_By_Attributes(string attributeFieldName, string attributeValue, int expectedCount)
         {
@@ -30,7 +34,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             AttributeFacet attrFacet = new AttributeFacet
             {
                 AttributeName = attributeFieldName,
-                AttributeValue = new ValueConstraint(attributeValue)
+                AttributeValue = attributeValue != null ? new ValueConstraint(attributeValue) : null
             };
 
 
@@ -69,9 +73,12 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
 
         [InlineData("IfcWall", "IfcOwnerHistory")]
+        [InlineData("IfcWall", "NAME")]
+        [InlineData("IfcWall", "OBJECTTYPE")]
         [InlineData("IfcWall", "IfcRelAggregates")]
         [InlineData("IfcWall", "*")]
         [InlineData("IfcWall", " ")]
+        [InlineData("IfcWall", "")]
         [Theory]
         public void Invalid_Attributes_Handled(string ifcType, string attributeFieldName)
         {
@@ -94,6 +101,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             ex.Should().NotBeNull();
             ex.Should().BeOfType<InvalidOperationException>();
+            ex.Message.Should().Be($"Attribute Facet '{attributeFieldName?.Trim()}' is not valid");
 
         }
 
