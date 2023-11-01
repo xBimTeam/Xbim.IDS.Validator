@@ -109,47 +109,52 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             var ctx = CreateValidationContext(requirement, facet);
 
-            var candidates = GetMaterials(item, facet);
+            var candidates = GetMaterialsValues(item);
 
             if (candidates.Any())
             {
+                bool? success = null;
 
+                
                 foreach (var material in candidates)
                 {
-                    var materialName = material.Name;
-                    bool isPopulated = IsValueRelevant(materialName);
-                    // Name meets requirement if it has a value and is Required.
-                    if (isPopulated)
+                    var materialName = material;
+                    
+                    if (facet.Value == null || facet.Value?.IsSatisfiedBy(materialName, true, logger) == true)
                     {
-                        result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.Value!, materialName, "Material found", material));
+                        result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.Value!, materialName, "Material satisfied", item));
+                        success = true;
                     }
-                    else
-                    {
-                        result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Value!, materialName, "No matching material found", material));
-                    }
+                }
+                // If no matching value found after all the psets checked, mark as failed
+                if (success == default)
+                {
+                    var materials = string.Join(",", candidates);
+                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Value!, materials, "No materials matched", item));
                 }
             }
             else
             {
-                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Value!, null, "No materials matching", item));
+                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Value!, null, "No materials found", item));
             }
         }
 
-        private IEnumerable<IIfcMaterial> GetMaterials(IPersistEntity item, MaterialFacet materialFacet)
+        private IEnumerable<string> GetMaterialsValues(IPersistEntity item)
         {
             if(item is IIfcObjectDefinition obj)
             {
-                var materials = IfcExtensions.GetMaterialsForEntity(obj, materialFacet);
+                var materials = IfcMaterialsExtensions.GetMaterialNames(obj.Material, logger);
 
                 if (obj is IIfcObject o && o.IsTypedBy!.Any())
                 {
-                    materials = materials.Union(GetMaterials(o.IsTypedBy.First().RelatingType, materialFacet));
+                    // TODO: handle multiple Types
+                    materials = materials.Union(GetMaterialsValues(o.IsTypedBy.First().RelatingType));
                 }
                 return materials;
             }
             else
             {
-                return Enumerable.Empty<IIfcMaterial>();
+                return Enumerable.Empty<string>();
             }
         }
 
