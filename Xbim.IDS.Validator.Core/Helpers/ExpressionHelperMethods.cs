@@ -26,16 +26,16 @@ namespace Xbim.IDS.Validator.Core.Helpers
             m.GetParameters().Length == 1 &&
             m.ReturnType.GetGenericTypeDefinition() == typeof(IEnumerable<>));
         
-        private static MethodInfo _enumerableIfcObjectsWithPropertiesMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcObjectsWithProperties), new Type[] { typeof(IEnumerable<IIfcRelDefinesByProperties>), typeof(IfcPropertyFacet)});
-        private static MethodInfo _enumerableIfcMaterialSelectorMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcObjectsUsingMaterials), new Type[] { typeof(IEnumerable<IIfcRelAssociatesMaterial>), typeof(MaterialFacet) });
-        private static MethodInfo _enumerableIfcAssociatesClassificationMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetIfcObjectsUsingClassification), new Type[] { typeof(IEnumerable<IIfcRelAssociatesClassification>), typeof(IfcClassificationFacet) });
-        private static MethodInfo _enumerableIfcPartofRelatedMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.GetRelatedIfcObjects), new Type[] { typeof(IEnumerable<IIfcRelationship>), typeof(PartOfFacet) });
+        private static MethodInfo _enumerableIfcObjectsWithPropertiesMethod = typeof(IfcPropertiesExtensions).GetMethod(nameof(IfcPropertiesExtensions.GetIfcObjectsWithProperties), new Type[] { typeof(IEnumerable<IIfcRelDefinesByProperties>), typeof(IfcPropertyFacet)});
+        private static MethodInfo _enumerableIfcAssociatesClassificationMethod = typeof(IfcClassificationExtensions).GetMethod(nameof(IfcClassificationExtensions.GetIfcObjectsUsingClassification), new Type[] { typeof(IEnumerable<IIfcRelAssociatesClassification>), typeof(IfcClassificationFacet) });
+        private static MethodInfo _enumerableIfcMaterialSelectorMethod = typeof(IfcMaterialsExtensions).GetMethod(nameof(IfcMaterialsExtensions.GetIfcObjectsUsingMaterials), new Type[] { typeof(IEnumerable<IIfcRelAssociatesMaterial>), typeof(MaterialFacet) });
+        private static MethodInfo _enumerableIfcPartofRelatedMethod = typeof(IfcRelationsExtensions).GetMethod(nameof(IfcRelationsExtensions.GetRelatedIfcObjects), new Type[] { typeof(IEnumerable<IIfcRelationship>), typeof(PartOfFacet) });
         
-        private static MethodInfo _enumerableWhereAssociatedWithClassificationMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.WhereAssociatedWithClassification), new Type[] { typeof(IEnumerable<IIfcObjectDefinition>), typeof(IfcClassificationFacet) });
-        private static MethodInfo _enumerableWhereAssociatedWithMaterialMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.WhereAssociatedWithMaterial), new Type[] { typeof(IEnumerable<IIfcObjectDefinition>), typeof(MaterialFacet) });
-        private static MethodInfo _enumerableWhereObjAssociatedWithPropertyMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.WhereAssociatedWithProperty), new Type[] { typeof(IEnumerable<IIfcObject>), typeof(IfcPropertyFacet) });
-        private static MethodInfo _enumerableWhereTypeAssociatedWithPropertyMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.WhereAssociatedWithProperty), new Type[] { typeof(IEnumerable<IIfcTypeObject>), typeof(IfcPropertyFacet) });
-        private static MethodInfo _enumerableWhereObjectPartOfMethod = typeof(IfcExtensions).GetMethod(nameof(IfcExtensions.WhereHasPartOfRelationship), new Type[] { typeof(IEnumerable<IIfcObjectDefinition>), typeof(PartOfFacet) });
+        private static MethodInfo _enumerableWhereObjAssociatedWithPropertyMethod = typeof(IfcPropertiesExtensions).GetMethod(nameof(IfcPropertiesExtensions.WhereAssociatedWithProperty), new Type[] { typeof(IEnumerable<IIfcObject>), typeof(IfcPropertyFacet) });
+        private static MethodInfo _enumerableWhereTypeAssociatedWithPropertyMethod = typeof(IfcPropertiesExtensions).GetMethod(nameof(IfcPropertiesExtensions.WhereAssociatedWithProperty), new Type[] { typeof(IEnumerable<IIfcTypeObject>), typeof(IfcPropertyFacet) });
+        private static MethodInfo _enumerableWhereAssociatedWithClassificationMethod = typeof(IfcClassificationExtensions).GetMethod(nameof(IfcClassificationExtensions.WhereAssociatedWithClassification), new Type[] { typeof(IEnumerable<IIfcObjectDefinition>), typeof(IfcClassificationFacet) });
+        private static MethodInfo _enumerableWhereAssociatedWithMaterialMethod = typeof(IfcMaterialsExtensions).GetMethod(nameof(IfcMaterialsExtensions.WhereAssociatedWithMaterial), new Type[] { typeof(IEnumerable<IIfcObjectDefinition>), typeof(MaterialFacet) });
+        private static MethodInfo _enumerableWhereObjectPartOfMethod = typeof(IfcRelationsExtensions).GetMethod(nameof(IfcRelationsExtensions.WhereHasPartOfRelationship), new Type[] { typeof(IEnumerable<IIfcObjectDefinition>), typeof(PartOfFacet) });
 
         //
 

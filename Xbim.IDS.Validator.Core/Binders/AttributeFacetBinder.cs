@@ -8,7 +8,7 @@ using Xbim.Common;
 using Xbim.Common.Metadata;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
-using Xbim.Ifc4x3;
+using Xbim.Ifc4x3;  // To provide ToIfc4() extension method
 using Xbim.InformationSpecifications;
 using Xbim.InformationSpecifications.Helpers;
 
@@ -223,7 +223,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
 
         /// <summary>
-        /// Binds a Expression check an entity attributes satisifiy a constraint
+        /// Binds a Expression check an entity's attribute(s) satisifiy a constraint
         /// </summary>
         /// <param name="expression"></param>
         /// <param name="ifcAttributePropInfos"></param>
@@ -235,16 +235,12 @@ namespace Xbim.IDS.Validator.Core.Binders
             // Get underlying collection type
             var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
 
-            var constraints = constraint.AcceptedValues;
+            var constraints = constraint?.AcceptedValues;
 
             // call .Cast<EntityType>()
             expression = Expression.Call(null, ExpressionHelperMethods.EnumerableCastGeneric.MakeGenericMethod(collectionType), expression);
 
-            if (constraints.Any() == false)
-            {
-                return expression;
-            }
-
+           
             // Build IEnumerable<TEntity>().Where(t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName]))
 
             // build IEnumerable.Where<TEntity>(...)
@@ -253,10 +249,22 @@ namespace Xbim.IDS.Validator.Core.Binders
             // build lambda param 'ent => ...'
             ParameterExpression ifcTypeParam = Expression.Parameter(collectionType, "ent");
 
-            var constraintExpr = Expression.Constant(constraint, typeof(ValueConstraint));
+            Expression querybody;
+            if (constraints?.Any() == true)
+            {
+                // Ensure Attribute satisfies Value constraint
+                var constraintExpr = Expression.Constant(constraint, typeof(ValueConstraint));
 
-            // build t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName])
-            Expression querybody = BuildAttributeQuery(ifcAttributePropInfos, ifcTypeParam, constraintExpr);
+                // build t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName])
+                querybody = BuildAttributeQuery(ifcAttributePropInfos, ifcTypeParam, constraintExpr);
+
+            }
+            else
+            {
+                // If no constraints or nothing specified (null) just check not null
+                
+                querybody = BuildAttributeNotNull(ifcAttributePropInfos, ifcTypeParam);
+            }
 
             // Build Lambda expression for filter predicate (Func<T,bool>)
             var filterExpression = Expression.Lambda(querybody, ifcTypeParam);
@@ -267,7 +275,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         internal static Expression BuildAttributeQuery(PropertyInfo[] ifcAttributePropInfo, ParameterExpression ifcTypeParam, ConstantExpression constraintExpr)
         {
-            Expression body = Expression.Constant(false);
+            Expression body = Expression.Constant(false);   // default false
             foreach(var ifcAttribute in ifcAttributePropInfo)
             {
                 Expression nameProperty = Expression.Property(ifcTypeParam, ifcAttribute);
@@ -279,9 +287,30 @@ namespace Xbim.IDS.Validator.Core.Binders
                 // build: t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName])
                 Expression querybody = Expression.Call(null, ExpressionHelperMethods.IdsSatisifiesConstraintMethod, constraintExpr, valueExpr);
                 // Join into Or statement for multiple attributes - includes parenthesis
-                body = Expression.OrElse(body, querybody);
+                body = (body is ConstantExpression) ? querybody : Expression.OrElse(body, querybody);
             }
             
+            return body;
+        }
+
+        internal static Expression BuildAttributeNotNull(PropertyInfo[] ifcAttributePropInfo, ParameterExpression ifcTypeParam)
+        {
+            var nullExpr = Expression.Constant(null, typeof(object));
+            Expression body = Expression.Constant(false); // default false
+            foreach (var ifcAttribute in ifcAttributePropInfo)
+            {
+                Expression nameProperty = Expression.Property(ifcTypeParam, ifcAttribute);
+
+                UnaryExpression valueExpr = Expression.Convert(nameProperty, typeof(object));
+
+                // build: t =>  t.[AttributeName] != null
+                Expression querybody = Expression.NotEqual(valueExpr, nullExpr);
+                // Join into Or statement for multiple attributes - includes parenthesis
+
+                body = (body is ConstantExpression) ? querybody: Expression.OrElse(body, querybody);
+
+            }
+
             return body;
         }
     }

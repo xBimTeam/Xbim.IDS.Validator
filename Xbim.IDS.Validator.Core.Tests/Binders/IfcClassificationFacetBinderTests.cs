@@ -22,6 +22,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
       
         [InlineData("Uniclass", "EF_25_30_97", 5)] // Via Type
         [InlineData("Uniclass", "Pr_40_50_12", 7)]
+        [InlineData("uniclass", "PR_40_50_12", 7)]
         [InlineData("Uniclass", "Pr_40_50.*", 7, ConstraintType.Exact, ConstraintType.Pattern)]
         [InlineData("", "Pr_40_50_12", 7)]
         [InlineData("Uniclass", "", 12)]
@@ -64,6 +65,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
 
         [InlineData("Uniclass", "Pr_40_50_12")]
+        [InlineData("UNICLASS", "PR_40_50_12")]
+        [InlineData("uniclass", "pr_40_50_12")]
         [InlineData(null, "Pr_40_50_12")]
         [InlineData("Uniclass", null)]
         [InlineData(null, null)]

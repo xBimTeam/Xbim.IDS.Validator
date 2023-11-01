@@ -125,6 +125,76 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             }
         }
 
+        protected void AssertIfcPropertyFacetQuery(PsetFacetBinder psetFacetBinder, string psetName, string propName, object propValue, int expectedCount, ConstraintType psetConstraint, ConstraintType propConstraint, ConstraintType valueConstraint)
+        {
+            IfcPropertyFacet propFacet = new IfcPropertyFacet
+            {
+                PropertySetName = new ValueConstraint(),
+                PropertyName = new ValueConstraint(),
+                PropertyValue = new ValueConstraint()
+            };
+            switch (psetConstraint)
+            {
+                case ConstraintType.Exact:
+                    propFacet.PropertySetName.AddAccepted(new ExactConstraint(psetName));
+                    break;
+
+                case ConstraintType.Pattern:
+                    propFacet.PropertySetName.AddAccepted(new PatternConstraint(psetName));
+                    break;
+
+            }
+            switch (propConstraint)
+            {
+                case ConstraintType.Exact:
+                    propFacet.PropertyName.AddAccepted(new ExactConstraint(propName));
+                    break;
+
+                case ConstraintType.Pattern:
+                    propFacet.PropertyName.AddAccepted(new PatternConstraint(propName));
+                    break;
+
+            }
+            if (propValue != null)
+            {
+                SetPropertyValue(propValue, valueConstraint, propFacet);
+            }
+
+            // Act
+            var expression = psetFacetBinder.BindSelectionExpression(query.InstancesExpression, propFacet);
+
+            // Assert
+
+            var result = query.Execute(expression, Model);
+            result.Should().HaveCount(expectedCount);
+        }
+
+        protected static void SetPropertyValue(object propValue, ConstraintType valueConstraint, IfcPropertyFacet propFacet)
+        {
+            switch (valueConstraint)
+            {
+                case ConstraintType.Exact:
+                    if (propValue is bool)
+                        propFacet.PropertyValue.BaseType = NetTypeName.Boolean;
+                    if (propValue is long)
+                        propFacet.PropertyValue.BaseType = NetTypeName.Integer;
+                    propFacet.PropertyValue.AddAccepted(new ExactConstraint(propValue.ToString()));
+                    break;
+
+                case ConstraintType.Pattern:
+                    propFacet.PropertyValue.AddAccepted(new PatternConstraint(propValue.ToString()));
+                    break;
+
+                case ConstraintType.Range:
+                    propFacet.PropertyValue.BaseType = NetTypeName.Double;
+                    propFacet.PropertyValue.AddAccepted(new RangeConstraint("0", false, propValue.ToString(), true));
+                    break;
+
+
+            }
+        }
+
+
 
         private static IfcTypeFacet BuildIfcTypeFacetFromCsv(string ifcTypeCsv, string predefinedTypeCsv = "", bool includeSubTypes = false,
             ConstraintType ifcConstraint = ConstraintType.Exact, ConstraintType preDefConstraint = ConstraintType.Exact)

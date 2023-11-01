@@ -151,7 +151,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         {
             if (item is IIfcObjectDefinition obj)
             {
-                var parts = IfcExtensions.GetPartsForEntity(obj, facet);
+                var parts = IfcRelationsExtensions.GetPartsForEntity(obj, facet);
 
                 //if (obj is IIfcObject o && o.IsTypedBy!.Any())
                 //{

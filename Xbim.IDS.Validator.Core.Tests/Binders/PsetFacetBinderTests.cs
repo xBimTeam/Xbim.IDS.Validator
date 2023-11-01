@@ -40,75 +40,11 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             ConstraintType valueConstraint = ConstraintType.Exact
             )
         {
-
-            IfcPropertyFacet propFacet = new IfcPropertyFacet
-            {
-                PropertySetName = new ValueConstraint(),
-                PropertyName = new ValueConstraint(),
-                PropertyValue = new ValueConstraint()
-            };
-            switch (psetConstraint)
-            {
-                case ConstraintType.Exact:
-                    propFacet.PropertySetName.AddAccepted(new ExactConstraint(psetName));
-                    break;
-
-                case ConstraintType.Pattern:
-                    propFacet.PropertySetName.AddAccepted(new PatternConstraint(psetName));
-                    break;
-
-            }
-            switch (propConstraint)
-            {
-                case ConstraintType.Exact:
-                    propFacet.PropertyName.AddAccepted(new ExactConstraint(propName));
-                    break;
-
-                case ConstraintType.Pattern:
-                    propFacet.PropertyName.AddAccepted(new PatternConstraint(propName));
-                    break;
-
-            }
-            if (propValue != null)
-            {
-                SetPropertyValue(propValue, valueConstraint, propFacet);
-            }
-            var binder = new PsetFacetBinder(BinderContext, Logger);
-
-            // Act
-            var expression = Binder.BindSelectionExpression(query.InstancesExpression, propFacet);
-
-            // Assert
-
-            var result = query.Execute(expression, Model);
-            result.Should().HaveCount(expectedCount);
+            AssertIfcPropertyFacetQuery(Binder, psetName, propName, propValue, expectedCount, psetConstraint, propConstraint, valueConstraint);
 
         }
 
-        private static void SetPropertyValue(object propValue, ConstraintType valueConstraint, IfcPropertyFacet propFacet)
-        {
-            switch (valueConstraint)
-            {
-                case ConstraintType.Exact:
-                    if (propValue is bool)
-                        propFacet.PropertyValue.BaseType = NetTypeName.Boolean;
-                    if (propValue is long)
-                        propFacet.PropertyValue.BaseType = NetTypeName.Integer;
-                    propFacet.PropertyValue.AddAccepted(new ExactConstraint(propValue.ToString()));
-                    break;
 
-                case ConstraintType.Pattern:
-                    propFacet.PropertyValue.AddAccepted(new PatternConstraint(propValue.ToString()));
-                    break;
-
-                case ConstraintType.Range:
-                    propFacet.PropertyValue.BaseType = NetTypeName.Double;
-                    propFacet.PropertyValue.AddAccepted(new RangeConstraint("0", false, propValue.ToString(), true));
-                    break;
-
-
-            }
-        }
 
         //[InlineData(421, "Pset_SpaceCommon", "IsExternal", false)]
         [InlineData(323, "Energy Analysis", "Area per Person", 28.5714285714286d)]

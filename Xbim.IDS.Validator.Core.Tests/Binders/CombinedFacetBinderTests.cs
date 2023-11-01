@@ -204,7 +204,36 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             var result = query.Execute(expression, Model);
             result.Should().HaveCount(expectedCount);
+            
+        }
 
+
+        // To implement
+        [Fact]
+        public void MaterialPropertiesNotSupported()
+        {
+            IfcTypeFacet ifcFacet = new IfcTypeFacet
+            {
+                IfcType = new ValueConstraint("IFCMATERIAL"),
+            };
+
+            IfcPropertyFacet propertyFacet = new IfcPropertyFacet
+            {
+                PropertySetName = new ValueConstraint("Pset_MaterialCombustion"),
+                PropertyName = new ValueConstraint("SpecificHeatCapacity"),
+                Measure = "IFCLABEL"
+            };
+
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
+            var psetbinder = new PsetFacetBinder(BinderContext, GetLogger<PsetFacetBinder>());
+
+            // Act
+            var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
+
+            var ex = Record.Exception(() => expression = psetbinder.BindWhereExpression(expression, propertyFacet));
+
+            ex.Should().NotBeNull();
+            ex.Should().BeOfType<NotImplementedException>();
         }
 
 
