@@ -135,7 +135,21 @@ namespace Xbim.IDS.Validator.Core
                 EntityAffected = entity
             };
         }
+        public static ValidationMessage Inconclusive<T>(ValidationContext<T> context, Expression<Func<T, object>> memberField, object? actualResult, string? reason = default, IPersist? entity = null) where T : IFacet
+        {
 
+            return new ValidationMessage
+            {
+                Status = ValidationStatus.Inconclusive,
+                Clause = context.Clause,
+                ActualResult = actualResult,
+                Reason = reason,
+                ExpectedResult = context.GetExpected(memberField),
+                Expectation = context.ExpectationMode,
+                ValidatedField = context.GetMember(memberField),
+                EntityAffected = entity
+            };
+        }
         public static ValidationMessage Error(string reason)
         {
             return new ValidationMessage
@@ -171,8 +185,11 @@ namespace Xbim.IDS.Validator.Core
         public IFacet? Clause { get; set; }
         public string? ValidatedField { get; set; }
         public IPersist? EntityAffected { get; set; }
-     
-    }
+
+        public string FormatedActualResult => string.IsNullOrEmpty(ActualResult?.ToString()) ? "<nothing>" : ActualResult.ToString()
+
+
+;    }
 
     /// <summary>
     /// Represents the validation status of a specification or one of its requirements
