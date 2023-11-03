@@ -130,6 +130,11 @@ namespace Xbim.IDS.Validator.Core
 
             var result = new IdsValidationResult(item, requirement, options?.OutputFullEntity ?? false);
 
+            if(requirement == null)
+            {
+                return result;
+            }
+
             foreach (var facet in requirement.Facets)
             {
                 var binder = FacetBinderFactory.Create(facet);

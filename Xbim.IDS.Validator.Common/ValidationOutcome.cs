@@ -99,7 +99,7 @@ namespace Xbim.IDS.Validator.Common
         /// <returns></returns>
         public bool IsFailure(IdsValidationResult result)
         {
-            return (Specification.Cardinality.ExpectsRequirements && result.ValidationStatus != ValidationStatus.Pass) ||
+            return (Specification.Cardinality.AllowsRequirements && result.ValidationStatus != ValidationStatus.Pass) ||
                 (Specification.Cardinality.NoMatchingEntities && result.ValidationStatus != ValidationStatus.Fail);
         }
 
