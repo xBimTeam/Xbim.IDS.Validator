@@ -1,7 +1,9 @@
 ﻿using Divergic.Logging.Xunit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+#if IFC4x3
 using Xbim.Common.Configuration;
+#endif
 using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests
@@ -18,23 +20,34 @@ namespace Xbim.IDS.Validator.Core.Tests
     public class TestEnvironment : IDisposable
     {
         private static ILoggerProvider xunitLoggerProvider = null;
+#if !IFC4x3
+        static IServiceCollection services = new ServiceCollection();
+        static IServiceProvider serviceProvider = null;
+#endif
 
         public TestEnvironment()
         {
             
             Console.WriteLine("Initialised Test Environment");
-            
-                XbimServices.Current.ConfigureServices(services => 
+#if IFC4x3
+            XbimServices.Current.ConfigureServices(services => 
                 {
                     services.AddXbimToolkit(/*c => c.AddMemoryModel()*/)
                         .AddIdsValidation()
                         .AddLogging(s=> s.SetMinimumLevel(LogLevel.Debug));
                 });
-            
-
+#else
+            services
+                .AddIdsValidation()
+                .AddLogging(s => s.SetMinimumLevel(LogLevel.Debug));
+            serviceProvider = services.BuildServiceProvider();
+#endif
         }
-
+#if IFC4x3
         public static IServiceProvider ServiceProvider { get => XbimServices.Current.ServiceProvider;  }
+#else
+        public static IServiceProvider ServiceProvider { get => serviceProvider; }
+#endif
 
         /// <summary>
         ///  Registers the current tests xUnit OutputHelper with the Divergent xUnit Logger.

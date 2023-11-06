@@ -133,10 +133,11 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                     case XbimSchemaVersion.Ifc4:
                         model = IfcStore.Open(modelFile);
                         break;
+#if IFC4x3
                     case XbimSchemaVersion.Ifc4x3:
                         model = IfcStore.Open(modelFile);
                         break;
-
+#endif
                     case XbimSchemaVersion.Ifc2X3:
                         {
 

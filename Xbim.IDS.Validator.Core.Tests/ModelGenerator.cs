@@ -20,9 +20,9 @@ namespace Xbim.IDS.Validator.Core.Tests
             ApplicationVersion = "1.0",
             ApplicationDevelopersName = "xbim"
         };
-
+#if IFC4x3
         [Fact]
-        public void CanCreateMinimalModel()
+        public void CanCreateMinimalIfc4x3Model()
         {
             string filename = "file.ifc";
 
@@ -54,6 +54,7 @@ namespace Xbim.IDS.Validator.Core.Tests
             }
             model.Dispose();
         }
+#endif
 
         [Fact]
         public void CanCreateIfc2x3Model()

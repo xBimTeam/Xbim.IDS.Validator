@@ -266,11 +266,6 @@ namespace Xbim.IDS.Validator.Core.Binders
             // Get underlying collection type
             var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
 
-            
-            var x= Enumerable.Empty<Ifc4x3.SharedBldgElements.IfcWall>();
-            x.Where(e => e.IsTypedBy is IIfcElementType et && ValueConstraintExtensions.SatisfiesConstraint(constraint, et.ElementType));
-
-
             // Build IEnumerable<TEntity>().Where(t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName]))
             // TODO: ||
             //          ValueConstraintExtensions.SatisfiesConstraint(constraint, t.IsTypedBy?[AttributeName]))

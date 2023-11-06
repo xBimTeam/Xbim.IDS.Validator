@@ -21,6 +21,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             outcome.Status.Should().Be(ValidationStatus.Pass);
         }
 
+#if IFC4x3
         [InlineData(@"TestCases/xbim/pass-ifc4x3_models_work.ids")]
         [InlineData(@"TestCases/xbim/pass-ifc4x3_new_attributes_available.ids")]
         [Theory]
@@ -30,7 +31,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
             outcome.Status.Should().Be(ValidationStatus.Pass);
         }
-
+#endif
 
 
         [InlineData(@"TestCases/xbim/pass-subclass_type_may_be_identified_with_subtype_extension_1_2.ids")]

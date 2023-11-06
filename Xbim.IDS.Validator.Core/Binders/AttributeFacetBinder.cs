@@ -11,7 +11,9 @@ using Xbim.IDS.Validator.Common.Interfaces;
 using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
+#if IFC4x3
 using Xbim.Ifc4x3;  // To provide ToIfc4() extension method
+#endif
 using Xbim.InformationSpecifications;
 using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
@@ -206,10 +208,12 @@ namespace Xbim.IDS.Validator.Core.Binders
                     {
                         attrvalue = ifc2x3Value.ToIfc4();
                     }
+#if IFC4x3
                     else if (IsIfc4x3Model() && attrvalue is Xbim.Ifc4x3.MeasureResource.IfcValue ifc4x3Value)
                     {
                         attrvalue = ifc4x3Value.ToIfc4();
                     }
+#endif
 
                     if (af.AttributeValue != null)
                     {

@@ -41,10 +41,4 @@
 		<ProjectReference Include="..\Xbim.IDS.Validator.Common\Xbim.IDS.Validator.Common.csproj" />
 	</ItemGroup>
 
-
-	<ItemGroup>
-    <ProjectReference Include="..\Xbim.IDS.Validator.Common\Xbim.IDS.Validator.Common.csproj" />
-  </ItemGroup>
-
-
 </Project>
