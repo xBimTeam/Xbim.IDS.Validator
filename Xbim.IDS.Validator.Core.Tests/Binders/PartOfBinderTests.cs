@@ -10,7 +10,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
     public class PartOfBinderTests : BaseModelTester
     {
-        public PartOfBinderTests(ITestOutputHelper output, XbimSchemaVersion schema = XbimSchemaVersion.Ifc4) : base(output, schema)
+        public PartOfBinderTests(ITestOutputHelper output) : base(output)
         {
             Binder = new PartOfFacetBinder(BinderContext, Logger);
         }
