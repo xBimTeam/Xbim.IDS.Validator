@@ -1,9 +1,9 @@
-﻿using System;
+﻿using IdsLib.IfcSchema;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xbim.Common;
 using Xbim.Common.Metadata;
-using Xbim.InformationSpecifications.Helpers;
 
 namespace Xbim.IDS.Validator.Core.Helpers
 {

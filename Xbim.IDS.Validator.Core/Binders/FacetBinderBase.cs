@@ -201,7 +201,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             return expression;
         }
 
-        internal Expression BindIfcExpressTypes(Expression expression, string[] rootTypes)
+        internal Expression BindIfcExpressTypes(Expression expression, IEnumerable<string> rootTypes)
         {
             IEnumerable<ExpressType> expressTypes = GetExpressTypes(rootTypes);
             if(!ExpressTypesAreValid(expressTypes))
@@ -255,7 +255,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             return Expression.Call(null, whereMethod, new[] { expression, filterExpression });
         }
 
-        private IEnumerable<ExpressType> GetExpressTypes(string[] ifcTypes)
+        protected IEnumerable<ExpressType> GetExpressTypes(IEnumerable<string> ifcTypes)
         {
             foreach(var type in ifcTypes)
             {
@@ -264,7 +264,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
         /// <summary>
-        /// Concatenate two Enumerable expressions together
+        /// Concatenate two Enumerable expressions together casting to the highest common type
         /// </summary>
         /// <param name="expression"></param>
         /// <param name="right"></param>
@@ -274,10 +274,21 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             // e.g. Concat an IfcObjectDefinition + IfcTypeObject => IfcObject
             Type highestCommonType = GetCommonAncestor(expression, right);
-            expression = Expression.Call(null, ExpressionHelperMethods.EnumerableCastGeneric.MakeGenericMethod(highestCommonType), expression);
+            expression = BindCast(expression, highestCommonType);
 
             expression = Expression.Call(null, ExpressionHelperMethods.EnumerableConcatGeneric.MakeGenericMethod(highestCommonType), expression, right);
             return expression;
+        }
+
+        /// <summary>
+        /// Casts a enumerable collection to a type
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        protected Expression BindCast(Expression expression, Type type)
+        {
+            return Expression.Call(null, ExpressionHelperMethods.EnumerableCastGeneric.MakeGenericMethod(type), expression);
         }
 
         private Type GetCommonAncestor(Expression left, Expression right)
@@ -301,7 +312,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 }
                 express = express.SuperType;
             }
-            return typeof(IIfcRoot);
+            return typeof(IPersistEntity);
         }
 
         protected object? ApplyWorkarounds([MaybeNull] object? value, ValueConstraint constraint)

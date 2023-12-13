@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using IdsLib.IfcSchema;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4x3;  // To provide ToIfc4() extension method
 using Xbim.InformationSpecifications;
-using Xbim.InformationSpecifications.Helpers;
+
 
 namespace Xbim.IDS.Validator.Core.Binders
 {
@@ -25,7 +26,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
 
         /// <summary>
-        /// Binds an IFC attribute filter to an expression, where Attributes are built in IFC schema fields
+        /// Binds an IFC attribute filter to an expression, where Attributes are built-in IFC schema fields
         /// </summary>
         /// <remarks>e.g Where(p=> p.GlobalId == "someGuid")</remarks>
         /// <param name="baseExpression"></param>
@@ -47,7 +48,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             if (!attrFacet.IsValid())
             {
-                // IsValid checks against a know list of all IFC Attributes
+                // IsValid checks against a known list of all IFC Attributes
                 throw new InvalidOperationException($"Attribute Facet '{attrFacet?.AttributeName}' is not valid");
             }
 
@@ -55,12 +56,13 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             if (attrFacet.AttributeName.IsSingleExact(out var attributeName))
             {
-                // When an Ifc Type facet has not yet been specified, find correct root type(s) for this AttributeName
-                // using the lookup that XIDS provides
+                // When an Ifc Type facet has not yet been specified, find correct IFC type(s) for this AttributeName
+                // using the lookup that IDSLib provides
 
+                // Test for raw Model.Instances:
                 if (expression.Type.IsInterface && typeof(IEntityCollection).IsAssignableFrom(expression.Type))
                 {
-                    string[] rootTypes;
+                    IEnumerable<string> rootTypes;
                     if (IsIfc2x3Model())
                     {
                         rootTypes = SchemaInfo.SchemaIfc2x3.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
@@ -73,29 +75,82 @@ namespace Xbim.IDS.Validator.Core.Binders
                     {
                         rootTypes = SchemaInfo.SchemaIfc4.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
                     }
+                    
 
-                    expression = base.BindIfcExpressTypes(expression, rootTypes);
+                    return BindIfcTypeForAttributes(expression, rootTypes, attrFacet, (string)attributeName);
 
 
                 }
-                var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
-                var expressType = Model.Metadata.ExpressType(collectionType);
-                if(!ExpressTypeIsValid(expressType))
+                else
                 {
-                    throw new InvalidOperationException($"Invalid IFC Type '{expression.Type.Name}'");
-                }
+                    // We know the Collection type, so can bind the Attribute predicate as long as it is a valid IFC type
+                    // i.e. Apply straight forward predicate to the expression.
 
-                expression = BindAttributeSelection(expression, expressType, (string)attributeName,
-                    attrFacet?.AttributeValue);
-                return expression;
+                    var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
+                    var expressType = Model.Metadata.ExpressType(collectionType);
+                    if (!ExpressTypeIsValid(expressType))
+                    {
+                        throw new InvalidOperationException($"Invalid IFC Type '{expression.Type.Name}'");
+                    }
+
+                    expression = BindAttributeSelection(expression, expressType, (string)attributeName,
+                        attrFacet?.AttributeValue);
+                    return expression;
+                }
+                
 
             }
             else
             {
+                // TODO: Should support Enum. E.g. Where Name or Description = 'Foo'
                 // Not sure why we'd want to pick attributes with a regex, range, or even an enum?
                 throw new NotSupportedException("Complex AttributeName constraints are not supported");
             }
 
+        }
+
+        /// <summary>
+        /// Selects the relevant types and applies the appropriate Attribute predicate to each before concatenating the resuls 
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <param name="rootTypes"></param>
+        /// <param name="attrFacet"></param>
+        /// <param name="attributeName"></param>
+        /// <returns>An expression applying the IfcType filters with relevant Attribute predicate, cast to the highest common type</returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        internal Expression BindIfcTypeForAttributes(Expression expression, IEnumerable<string> rootTypes, AttributeFacet attrFacet, string attributeName)
+        {
+            IEnumerable<ExpressType> expressTypes = base.GetExpressTypes(rootTypes);
+            if (!ExpressTypesAreValid(expressTypes))
+            {
+                var types = string.Join(',', rootTypes);
+                throw new InvalidOperationException($"Invalid IFC Types '{types}'");
+            }
+
+            var baseExpression = expression;
+            bool doConcat = false;
+            foreach (var expressType in expressTypes)
+            {
+
+                var rightExpr = BindIfcExpressType(baseExpression, expressType, true);
+
+                rightExpr = BindAttributeSelection(rightExpr, expressType, (string)attributeName,
+                    attrFacet?.AttributeValue);
+
+
+                // Concat to main expression.
+                if (doConcat)
+                {
+                    expression = BindConcat(expression, rightExpr);
+                }
+                else
+                {
+                    expression = rightExpr;
+                    doConcat = true;
+                }
+            }
+
+            return expression;
         }
 
         public override Expression BindWhereExpression(Expression baseExpression, AttributeFacet attrFacet)

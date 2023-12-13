@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ids-lib" Version="1.0.54" />
+    <PackageReference Include="ids-lib" Version="1.0.56" />
   </ItemGroup>
 
   <ItemGroup>
