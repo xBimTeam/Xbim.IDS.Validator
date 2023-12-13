@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -24,14 +25,16 @@ namespace Xbim.IDS.Validator.Core.Binders
     /// <typeparam name="T"></typeparam>
     public abstract class FacetBinderBase<T> : IFacetBinder<T> where T: IFacet
     {
+        private readonly ILogger<FacetBinderBase<T>> logger;
+
         /// <summary>
         /// Constructs a new <see cref="FacetBinderBase{T}"/>
         /// </summary>
         /// <param name="model"></param>
-        public FacetBinderBase(BinderContext binderContext)
+        public FacetBinderBase(BinderContext binderContext, ILogger<FacetBinderBase<T>> logger)
         {
             BinderContext = binderContext ?? throw new ArgumentNullException(nameof(binderContext));
-
+            this.logger = logger;
         }
 
         public BinderContext BinderContext { get; }
@@ -57,7 +60,6 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// </summary>
         /// <param name="item"></param>
         /// <param name="requirement"></param>
-        /// <param name="logger"></param>
         /// <param name="result"></param>
         /// <param name="facet"></param>
         public abstract void ValidateEntity(IPersistEntity item, T facet, RequirementCardinalityOptions requirement, IdsValidationResult result);
@@ -353,27 +355,29 @@ namespace Xbim.IDS.Validator.Core.Binders
             return quantity.UnwrapQuantity();
         }
 
-        protected object UnwrapValue(IIfcValue? value)
+        /// <summary>
+        /// Gets the primitive value in the standard IDS ISO units.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        protected object GetNormalisedValue(IIfcValue? value)
         {
             object result = HandleBoolConventions(value);
-            if (result is IIfcMeasureValue)
+            if (result is IIfcMeasureValue measure)
             {
-                if(IsIfc2x3Model())
-                {
-                    result = HandleUnitConversionIfc2x3(value);
-                }
-                else if(IsIfc4x3Model())
-                {
-                    result = HandleUnitConversionIfc4x3(value);
-                }
-                else
-                {
-                    result = HandleUnitConversionIfc4(value);
-                }
+                var units = GetUnits();
+                result = measure.NormaliseUnits(units);
             }
+
+            // TODO: Review if we have to do anything with derived
+            //else if(result is IIfcDerivedMeasureValue derived)
+            //{
+            //    var units = GetUnits();
+            //    result = derived.NormaliseUnits(units);
+            //}
             if (result is IIfcValue v)
             {
-                result = v.Value;
+                result = v.Value;   // Unpack the primitive object
             }
 
             return result;
@@ -385,173 +389,6 @@ namespace Xbim.IDS.Validator.Core.Binders
             
 
             return project?.UnitsInContext ?? default;
-        }
-
-        
-        protected IIfcValue HandleUnitConversionIfc4(IIfcValue value)
-        {
-            var units = GetUnits() as IfcUnitAssignment;
-
-            if (units == null) return value;
-
-            
-            if (value is IfcCountMeasure c)
-                return c;
-            if (value is IfcAreaMeasure area)
-            {
-                var unit = units.AreaUnit;
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcAreaMeasure(area * si.Power);
-                }
-                return area;
-            }
-            else if (value is IfcLengthMeasure l)
-            {
-                var unit = units.LengthUnit;
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcLengthMeasure(l * si.Power);
-                }
-                return l;
-            }
-            else if (value is IfcVolumeMeasure v)
-            {
-                var unit = units.VolumeUnit;
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcMassMeasure(v * si.Power);
-                }
-                return v;
-            }
-
-            // TODO Add remaining measures
-            //if (value is IfcMassMeasure w)
-            //{
-            //    var unit = units.GetUnitFor(w);
-            //    if (unit is IIfcSIUnit si)
-            //    {
-            //        return new IfcMassMeasure(v * si.Power);
-            //    }
-            //    return w;
-            //}
-
-            if (value is IfcTimeMeasure t)
-                return t;
-            else
-                return value;
-            //throw new NotImplementedException(value.GetType().Name);
-        }
-
-        protected IIfcValue HandleUnitConversionIfc4x3(IIfcValue value)
-        {
-            var units = GetUnits() as Ifc4x3.MeasureResource.IfcUnitAssignment;
-
-            if (units == null) return value;
-
-
-            if (value is IfcCountMeasure c)
-                return c;
-            if (value is IfcAreaMeasure area)
-            {
-                var unit = units.AreaUnit();
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcAreaMeasure(area * si.Power);
-                }
-                return area;
-            }
-            else if (value is IfcLengthMeasure l)
-            {
-                var unit = units.LengthUnit();
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcLengthMeasure(l * si.Power);
-                }
-                return l;
-            }
-            else if (value is IfcVolumeMeasure v)
-            {
-                var unit = units.VolumeUnit();
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcMassMeasure(v * si.Power);
-                }
-                return v;
-            }
-
-            // TODO Add remaining measures
-            //if (value is IfcMassMeasure w)
-            //{
-            //    var unit = units.GetUnitFor(w);
-            //    if (unit is IIfcSIUnit si)
-            //    {
-            //        return new IfcMassMeasure(v * si.Power);
-            //    }
-            //    return w;
-            //}
-
-            if (value is IfcTimeMeasure t)
-                return t;
-            else
-                return value;
-            //throw new NotImplementedException(value.GetType().Name);
-        }
-
-
-        protected IIfcValue HandleUnitConversionIfc2x3(IIfcValue value)
-        {
-            var units = GetUnits() as Ifc2x3.MeasureResource.IfcUnitAssignment;
-
-            if (units == null) return value;
-
-
-            if (value is IfcCountMeasure c)
-                return c;
-            if (value is IfcAreaMeasure area)
-            {
-                var unit = units.AreaUnit;
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcAreaMeasure(area * si.Power);
-                }
-                return area;
-            }
-            else if (value is IfcLengthMeasure l)
-            {
-                var unit = units.LengthUnit;
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcLengthMeasure(l * si.Power);
-                }
-                return l;
-            }
-            else if (value is IfcVolumeMeasure v)
-            {
-                var unit = units.VolumeUnit;
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcMassMeasure(v * si.Power);
-                }
-                return v;
-            }
-
-            // TODO Add remaining measures
-            //if (value is IfcMassMeasure w)
-            //{
-            //    var unit = units.GetUnitFor(w);
-            //    if (unit is IIfcSIUnit si)
-            //    {
-            //        return new IfcMassMeasure(v * si.Power);
-            //    }
-            //    return w;
-            //}
-
-            if (value is IfcTimeMeasure t)
-                return t;
-            else
-                return value;
-            //throw new NotImplementedException(value.GetType().Name);
         }
 
         protected bool IsIfc2x3Model()

@@ -11,6 +11,7 @@
     <PackageReadmeFile>Readme.md</PackageReadmeFile>
     <PackageTags>xbim ifc ids bim validation</PackageTags>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <LangVersion>10</LangVersion>
     <PackageLicenseExpression>CDDL-1.0</PackageLicenseExpression>
   </PropertyGroup>
 

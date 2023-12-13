@@ -54,6 +54,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData(323, null, "Area", 15.41678125d)]   // Technically not valid-Pset is required
         [InlineData(323, "", "Area", 15.41678125d)]     // ""
         [InlineData(323, " ", "Area", 15.41678125d)]    // ""
+        [InlineData(1229, "Pset_WallCommon", "ThermalTransmittance", 0.235926059936681d)]   // Derived Unit - THERMALTRANSMITTANCEUNIT
+        [InlineData(2826, "Constraints", "Angle", 1.570796326794897d)]   // Conversion-based Unit. PLANEANGLEUNIT - 90 degrees in Radians = pi/2
         [InlineData(10942, "Other", "Category", "Doors")] // Type
         [InlineData(3951, "Dimensions", "Thickness", 25d/1000)] // Type Inheritance
         [Theory]

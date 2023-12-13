@@ -64,7 +64,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
             }
             else
             {
-                throw new NotSupportedException($"{innerType} is not a supported relationship");
+                throw new NotImplementedException($"{innerType} is not a supported relationship");
             }
         }
 

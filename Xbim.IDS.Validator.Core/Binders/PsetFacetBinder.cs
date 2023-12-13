@@ -19,7 +19,7 @@ namespace Xbim.IDS.Validator.Core.Binders
     {
         private readonly ILogger<PsetFacetBinder> logger;
 
-        public PsetFacetBinder(BinderContext context, ILogger<PsetFacetBinder> logger) : base(context)
+        public PsetFacetBinder(BinderContext context, ILogger<PsetFacetBinder> logger) : base(context, logger)
         {
             this.logger = logger;
         }
@@ -132,7 +132,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
                             foreach (var propValue in values)
                             {
-                                object? value = UnwrapValue(propValue);
+                                object? value = GetNormalisedValue(propValue);
                                 bool isPopulated = IsValueRelevant(value);
                                 if (isPopulated)
                                 {
@@ -160,7 +160,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                                 failure = true;
                             }
 
-                            var vals = string.Join(',', values);
+                            var vals = string.Join(',', values.Select(v=> GetNormalisedValue(v)));
                             if (satisfiedValue)
                             {
                                 result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, vals, $"Value matched in {pset.Name}_{prop.Name}", prop));
@@ -176,7 +176,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                         foreach (var quant in quants)
                         {
                             var propValue = UnwrapQuantity(quant);
-                            object? value = UnwrapValue(propValue);
+                            object? value = GetNormalisedValue(propValue);
                             bool isPopulated = IsValueRelevant(value);
 
                             if (isPopulated)

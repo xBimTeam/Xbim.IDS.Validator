@@ -18,7 +18,7 @@ namespace Xbim.IDS.Validator.Core.Binders
     {
         private readonly ILogger<IfcTypeFacetBinder> logger;
 
-        public IfcTypeFacetBinder(BinderContext binderContext, ILogger<IfcTypeFacetBinder> logger) : base(binderContext)
+        public IfcTypeFacetBinder(BinderContext binderContext, ILogger<IfcTypeFacetBinder> logger) : base(binderContext, logger)
         {
             this.logger = logger;
         }
@@ -101,7 +101,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             // A real edge case, since we always try to start with a Ifc Type. 
             // e.g. Select all items with materials 'wood', where IfcType is IfcDoor - we should filter the entities from first predicate
             // But we reverse the predicate upstream as it's likely more efficient that way anyway
-            throw new NotImplementedException();
+            throw new NotImplementedException("Filtering by IfcType after initial selection not implemented");
         }
 
         public override void ValidateEntity(IPersistEntity item, IfcTypeFacet f, RequirementCardinalityOptions requirement, IdsValidationResult result)

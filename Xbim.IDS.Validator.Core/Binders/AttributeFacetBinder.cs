@@ -19,7 +19,7 @@ namespace Xbim.IDS.Validator.Core.Binders
     {
         private readonly ILogger<AttributeFacetBinder> logger;
 
-        public AttributeFacetBinder(BinderContext context, ILogger<AttributeFacetBinder> logger) : base(context)
+        public AttributeFacetBinder(BinderContext context, ILogger<AttributeFacetBinder> logger) : base(context, logger)
         {
             this.logger = logger;
         }
@@ -104,7 +104,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             {
                 // TODO: Should support Enum. E.g. Where Name or Description = 'Foo'
                 // Not sure why we'd want to pick attributes with a regex, range, or even an enum?
-                throw new NotSupportedException("Complex AttributeName constraints are not supported");
+                throw new NotImplementedException("Complex AttributeName constraints are not supported");
             }
 
         }
