@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
 		azure-pipelines.yml = azure-pipelines.yml
+		Directory.Build.props = Directory.Build.props
 		nuget.config = nuget.config
 		Readme.md = Readme.md
 	EndProjectSection
@@ -20,7 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xbim.IDS.Validator.Console"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xbim.IDS.Validator.Common", "Xbim.IDS.Validator.Common\Xbim.IDS.Validator.Common.csproj", "{54773B8D-E7B0-4BC1-BB42-13E26C5AB009}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeGenerator", "CodeGenerator\CodeGenerator.csproj", "{A2382CC0-E7BE-4363-9143-B59BFEB56F8E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeGenerator", "CodeGenerator\CodeGenerator.csproj", "{A2382CC0-E7BE-4363-9143-B59BFEB56F8E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

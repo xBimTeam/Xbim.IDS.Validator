@@ -5,6 +5,9 @@ using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Interfaces
 {
+    /// <summary>
+    /// Interface defining how IDS <see cref="IFacet"/>s build queries against a xbim model.
+    /// </summary>
     public interface IFacetBinder
     {
 

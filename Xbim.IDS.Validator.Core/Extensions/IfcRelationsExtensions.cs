@@ -94,7 +94,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
         /// Gets Parents associated to an entity that match the requirement
         /// </summary>
         /// <param name="obj"></param>
-        /// <param name="materialFacet"></param>
+        /// <param name="facet"></param>
         /// <returns></returns>
         public static IEnumerable<IIfcObjectDefinition> GetPartsForEntity(IIfcObjectDefinition obj, PartOfFacet facet)
         {

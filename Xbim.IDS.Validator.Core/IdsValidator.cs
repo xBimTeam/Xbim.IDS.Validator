@@ -1,19 +1,15 @@
-﻿using CommandLine;
-using IdsLib;
+﻿using IdsLib;
 using IdsLib.SchemaProviders;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using Xbim.Common;
-using Xbim.IDS.Validator.Common;
+using Xbim.IDS.Validator.Core.Interfaces;
 
 
 namespace Xbim.IDS.Validator.Core
 {
-    public class IdsValidator
+    public class IdsValidator : IIdsValidator
     {
         private readonly ILogger<IdsValidator> logger;
 
@@ -40,10 +36,10 @@ namespace Xbim.IDS.Validator.Core
             var options = new SingleAuditOptions
             {
                 //OmitIdsContentAudit = true,
-                XmlWarningAction =  AuditProcessOptions.XmlWarningBehaviour.ReportAsWarning,
+                XmlWarningAction = AuditProcessOptions.XmlWarningBehaviour.ReportAsWarning,
                 IdsVersion = IdsLib.IdsSchema.IdsNodes.IdsVersion.Invalid,
                 SchemaProvider = new FixedVersionSchemaProvider(IdsLib.IdsSchema.IdsNodes.IdsVersion.Ids0_9_6)
-                
+
             };
             return Audit.Run(idsFileStream, options, logger);
         }
@@ -55,7 +51,7 @@ namespace Xbim.IDS.Validator.Core
                 InputSource = idsFolder,
                 OmitIdsContentAuditPattern = ".*fail.*"
             };
-            if(idsSchemaFile != null)
+            if (idsSchemaFile != null)
             {
                 batchOptions.SchemaFiles = new List<string> { idsSchemaFile };
             }

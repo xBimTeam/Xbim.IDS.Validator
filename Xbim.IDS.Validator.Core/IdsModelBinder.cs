@@ -41,7 +41,8 @@ namespace Xbim.IDS.Validator.Core
         /// <summary>
         /// Returns all entities in the model that apply to a specification
         /// </summary>
-        /// <param name="facets"></param>
+        /// <param name="model"></param>
+        /// <param name="spec"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         public IEnumerable<IPersistEntity> SelectApplicableEntities(IModel model, Specification spec)
@@ -122,7 +123,7 @@ namespace Xbim.IDS.Validator.Core
         /// Validate an IFC entity meets its requirements against the defined Constraints
         /// </summary>
         /// <param name="item"></param>
-        /// <param name="requirement"
+        /// <param name="requirement"></param>
         /// <param name="logger"></param>
         /// <returns></returns>
         public IdsValidationResult ValidateRequirement(IPersistEntity item, FacetGroup requirement, ILogger? logger)

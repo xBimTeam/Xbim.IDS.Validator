@@ -30,7 +30,8 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <summary>
         /// Constructs a new <see cref="FacetBinderBase{T}"/>
         /// </summary>
-        /// <param name="model"></param>
+        /// <param name="binderContext"></param>
+        /// <param name="logger"></param>
         public FacetBinderBase(BinderContext binderContext, ILogger<FacetBinderBase<T>> logger)
         {
             BinderContext = binderContext ?? throw new ArgumentNullException(nameof(binderContext));
@@ -96,6 +97,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// </summary>
         /// <param name="expression"></param>
         /// <param name="expressType"></param>
+        /// <param name="includeSubTypes"></param>
         /// <returns></returns>
         protected Expression BindIfcExpressType(Expression expression, ExpressType expressType, bool includeSubTypes = false)
         {

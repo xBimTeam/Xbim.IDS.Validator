@@ -2,7 +2,7 @@
 
 
 Xbim.IDS.Validator is a library to help validate IFC models against the 
-BuildingSMART [Information Delivery Specification](https://github.com/buildingSMART/IDS/tree/master/Documentation) (IDS) schema.
+BuildingSMART [Information Delivery Specification](https://github.com/buildingSMART/IDS/blob/master/Documentation/README.md) (IDS) schema.
 
 Powered by xbim Tookit, this library can be used to translate IDS files into an executable specification, 
 which can be run against any IFC2x3 or IFC4 model and provide a detailed breakdown of the results.
@@ -10,7 +10,7 @@ which can be run against any IFC2x3 or IFC4 model and provide a detailed breakdo
 
 ## How do I use it?
 
-Given an IDS file such as [example.ids](https://raw.githubusercontent.com/andyward/Xbim.IDS.Validator/master/Xbim.IDS.Validator.Core.Tests/TestModels/Example.ids?token=GHSAT0AAAAAABYNDJ4NB3E6GAGY7ZR7QFNQY5O2P3Q])
+Given an IDS file such as [example.ids](https://github.com/andyward/Xbim.IDS.Validator/blob/master/Xbim.IDS.Validator.Core.Tests/TestModels/Example.ids])
 
 
 ```csharp

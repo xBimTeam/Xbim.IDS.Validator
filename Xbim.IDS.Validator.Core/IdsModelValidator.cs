@@ -12,7 +12,6 @@ using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 using Xbim.InformationSpecifications.Cardinality;
-using Xbim.IO.Parser;
 
 namespace Xbim.IDS.Validator.Core
 {
@@ -21,12 +20,17 @@ namespace Xbim.IDS.Validator.Core
     /// </summary>
     public class IdsModelValidator : IIdsModelValidator
     {
+
+        /// <summary>
+        /// Constructs a new <see cref="IdsModelValidator"/>
+        /// </summary>
+        /// <param name="modelBinder"></param>
         public IdsModelValidator(IIdsModelBinder modelBinder)
         {
             ModelBinder = modelBinder;
         }
 
-        public IIdsModelBinder ModelBinder { get; }
+        private IIdsModelBinder ModelBinder { get; }
 
         /// <inheritdoc/>
         public ValidationOutcome ValidateAgainstIds(IModel model, string idsFile, ILogger logger, VerificationOptions? options = default)
@@ -34,6 +38,8 @@ namespace Xbim.IDS.Validator.Core
             // Plan to obsolete the Synchronous
             return ValidateAgainstIdsAsync(model, idsFile, logger, null, options).Result;
         }
+
+        /// <inheritdoc/>
         public Task<ValidationOutcome> ValidateAgainstXidsAsync(IModel model, Xids idsSpec, ILogger logger, Action<ValidationRequirement>? requirementCompleted, VerificationOptions? verificationOptions = null,
             CancellationToken token = default)
         {

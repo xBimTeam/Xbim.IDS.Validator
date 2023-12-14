@@ -417,7 +417,6 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <summary>
         /// Finds all Quantities in a pset meeting a constraint
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="entityLabel"></param>
         /// <param name="psetName"></param>
         /// <param name="nameConstraint"></param>

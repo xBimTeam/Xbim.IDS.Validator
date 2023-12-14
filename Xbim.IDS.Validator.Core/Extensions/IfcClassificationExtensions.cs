@@ -23,7 +23,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
         /// </summary>
         /// <remarks>The filtering also accounts for hierarchical classification schemes</remarks>
         /// <param name="relAssociates"></param>
-        /// <param name="materialName"></param>
+        /// <param name="facet"></param>
         /// <returns></returns>
         public static IEnumerable<IIfcObjectDefinition> GetIfcObjectsUsingClassification(this IEnumerable<IIfcRelAssociatesClassification> relAssociates, IfcClassificationFacet facet)
         {

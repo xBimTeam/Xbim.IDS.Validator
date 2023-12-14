@@ -20,7 +20,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
         /// Selects all objects using a matching material
         /// </summary>
         /// <param name="relAssociates"></param>
-        /// <param name="materialName"></param>
+        /// <param name="materialFacet"></param>
         /// <returns></returns>
         public static IEnumerable<IIfcObjectDefinition> GetIfcObjectsUsingMaterials(this IEnumerable<IIfcRelAssociatesMaterial> relAssociates, MaterialFacet materialFacet)
         {
@@ -37,7 +37,6 @@ namespace Xbim.IDS.Validator.Core.Extensions
         /// Filters a set of <see cref="IIfcObjectDefinition"/> entries to those satisifying the material facet
         /// </summary>
         /// <param name="ent"></param>
-        /// <param name="facet"></param>
         /// <param name="facet"></param>
         /// <returns></returns>
         public static IEnumerable<IIfcObjectDefinition> WhereAssociatedWithMaterial(this IEnumerable<IIfcObjectDefinition> ent, MaterialFacet facet)

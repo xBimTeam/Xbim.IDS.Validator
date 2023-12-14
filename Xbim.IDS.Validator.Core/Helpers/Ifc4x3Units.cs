@@ -89,6 +89,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
         /// <summary>
         /// Sets the Length Unit to be SIUnit and SIPrefix, returns false if the units are not SI
         /// </summary>
+        /// <param name="unit"></param>
         /// <param name = "siUnitName"></param>
         /// <param name = "siPrefix"></param>
         /// <returns></returns>
