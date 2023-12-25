@@ -10,6 +10,7 @@ using Xbim.IDS.Validator.Common;
 using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc4.Interfaces;
+using Xbim.Ifc4.ProductExtension;
 using Xbim.InformationSpecifications;
 using Xbim.InformationSpecifications.Cardinality;
 
@@ -178,8 +179,35 @@ namespace Xbim.IDS.Validator.Core
                     requirementResult.ApplicableResults.Add(result);
                     token.ThrowIfCancellationRequested();
                 }
+
+                var relAggregations = model.Instances.OfType<IIfcRelAggregates>(true);
+                //add the reverse lookup
+                var aggregationReverseLookup = new XbimMultiValueDictionary<int, int>();
+                foreach (var relAggregation in relAggregations.Where(rel => rel.RelatingObject != null && requirementResult.ApplicableResults.Select(x => x.Entity).Contains(rel.RelatingObject.EntityLabel))) //only take top level assemblies that are in the filter
+                {
+                    foreach (var relObject in relAggregation.RelatedObjects)
+                    {
+
+                        var result = requirementResult.ApplicableResults.FirstOrDefault(x => x.Entity == relObject.EntityLabel);
+                        if (result != null)
+                            result.ParentEntity = relAggregation.EntityLabel;
+                    }
+                }
+
+                XbimMultiValueDictionary<int, int> _openingsLookup = new XbimMultiValueDictionary<int, int>();
+
+                var opening = model.Instances.OfType<IIfcGeometricRepresentationItem>(true);
+                var voids = model.Instances.OfType<IIfcRelVoidsElement>(true).ToList();
+                foreach (var v in voids)
+                {
+                    var result = requirementResult.ApplicableResults.FirstOrDefault(x => x.Entity == v.RelatedOpeningElement.EntityLabel);
+                    if(result != null)
+                        result.ParentEntity = v.RelatingBuildingElement.EntityLabel;
+                }
+                
+
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to run specification: {reason}", ex.Message);
                 requirementResult.Status = ValidationStatus.Error;

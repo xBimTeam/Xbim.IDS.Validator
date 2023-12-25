@@ -45,6 +45,11 @@ namespace Xbim.IDS.Validator.Core
         public int? Entity { get; internal set; }
 
         /// <summary>
+        /// The Id of the model entity being tested against defined requirements
+        /// </summary>
+        public int? ParentEntity { get; set; }
+
+        /// <summary>
         ///  The Full entity being tested against defined requirements
         /// </summary>
         public IPersist? FullEntity { get; internal set; }
