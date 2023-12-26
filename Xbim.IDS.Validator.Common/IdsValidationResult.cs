@@ -38,12 +38,7 @@ namespace Xbim.IDS.Validator.Core
         /// The validation status of an individual entity for a requirement
         /// </summary>
         public ValidationStatus ValidationStatus { get; set; }
-
-        /// <summary>
-        /// The Id of the model entity being tested against defined requirements
-        /// </summary>
-        public int? ParentEntity { get; set; }
-
+        
         /// <summary>
         /// The Id of the model entity being tested against defined requirements
         /// </summary>
