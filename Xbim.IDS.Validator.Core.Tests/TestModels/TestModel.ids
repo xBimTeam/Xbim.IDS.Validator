@@ -26,7 +26,7 @@
             </xs:restriction>
           </ids:system>
         </ids:classification>
-        <ids:property minOccurs="1" maxOccurs="unbounded" datatype="IFCLENGTHMEASURE">
+        <ids:property minOccurs="1" maxOccurs="unbounded" measure="Length">
           <ids:propertySet>
             <xs:restriction base="xs:string">
               <xs:enumeration value="COBie_Component" />

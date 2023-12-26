@@ -221,7 +221,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             {
                 PropertySetName = new ValueConstraint("Pset_MaterialCombustion"),
                 PropertyName = new ValueConstraint("SpecificHeatCapacity"),
-                DataType = "IFCLABEL"
+                Measure = "IFCLABEL"
             };
 
             var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);

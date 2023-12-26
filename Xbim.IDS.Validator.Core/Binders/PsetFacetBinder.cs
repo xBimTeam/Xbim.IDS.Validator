@@ -142,7 +142,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                                 if (ValueSatifiesConstraint(facet, value))
                                 {
                                     satisfiedValue = true;
-                                    if (ValidateDataType(ctx, result, propValue, facet.DataType))
+                                    if (ValidateMeasure(ctx, result, propValue, facet.Measure))
                                     {
                                         // We found a match
                                         break;
@@ -189,7 +189,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                                 result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, quant.Name, $"No quantity matching in {pset.Name}", quant));
                                 failure = true;
                             }
-                            ValidateDataType(ctx, result, propValue, facet.DataType);
+                            ValidateMeasure(ctx, result, propValue, facet.Measure);
 
 
                             if (ValueSatifiesConstraint(facet, value))
@@ -520,25 +520,25 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
 
-        protected bool ValidateDataType(ValidationContext<IfcPropertyFacet> ctx, IdsValidationResult result, IIfcValue propValue, string expectedDataType)
+        protected bool ValidateMeasure(ValidationContext<IfcPropertyFacet> ctx, IdsValidationResult result, IIfcValue propValue, string expectedMeasure)
         {
             if (propValue is null)
             {
                 return false;
             }
 
-            if (string.IsNullOrEmpty(expectedDataType)) return true;
+            if (string.IsNullOrEmpty(expectedMeasure)) return true;
 
             string measure = propValue.GetType().Name;
 
-            if (measure.Equals(expectedDataType, StringComparison.InvariantCultureIgnoreCase))
+            if (measure.Equals(expectedMeasure, StringComparison.InvariantCultureIgnoreCase))
             {
-                result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.DataType!, measure, "DataType matches", propValue));
+                result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.Measure!, measure, "Measure matches", propValue));
                 return true;
             }
             else
             {
-                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.DataType!, measure, "Invalid DataType", propValue));
+                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Measure!, measure, "Invalid Measure", propValue));
                 return false;
             }
 

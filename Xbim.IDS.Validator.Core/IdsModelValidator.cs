@@ -163,7 +163,7 @@ namespace Xbim.IDS.Validator.Core
                     var result = ModelBinder.ValidateRequirement(item, spec.Requirement, logger);
                     GetLogLevel(result.ValidationStatus, out LogLevel level, out int pad);
                     logger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '),
-                        result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Requirement?.Short() ?? "No requirement");
+                        result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Requirement.Short());
                     foreach (var message in result.Messages)
                     {
                         GetLogLevel(message.Status, out level, out pad, LogLevel.Debug);
@@ -226,7 +226,7 @@ namespace Xbim.IDS.Validator.Core
             // TODO: Check this logic
             if (specification.Cardinality is SimpleCardinality simpleCard)
             {
-                if (simpleCard.AllowsRequirements) // Required or Optional
+                if (simpleCard.ExpectsRequirements) // Required or Optional
                 {
                     if (validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Fail))
                     {
@@ -250,7 +250,7 @@ namespace Xbim.IDS.Validator.Core
                 }
                 if (simpleCard.NoMatchingEntities)  // Prohibited
                 {
-                    if (validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Pass || r.ValidationStatus == ValidationStatus.Inconclusive))
+                    if (validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Pass))
                     {
                         validation.Status = ValidationStatus.Fail;
                     }
@@ -262,7 +262,7 @@ namespace Xbim.IDS.Validator.Core
             }
             else if (specification.Cardinality is MinMaxCardinality cardinality)
             {
-                if (cardinality.AllowsRequirements)
+                if (cardinality.ExpectsRequirements)
                 {
                     if (cardinality.IsModelConstraint)
                     {

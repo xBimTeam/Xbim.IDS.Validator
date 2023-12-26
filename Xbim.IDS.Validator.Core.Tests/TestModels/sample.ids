@@ -38,7 +38,7 @@
                 </entity>
             </applicability>
             <requirements>
-                <property datatype="IfcLabel" instructions="Fire rating is specified using the Fire Resistance Level as defined in the Australian National Construction Code (NCC) 2019. Valid examples include -/-/-, -/120/120, and 60/60/60" minOccurs="1" maxOccurs="1">
+                <property measure="IfcLabel" instructions="Fire rating is specified using the Fire Resistance Level as defined in the Australian National Construction Code (NCC) 2019. Valid examples include -/-/-, -/120/120, and 60/60/60" minOccurs="1" maxOccurs="1">
                     <propertySet>
                         <simpleValue>Pset_WallCommon</simpleValue>
                     </propertySet>

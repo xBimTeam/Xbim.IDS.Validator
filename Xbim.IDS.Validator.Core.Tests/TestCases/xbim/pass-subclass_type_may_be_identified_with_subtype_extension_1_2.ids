@@ -14,7 +14,7 @@
             </applicability>
             <requirements>
               <entity>
-                    <name>
+                    <name minOccurs="1" maxOccurs="1">
                         <simpleValue>IFCWALLSTANDARDCASE</simpleValue>
                     </name>
                 </entity>

@@ -144,7 +144,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             var ctx = CreateValidationContext(requirement, facet);
 
-            var candidates = GetClassifications(item).ToList();
+            var candidates = GetClassifications2(item);
 
             if (candidates.Any())
             {
@@ -203,8 +203,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 }
                 if (!isSatisfied)
                 {
-                    var identifiers = string.Join(",", identifications.Distinct());
-                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Identification!, identifiers, "No classifications matching", classification));
+                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Identification!, null, "No classifications matching", classification));
                     return false;
                 }
             }
@@ -264,7 +263,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
 
-        private IEnumerable<IIfcClassificationSelect> GetClassifications([NotNull] IPersistEntity item,  bool isFirstPass = true)
+        private IEnumerable<IIfcClassificationSelect> GetClassifications2([NotNull] IPersistEntity item,  bool isFirstPass = true)
         {
             if (item is IIfcObjectDefinition obj)
             {
