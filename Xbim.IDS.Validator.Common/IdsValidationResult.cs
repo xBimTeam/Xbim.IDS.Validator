@@ -70,7 +70,7 @@ namespace Xbim.IDS.Validator.Core
 
     public class ValidationMessage
     {
-        
+
 
 
         // Gets the status based on current Expectation mode - i.e. Failure to match in Prohibited model = Success
@@ -89,23 +89,34 @@ namespace Xbim.IDS.Validator.Core
                     return ValidationStatus.Inconclusive;
 
             }
-           
-            
+
+
         }
 
         public override string ToString()
         {
-            if(Status == ValidationStatus.Fail)
+            var actualResultString = string.IsNullOrEmpty(ActualResult?.ToString()) ? " " : ActualResult?.ToString();
+            if (Status == ValidationStatus.Fail)
             {
-                return $"[{Status}] {Expectation} {Clause?.GetType().Name}.{ValidatedField} to be {ExpectedResult} - but actually found '{ActualResult}'";
+                return $"{Expectation} {Clause?.GetType().Name}.{ValidatedField} to be {ExpectedResult} - but actually found '{actualResultString}'";
             }
             else
             {
-                return $"[{Status}] {Expectation} {Clause?.GetType().Name}.{ValidatedField} to be {ExpectedResult} and found '{ActualResult}'";
+                return $"{Expectation} {Clause?.GetType().Name}.{ValidatedField} to be {ExpectedResult} and found '{actualResultString}'";
             }
         }
 
-        public static ValidationMessage Success<T>(ValidationContext<T> context, [NotNull] Expression<Func<T, object>> memberField, object? actualResult, string? reason = default, IPersist? entity = null) where T: IFacet
+        /// <summary>
+        /// Builds a message representing a successful check
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="context"></param>
+        /// <param name="memberField"></param>
+        /// <param name="actualResult"></param>
+        /// <param name="reason"></param>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public static ValidationMessage Success<T>(ValidationContext<T> context, [NotNull] Expression<Func<T, object>> memberField, object? actualResult, string? reason = default, IPersist? entity = null) where T : IFacet
         {
             return new ValidationMessage
             {
@@ -120,7 +131,17 @@ namespace Xbim.IDS.Validator.Core
             };
         }
 
-        public static ValidationMessage Failure<T>(ValidationContext<T> context, Expression<Func<T, object>> memberField, object? actualResult, string? reason = default, IPersist? entity = null) where T: IFacet
+        /// <summary>
+        /// Builds message representing a failed check
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="context"></param>
+        /// <param name="memberField"></param>
+        /// <param name="actualResult"></param>
+        /// <param name="reason"></param>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public static ValidationMessage Failure<T>(ValidationContext<T> context, Expression<Func<T, object>> memberField, object? actualResult, string? reason = default, IPersist? entity = null) where T : IFacet
         {
 
             return new ValidationMessage
