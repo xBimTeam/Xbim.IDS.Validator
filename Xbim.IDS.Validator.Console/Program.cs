@@ -171,7 +171,7 @@ class Program
 
     }
 
-    private static void OutputRequirement(ValidationRequirement req)
+    private static Task OutputRequirement(ValidationRequirement req)
     {
         var passed = req.PassedResults.Count();
 
@@ -190,7 +190,7 @@ class Program
                 foreach(var msg in itm.Messages.Where(m => m.Status != ValidationStatus.Pass))
                 {
                     WriteColored(ValidationStatus.Error, $": {msg?.Reason}\n");
-                    WriteColored($"               {msg?.Expectation} {msg?.Clause?.GetType().Name}.{msg?.ValidatedField} to be {msg?.ExpectedResult} - but actually found '{msg?.FormatedActualResult}'\n", ConsoleColor.DarkGray);
+                    WriteColored($"               {msg?.Expectation} {msg?.Clause?.GetType().Name}.{msg?.ValidatedField} to be {msg?.ExpectedResult} - but actually found '{msg?.ActualResult}'\n", ConsoleColor.DarkGray);
                 }
 
             }
@@ -201,7 +201,7 @@ class Program
                 WriteColored($": {itm.FullEntity}\n", ConsoleColor.White);
                 foreach (var msg in itm.Messages.Where(m => m.Status != ValidationStatus.Pass))
                 {
-                    WriteColored($"               {msg?.Expectation} {msg?.Clause?.GetType().Name}.{msg?.ValidatedField} to be {msg?.ExpectedResult} - but actually found '{msg?.FormatedActualResult}' - {msg?.Reason}\n", ConsoleColor.DarkGray);
+                    WriteColored($"               {msg?.Expectation} {msg?.Clause?.GetType().Name}.{msg?.ValidatedField} to be {msg?.ExpectedResult} - but actually found '{msg?.ActualResult}' - {msg?.Reason}\n", ConsoleColor.DarkGray);
                 }
             }
             //else
@@ -217,6 +217,7 @@ class Program
         }
         Console.WriteLine();
         Console.WriteLine("------------------------------");
+        return Task.CompletedTask;
     }
 
     private static void WriteColored(ValidationStatus status, string text)

@@ -34,7 +34,7 @@ namespace Xbim.IDS.Validator.Core
             // Plan to obsolete the Synchronous
             return ValidateAgainstIdsAsync(model, idsFile, logger, null, options).Result;
         }
-        public Task<ValidationOutcome> ValidateAgainstXidsAsync(IModel model, Xids idsSpec, ILogger logger, Action<ValidationRequirement>? requirementCompleted, VerificationOptions? verificationOptions = null,
+        public async Task<ValidationOutcome> ValidateAgainstXidsAsync(IModel model, Xids idsSpec, ILogger logger,  Func<ValidationRequirement, Task>? requirementCompleted, VerificationOptions? verificationOptions = null,
             CancellationToken token = default)
         {
             if (logger is null)
@@ -53,7 +53,7 @@ namespace Xbim.IDS.Validator.Core
                 {
                     outcome.MarkCompletelyFailed($"Unable to open IDS file '{idsSpec.Name}'");
                     logger.LogError("Unable to open IDS file '{idsFile}", idsSpec.Name);
-                    return Task.FromResult(outcome);
+                    return outcome;
                 }
 
 
@@ -76,7 +76,7 @@ namespace Xbim.IDS.Validator.Core
                         if (requirementCompleted != null)
                         {
                             // report progress
-                            requirementCompleted(requirementResult);
+                           await requirementCompleted(requirementResult);
                         }
                         outcome.ExecutedRequirements.Add(requirementResult);
 
@@ -92,19 +92,19 @@ namespace Xbim.IDS.Validator.Core
                     outcome.Status = ValidationStatus.Pass;
                 }
                 // TODO: Consider Inconclusive
-                return Task.FromResult(outcome);
+                return outcome;
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to complete validation");
                 var badOutcome = new ValidationOutcome(new Xids());
                 badOutcome.MarkCompletelyFailed(ex.Message);
-                return Task.FromResult(badOutcome);
+                return badOutcome;
             }
         }
 
         /// <inheritdoc/>
-        public async Task<ValidationOutcome> ValidateAgainstIdsAsync(IModel model, string idsFile, ILogger logger, Action<ValidationRequirement>? requirementCompleted, VerificationOptions? verificationOptions = null,
+        public async Task<ValidationOutcome> ValidateAgainstIdsAsync(IModel model, string idsFile, ILogger logger,  Func<ValidationRequirement, Task>? requirementCompleted, VerificationOptions? verificationOptions = null,
             CancellationToken token = default)
         {
             if (logger is null)
@@ -126,7 +126,7 @@ namespace Xbim.IDS.Validator.Core
                 logger.LogError(ex, "Failed to complete validation");
                 var badOutcome = new ValidationOutcome(new Xids());
                 badOutcome.MarkCompletelyFailed(ex.Message);
-                return await Task.FromResult(badOutcome);
+                return badOutcome;
             }
         }
 
