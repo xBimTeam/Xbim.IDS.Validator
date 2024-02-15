@@ -131,10 +131,55 @@ namespace Xbim.IDS.Validator.Core.Extensions
             {
                 throw new ArgumentNullException(nameof(obj));
             }
-            // TODO: Limited support for Predefined Type only. Omits complex scenarios, Type Inheritance, Enums etc
+            // Based on latest thinking at https://github.com/buildingSMART/IDS/pull/240#issuecomment-1929367078
             return (facet.EntityType?.IfcType?.IsSatisfiedBy(obj.GetType().Name, true) == true) &&
-                (facet.EntityType?.PredefinedType == null || obj is IIfcObject p && facet.EntityType?.PredefinedType?.IsSatisfiedBy(p.ObjectType, true) == true)
+                (facet.EntityType?.PredefinedType == null || 
+                facet.EntityType?.PredefinedType?.IsSatisfiedBy(GetPredefinedType(obj), true) == true)
                 ;
+        }
+
+        private static string? GetPredefinedType(IIfcObjectDefinition obj)
+        {
+            if(obj is IIfcObject o)
+            {
+                var definingType = o.IsTypedBy.FirstOrDefault()?.RelatingType;
+                if(definingType != null)
+                {
+                    return GetSubType(definingType);
+                }
+                else
+                {
+                    // No type
+                    return GetSubType(o);
+                }
+            }
+            else
+            {
+                return GetSubType(obj);
+            }
+        }
+
+        private static string? GetSubType(IIfcObjectDefinition definingType)
+        {
+            var pdt = definingType.GetPredefinedTypeValue();
+            if (pdt == null || pdt == "USERDEFINED")
+            {
+                return GetObjectType((IIfcObjectDefinition?)definingType) ?? pdt;
+            }
+            return pdt;
+        }
+
+
+        private static string? GetObjectType(IIfcObjectDefinition entity)
+        {
+            if (entity is IIfcObject obj)
+                return obj.ObjectType?.Value.ToString();
+            else if (entity is IIfcElementType type)
+                return type.ElementType?.Value.ToString();
+            else if (entity is IIfcTypeProcess process)
+                return process.ProcessType?.Value.ToString();
+            else
+                return null;
         }
 
         private static IEnumerable<IIfcObjectDefinition> UnionAncestry(this IEnumerable<IIfcObjectDefinition> objs, PartOfRelation relation)
