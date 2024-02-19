@@ -37,13 +37,12 @@ namespace Xbim.IDS.Validator.Core.Helpers
         private static MethodInfo _enumerableWhereAssociatedWithMaterialMethod = typeof(IfcMaterialsExtensions).GetMethod(nameof(IfcMaterialsExtensions.WhereAssociatedWithMaterial), new Type[] { typeof(IEnumerable<IIfcObjectDefinition>), typeof(MaterialFacet) });
         private static MethodInfo _enumerableWhereObjectPartOfMethod = typeof(IfcRelationsExtensions).GetMethod(nameof(IfcRelationsExtensions.WhereHasPartOfRelationship), new Type[] { typeof(IEnumerable<IIfcObjectDefinition>), typeof(PartOfFacet) });
 
-        //
-
         private static MethodInfo _idsValidationIsSatisifiedMethod = typeof(IValueConstraintComponent).GetMethod(nameof(IValueConstraintComponent.IsSatisfiedBy), new Type[] { typeof(object), typeof(ValueConstraint), typeof(bool), typeof(ILogger) });
-        private static MethodInfo _idsSatisfiesConstraintMethod = typeof(ValueConstraintExtensions).GetMethod(nameof(ValueConstraintExtensions.SatisifesConstraint), new Type[] { typeof(ValueConstraint), typeof(object) });
+        private static MethodInfo _idsSatisfiesConstraintMethod = typeof(ValueConstraintExtensions).GetMethod(nameof(ValueConstraintExtensions.SatisfiesConstraint), new Type[] { typeof(ValueConstraint), typeof(object) });
 
 
         private static MethodInfo _enumerableWhereMethod = GenericMethodOf(_ => Enumerable.Where<int>(default(IEnumerable<int>), default(Func<int, bool>)));
+        private static MethodInfo _enumerableAnyMethod = GenericMethodOf(_ => Enumerable.Any<int>(default(IEnumerable<int>), default(Func<int, bool>)));
         private static MethodInfo _enumerableCastMethod = GenericMethodOf(_ => Enumerable.Cast<int>(default(IEnumerable<int>)));
         private static MethodInfo _enumerableOfTypeMethod = GenericMethodOf(_ => Enumerable.OfType<int>(default(IEnumerable<int>)));
         private static MethodInfo _enumerableSelectMethod = GenericMethodOf(_ => Enumerable.Select<int, int>(default(IEnumerable<int>), i => i));
@@ -60,6 +59,11 @@ namespace Xbim.IDS.Validator.Core.Helpers
         public static MethodInfo EnumerableWhereGeneric
         {
             get { return _enumerableWhereMethod; }
+        }
+
+        public static MethodInfo EnumerableAnyGeneric
+        {
+            get { return _enumerableAnyMethod; }
         }
 
         public static MethodInfo EntityCollectionOfGenericType

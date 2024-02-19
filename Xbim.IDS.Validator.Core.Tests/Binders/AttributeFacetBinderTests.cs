@@ -25,8 +25,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData(nameof(IIfcSite.RefElevation), "0", 1)]
         [InlineData(nameof(IIfcRoot.GlobalId), "2ru7YPT4T9MuTpOS4FRzxX", 1)]    // A WallType
         [InlineData(nameof(IIfcObject.ObjectType), null, 68)]    // Any object with an ObjectType defined (any IfcObject)
-        [InlineData(nameof(IIfcRoot.GlobalId), null, 95)]    // Any object with an GlobalID (any object or Type)
-        [InlineData(nameof(IIfcRoot.Description), null, 1)] // Any Object with a description
+        [InlineData(nameof(IIfcRoot.GlobalId), null, 95)]    // Any entity with an GlobalID (any Rooted object)
+        [InlineData(nameof(IIfcRoot.Description), null, 1)] // Any entity with a description
         [Theory]
         public void Can_Query_By_Attributes(string attributeFieldName, string attributeValue, int expectedCount)
         {

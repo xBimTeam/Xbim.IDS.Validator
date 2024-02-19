@@ -1,11 +1,13 @@
 ﻿using Divergic.Logging.Xunit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Xbim.Common;
 using Xbim.Common.Step21;
 using Xbim.IDS.Validator.Common;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
+using Xbim.IO.CobieExpress;
 using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.TestCases
@@ -106,7 +108,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
             if (schemaVersions == null || schemaVersions.Length == 0)
             {
-                return new[] { XbimSchemaVersion.Ifc4, XbimSchemaVersion.Ifc2X3 };
+                return new[] { XbimSchemaVersion.Ifc4, XbimSchemaVersion.Ifc2X3 };  // We don't test 4.3 unless explicit
             }
             var except = new[] { XbimSchemaVersion.Ifc2X3 };
             return schemaVersions;//.Except(except).ToArray();
@@ -116,35 +118,46 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             VerificationOptions options = default
             )
         {
-            IfcStore model = null;
+            IModel model = null;
             try
             {
-                string ifcFile = Path.ChangeExtension(idsFile, "ifc");
-                logger.LogInformation("Verifying {schema} model {model}", schemaVersion, ifcFile);
-                if (schemaVersion == XbimSchemaVersion.Ifc4)
+                string modelFile = Path.ChangeExtension(idsFile, "ifc");
+                logger.LogInformation("Verifying {schema} model {model}", schemaVersion, modelFile);
+                switch (schemaVersion)
                 {
-                    model = IfcStore.Open(ifcFile);
-                }
-                else if (schemaVersion == XbimSchemaVersion.Ifc4x3)
-                {
-                    model = IfcStore.Open(ifcFile);
-                }
-                else
-                {
+                    case XbimSchemaVersion.Ifc4:
+                        model = IfcStore.Open(modelFile);
+                        break;
+                    case XbimSchemaVersion.Ifc4x3:
+                        model = IfcStore.Open(modelFile);
+                        break;
 
-                    // Very crude attempt to fake an IFC2x3 from IFC4. Because of breaking changes between schemas
-                    // this should be treated as suspect - but does allow quick & dirty testing of our schema switching logic
-                    var stepText = File.ReadAllText(ifcFile);
-                    stepText = stepText.Replace("FILE_SCHEMA(('IFC4'));", "FILE_SCHEMA(('IFC2x3'));");
-                    using (var stream = new MemoryStream())
-                    using (var sw = new StreamWriter(stream))
-                    {
-                        sw.Write(stepText);
-                        sw.Flush();
-                        stream.Seek(0, SeekOrigin.Begin);
+                    case XbimSchemaVersion.Ifc2X3:
+                        {
 
-                        model = IfcStore.Open(stream, IO.StorageType.Ifc, schemaVersion, IO.XbimModelType.MemoryModel);
-                    }
+                            // Very crude attempt to fake an IFC2x3 from IFC4. Because of breaking changes between schemas
+                            // this should be treated as suspect - but does allow quick & dirty testing of our schema switching logic
+                            var stepText = File.ReadAllText(modelFile);
+                            stepText = stepText.Replace("FILE_SCHEMA(('IFC4'));", "FILE_SCHEMA(('IFC2x3'));");
+                            using (var stream = new MemoryStream())
+                            using (var sw = new StreamWriter(stream))
+                            {
+                                sw.Write(stepText);
+                                sw.Flush();
+                                stream.Seek(0, SeekOrigin.Begin);
+
+                                model = IfcStore.Open(stream, IO.StorageType.Ifc, schemaVersion, IO.XbimModelType.MemoryModel);
+                            }
+
+                            break;
+                        }
+                    case XbimSchemaVersion.Cobie2X4:
+                        modelFile = @"..\..\..\TestModels\SampleHouse4.xlsx";
+                        model = OpenCOBie(modelFile);
+                        break;
+
+                    default:
+                        throw new NotSupportedException($"Schema not supported {schemaVersion}");
                 }
 
                 if (spotfix)
@@ -181,6 +194,15 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                     model.Dispose();
                 }
             }
+        }
+
+        private IModel OpenCOBie(string file)
+        {
+            var mapping = CobieModel.GetMapping();
+            //mapping.ClassMappings.RemoveAll(m => m.Class == "System");
+            var model = CobieModel.ImportFromTable(file, out string report, mapping);
+            
+            return model;
         }
     }
 }

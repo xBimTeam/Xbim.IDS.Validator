@@ -15,5 +15,10 @@
         /// Determines if the full IFC entity is returned in the <see cref="IdsValidationResult"/>.
         /// </summary>
         public bool OutputFullEntity { get; set; }
+
+        /// <summary>
+        /// Determines if Derived Attributes can be used for applicability and requirements
+        /// </summary>
+        public bool AllowDerivedAttributes { get; set; }
     }
 }

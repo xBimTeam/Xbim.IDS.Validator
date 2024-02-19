@@ -113,7 +113,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
             return true;
         }
 
-        public static bool SatisifesConstraint(this ValueConstraint constraint, object value)
+        public static bool SatisfiesConstraint(this ValueConstraint constraint, object value)
         {
 
 
@@ -129,7 +129,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
             }
             
             var valueType = value.GetType();
-            var isNullWrapped = TypeHelper.IsNullable(valueType);
+            var isNullWrapped = TypeHelper.IsNullable(valueType) && TypeHelper.IsValueType(valueType);
             var underlyingType = isNullWrapped ? Nullable.GetUnderlyingType(valueType) : valueType;
 
             if (TypeHelper.IsCollection(underlyingType))
@@ -142,79 +142,42 @@ namespace Xbim.IDS.Validator.Core.Extensions
             }
 
             // Wrap simple navigation objects to use built-in equality operators
-
-            else if (value is Ifc4.MeasureResource.IfcLabel label)
-            {
-                return constraint.IsSatisfiedBy(label.Value, true);
-            }
-            else if (value is Ifc4.MeasureResource.IfcIdentifier id)
-            {
-                return constraint.IsSatisfiedBy(id.Value, true);
-            }
-            else if (value is Ifc4.MeasureResource.IfcText text)
-            {
-                return constraint.IsSatisfiedBy(text.Value, true);
-            }
-            else if (value is Ifc4.MeasureResource.IfcBoolean boolean)
-            {
-                return constraint.IsSatisfiedBy(boolean.Value, true);
-            }
-            else if (value is Ifc4.MeasureResource.IfcInteger integer)
-            {
-                return constraint.IsSatisfiedBy(integer.Value, true);
-            }
-            else if (value is Ifc4.MeasureResource.IfcReal real)
-            {
-                return constraint.IsSatisfiedBy(real.Value, true);
-            }
-
-            else if (value is Ifc4.UtilityResource.IfcGloballyUniqueId guid)
-            {
-                return constraint.IsSatisfiedBy(guid.Value, true);
-            }
-            else if (value is Ifc2x3.UtilityResource.IfcGloballyUniqueId guid2x3)
-            {
-                return constraint.IsSatisfiedBy(guid2x3.Value, true);
-            }
-
-            
-
-            // Measures
-            else if (value is Ifc4.MeasureResource.IfcCountMeasure cnt)
-            {
-                return constraint.IsSatisfiedBy(cnt.Value, true);
-            }
-            else if (value is Ifc4.MeasureResource.IfcLengthMeasure len)
-            {
-                return constraint.IsSatisfiedBy(len.Value, true);
-            }
-            else if (value is Ifc4.MeasureResource.IfcAreaMeasure area)
-            {
-                return constraint.IsSatisfiedBy(area.Value, true);
-            }
-            else if (value is Ifc4.MeasureResource.IfcVolumeMeasure vol)
-            {
-                return constraint.IsSatisfiedBy(vol.Value, true);
-            }
-            else if (value is Ifc4.DateTimeResource.IfcDate date)
-            {
-                return constraint.IsSatisfiedBy(date.Value, true);
-            }
-            else if (value is Ifc4.DateTimeResource.IfcDuration interval)
-            {
-                return constraint.IsSatisfiedBy(interval.Value, true);
-            }
-
-            else if (value is bool nativebool)
-            {
-                return constraint.IsSatisfiedBy(nativebool);
-            }
-
             else
             {
-                // Throw to catch omissions. 
-                throw new NotImplementedException($"Filtering on Ifc type {value?.GetType()?.Name} not implemented");
+                return value switch
+                {
+                    Ifc4.MeasureResource.IfcLabel label => constraint.IsSatisfiedBy(label.Value, true),
+                    Ifc4.MeasureResource.IfcIdentifier id => constraint.IsSatisfiedBy(id.Value, true),
+                    Ifc4.MeasureResource.IfcText text => constraint.IsSatisfiedBy(text.Value, true),
+                    Ifc4.MeasureResource.IfcBoolean boolean => constraint.IsSatisfiedBy(boolean.Value, true),
+                    Ifc4.MeasureResource.IfcInteger integer => constraint.IsSatisfiedBy(integer.Value, true),
+                    Ifc4.MeasureResource.IfcReal real => constraint.IsSatisfiedBy(real.Value, true),
+                    Ifc4.UtilityResource.IfcGloballyUniqueId guid => constraint.IsSatisfiedBy(guid.Value, true),
+                    Ifc2x3.UtilityResource.IfcGloballyUniqueId guid2x3 => constraint.IsSatisfiedBy(guid2x3.Value, true),
+                    Ifc4.MeasureResource.IfcCountMeasure cnt => constraint.IsSatisfiedBy(cnt.Value, true),
+                    Ifc4.MeasureResource.IfcLengthMeasure len => constraint.IsSatisfiedBy(len.Value, true),
+                    Ifc4.MeasureResource.IfcAreaMeasure area => constraint.IsSatisfiedBy(area.Value, true),
+                    Ifc4.MeasureResource.IfcVolumeMeasure vol => constraint.IsSatisfiedBy(vol.Value, true),
+                    Ifc4.DateTimeResource.IfcDate date => constraint.IsSatisfiedBy(date.Value, true),
+                    Ifc4.DateTimeResource.IfcDuration interval => constraint.IsSatisfiedBy(interval.Value, true),
+
+                    Xbim.CobieExpress.CobieRole cobieRole => constraint.IsSatisfiedBy(cobieRole.Value, true),
+                    Xbim.CobieExpress.CobieCategory cobie => constraint.IsSatisfiedBy(cobie.Value, true),
+                    Xbim.CobieExpress.DateTimeValue cobie => constraint.IsSatisfiedBy(cobie.Value),
+                    Xbim.CobieExpress.CobieExternalObject cobieExtObj => constraint.IsSatisfiedBy(cobieExtObj.Name, true),
+                    Xbim.CobieExpress.CobieExternalSystem cobieExtSys => constraint.IsSatisfiedBy(cobieExtSys.Name, true),
+                    Xbim.CobieExpress.CobieDurationUnit cobie => constraint.IsSatisfiedBy(cobie.Value, true),
+                    Xbim.CobieExpress.CobieContact cobie => constraint.IsSatisfiedBy(cobie.Email, true),
+                    Xbim.CobieExpress.CobieAsset cobie => constraint.IsSatisfiedBy(cobie.Name, true),
+
+                    bool nativebool => constraint.IsSatisfiedBy(nativebool),
+                    string strVal => constraint.IsSatisfiedBy(strVal, true),
+                    double val => constraint.IsSatisfiedBy(val),
+
+                    _ => throw new NotImplementedException($"Filtering on Ifc type {value?.GetType()?.Name} not implemented")
+                };
             }
+            
 
         }
 

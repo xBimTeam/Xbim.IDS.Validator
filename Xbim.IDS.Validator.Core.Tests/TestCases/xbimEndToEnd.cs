@@ -55,6 +55,18 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             outcome.Status.Should().Be(expected);
         }
 
+        [InlineData(@"TestCases/xbim/pass-cobie_models_work.ids", ValidationStatus.Pass)]
+        [InlineData(@"TestCases/xbim/pass-cobie_checks_ext_id_length.ids", ValidationStatus.Pass)]
+        [InlineData(@"TestCases/xbim/pass-cobie_models_can_verify.ids", ValidationStatus.Pass)]
+        [Theory]
+        public async Task COBieSupported(string idsFile, ValidationStatus expected)
+        {
+            var outcome = await VerifyIdsFile(idsFile, schemaVersion: XbimSchemaVersion.Cobie2X4, options: 
+                new VerificationOptions { IncludeSubtypes = true, AllowDerivedAttributes = true });
+
+            outcome.Status.Should().Be(expected);
+        }
+
         [Theory(Skip ="Needs thought on querying Type's Predefined values via expressions")]
         [InlineData(@"TestCases/xbim/pass-ifc2x3-air_terminal_edge_case_with_predefined.ids", ValidationStatus.Pass)]
         [InlineData(@"TestCases/xbim/fail-ifc2x3-air_terminal_edge_case_with_predefined.ids", ValidationStatus.Fail)]

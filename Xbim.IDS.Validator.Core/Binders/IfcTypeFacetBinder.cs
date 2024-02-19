@@ -269,7 +269,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             
             var x= Enumerable.Empty<Ifc4x3.SharedBldgElements.IfcWall>();
-            x.Where(e => e.IsTypedBy is IIfcElementType et && ValueConstraintExtensions.SatisifesConstraint(constraint, et.ElementType));
+            x.Where(e => e.IsTypedBy is IIfcElementType et && ValueConstraintExtensions.SatisfiesConstraint(constraint, et.ElementType));
 
 
             // Build IEnumerable<TEntity>().Where(t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName]))

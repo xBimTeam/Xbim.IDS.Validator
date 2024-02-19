@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Xbim.Common;
+using Xbim.Common.Step21;
+using Xbim.IDS.Validator.Common.Interfaces;
 using Xbim.IDS.Validator.Core.Binders;
 using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Interfaces;
@@ -37,6 +39,7 @@ namespace Xbim.IDS.Validator.Core
             ifcQuery = new IfcQuery();
         }
 
+        public XbimSchemaVersion Schema => binderContext.Model?.SchemaVersion ?? XbimSchemaVersion.Ifc2X3;
 
         /// <summary>
         /// Returns all entities in the model that apply to a specification
@@ -132,7 +135,12 @@ namespace Xbim.IDS.Validator.Core
 
             foreach (var facet in requirement.Facets)
             {
-                var binder = FacetBinderFactory.Create(facet);
+                var binder = FacetBinderFactory.Create(facet, Schema);
+
+                if(binder is ISupportOptions opts)
+                {
+                    opts.SetOptions(options);
+                }
                 var card = requirement.GetCardinality(facet);
                 binder.ValidateEntity(item, facet, card, result);
             }
@@ -158,14 +166,14 @@ namespace Xbim.IDS.Validator.Core
         /// <exception cref="NotImplementedException"></exception>
         private Expression BindSelection(Expression baseExpression, IFacet facet)
         {
-            var binder = FacetBinderFactory.Create(facet);
+            var binder = FacetBinderFactory.Create(facet, Schema);
             return binder.BindSelectionExpression(baseExpression, facet); 
            
         }
 
         private Expression BindFilters(Expression baseExpression, IFacet facet)
         {
-            var binder = FacetBinderFactory.Create(facet);
+            var binder = FacetBinderFactory.Create(facet, Schema);
             return binder.BindWhereExpression(baseExpression, facet);
         }
 

@@ -20,7 +20,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         
       
 
-        public IModel Model
+        public virtual IModel Model
         {
             get
             {
@@ -46,7 +46,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         protected IfcQuery query;
 
-        private readonly ITestOutputHelper output;
+        protected readonly ITestOutputHelper output;
         private XbimSchemaVersion _schema;
         protected readonly ILogger logger;
 
