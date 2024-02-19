@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,10 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xbim.Common;
 using Xbim.IDS.Validator.Common;
-using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc4.Interfaces;
-using Xbim.Ifc4.ProductExtension;
 using Xbim.InformationSpecifications;
 using Xbim.InformationSpecifications.Cardinality;
 

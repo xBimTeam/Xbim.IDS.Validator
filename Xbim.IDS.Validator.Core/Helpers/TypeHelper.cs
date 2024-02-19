@@ -105,7 +105,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
                         t => TypeHelper.IsGenericType(t)
                              && t.GetGenericTypeDefinition() == typeof(IEnumerable<>));
 
-            if (collectionInterface != null)
+            if (collectionInterface != null && clrType != typeof(string))
             {
                 elementType = collectionInterface.GetGenericArguments().Single();
                 return true;

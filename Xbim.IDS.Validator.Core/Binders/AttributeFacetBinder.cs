@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Xbim.Common;
 using Xbim.Common.Metadata;
+using Xbim.IDS.Validator.Common.Interfaces;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4x3;  // To provide ToIfc4() extension method
@@ -15,9 +16,10 @@ using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Binders
 {
-    public class AttributeFacetBinder : FacetBinderBase<AttributeFacet>
+    public class AttributeFacetBinder : FacetBinderBase<AttributeFacet>, ISupportOptions
     {
         private readonly ILogger<AttributeFacetBinder> logger;
+        private VerificationOptions _options = new VerificationOptions();
 
         public AttributeFacetBinder(BinderContext context, ILogger<AttributeFacetBinder> logger) : base(context, logger)
         {
@@ -46,7 +48,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 throw new ArgumentNullException(nameof(attrFacet));
             }
 
-            if (!attrFacet.IsValid())
+            if (!attrFacet.IsValid() && Model.SchemaVersion != Xbim.Common.Step21.XbimSchemaVersion.Cobie2X4)
             {
                 // IsValid checks against a known list of all IFC Attributes
                 throw new InvalidOperationException($"Attribute Facet '{attrFacet?.AttributeName}' is not valid");
@@ -54,7 +56,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             var expression = baseExpression;
 
-            if (attrFacet.AttributeName.IsSingleExact(out var attributeName))
+            if (attrFacet.AttributeName?.IsSingleExact(out var attributeName) == true)
             {
                 // When an Ifc Type facet has not yet been specified, find correct IFC type(s) for this AttributeName
                 // using the lookup that IDSLib provides
@@ -62,18 +64,33 @@ namespace Xbim.IDS.Validator.Core.Binders
                 // Test for raw Model.Instances:
                 if (expression.Type.IsInterface && typeof(IEntityCollection).IsAssignableFrom(expression.Type))
                 {
+                    // Work out the set of all types this attribute could apply to.
+                    // This is schema dependent. We want to get the highest common roots
                     IEnumerable<string> rootTypes;
-                    if (IsIfc2x3Model())
+
+                    switch (Model.SchemaVersion)
                     {
-                        rootTypes = SchemaInfo.SchemaIfc2x3.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
-                    }
-                    else if(IsIfc4x3Model())
-                    {
-                        rootTypes = SchemaInfo.SchemaIfc4x3.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
-                    }
-                    else
-                    {
-                        rootTypes = SchemaInfo.SchemaIfc4.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
+                        case Xbim.Common.Step21.XbimSchemaVersion.Ifc2X3:
+                            rootTypes = SchemaInfo.SchemaIfc2x3.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
+                            break;
+
+                        case Xbim.Common.Step21.XbimSchemaVersion.Ifc4x3:
+                            rootTypes = SchemaInfo.SchemaIfc4x3.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
+                            break;
+
+                        //case Xbim.Common.Step21.XbimSchemaVersion.Cobie2X4:
+                        //    //rootTypes = SchemaInfo.SchemaIfc4.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
+                        //    break;
+                        // TODO: Support COBieExpress. E.g. CreatedBy => CobieReferencedObject, SerialNumber = COBieComponent
+
+                        case Xbim.Common.Step21.XbimSchemaVersion.Ifc4:
+                        case Xbim.Common.Step21.XbimSchemaVersion.Ifc4x1:
+                            rootTypes = SchemaInfo.SchemaIfc4.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
+                            break;
+
+                        default:
+                            throw new NotImplementedException($"Unsupported Schema {Model.SchemaVersion}");
+
                     }
                     
 
@@ -102,8 +119,13 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             else
             {
-                // TODO: Should support Enum. E.g. Where Name or Description = 'Foo'
-                // Not sure why we'd want to pick attributes with a regex, range, or even an enum?
+                if(attrFacet.AttributeName is null || attrFacet.AttributeName.IsEmpty() == true)
+                {
+                    logger.LogWarning("AttributeName is Required");
+                    return BindNotFound(expression);
+                }
+                // TODO: Should support Enum, Regex, Range. E.g. Where Name or Description = 'Foo'
+                
                 throw new NotImplementedException("Complex AttributeName constraints are not supported");
             }
 
@@ -219,12 +241,15 @@ namespace Xbim.IDS.Validator.Core.Binders
                 return results;
 
             var expressType = Model.Metadata.ExpressType(entity);
+            var properties = GetAllProperties(expressType, _options);
 
             if (facet.AttributeName.IsSingleExact(out string? attrName))
             {
                 // Optimise for the typical scenario where one Attribute name is specified exactly
 
-                var propertyMeta = expressType.Properties.FirstOrDefault(p => p.Value.Name == attrName).Value;
+                
+
+                var propertyMeta = properties.FirstOrDefault(p => p.Name == attrName);
                 if (propertyMeta == null)
                 {
                     results.Add(attrName, default);
@@ -239,14 +264,14 @@ namespace Xbim.IDS.Validator.Core.Binders
             else
             {
                 // It's an enum, Regex, Range or Structure
-                foreach (var prop in expressType.Properties)
+                foreach (var prop in properties)
                 {
-                    if (facet?.AttributeName?.IsSatisfiedBy(prop.Value.Name, true) == true)
+                    if (facet?.AttributeName?.IsSatisfiedBy(prop.Name, true) == true)
                     {
-                        var value = prop.Value.PropertyInfo.GetValue(entity);
+                        var value = prop.PropertyInfo.GetValue(entity);
                         if (!(value == null && IsEnum(facet.AttributeName)))
                         {
-                            results.Add(prop.Value.Name, value);
+                            results.Add(prop.Name, value);
                         }
                     }
                 }
@@ -260,25 +285,24 @@ namespace Xbim.IDS.Validator.Core.Binders
             return constraint.AcceptedValues.Count(av => av is ExactConstraint) > 1;
         }
 
-        private static Expression BindAttributeSelection(Expression expression, ExpressType expressType,
+        private Expression BindAttributeSelection(Expression expression, ExpressType expressType,
             string ifcAttributeName, ValueConstraint constraint)
         {
-
-            var propertyMeta = expressType.Properties.FirstOrDefault(p => p.Value.Name == ifcAttributeName).Value;
+            var props = GetAllProperties(expressType, _options);
+            var propertyMeta = props.FirstOrDefault(p => p.Name == ifcAttributeName);
             if (propertyMeta == null)
             {
                 throw new InvalidOperationException($"Property '{ifcAttributeName}' not found on '{expressType.Name}'");
             }
             if (propertyMeta.EnumerableType != null)
             {
-                throw new NotSupportedException("Cannot filter on collection properties");
+                return BindAnyAttributeSelection(expression, constraint, propertyMeta.PropertyInfo);
             }
             return BindAttributeSelection(expression, constraint, propertyMeta.PropertyInfo);
         }
 
-
         /// <summary>
-        /// Binds a Expression check an entity's attribute(s) satisifiy a constraint
+        /// Binds an Expression checking an entity's attribute(s) satisifies the constraint
         /// </summary>
         /// <param name="expression"></param>
         /// <param name="ifcAttributePropInfos"></param>
@@ -296,7 +320,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             expression = Expression.Call(null, ExpressionHelperMethods.EnumerableCastGeneric.MakeGenericMethod(collectionType), expression);
 
            
-            // Build IEnumerable<TEntity>().Where(t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName]))
+            // Build IEnumerable<TEntity>().Where(ent => ValueConstraintExtensions.SatisfiesConstraint(constraint, ent.[AttributeName]))
 
             // build IEnumerable.Where<TEntity>(...)
             var whereMethod = ExpressionHelperMethods.EnumerableWhereGeneric.MakeGenericMethod(collectionType);
@@ -328,10 +352,63 @@ namespace Xbim.IDS.Validator.Core.Binders
             return Expression.Call(null, whereMethod, new[] { expression, filterExpression });
         }
 
+        /// <summary>
+        /// Binds an expression to a Enumerable collection, checking if Any of the elements match constraint
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <param name="constraint"></param>
+        /// <param name="ifcAttributePropInfos"></param>
+        /// <returns></returns>
+        private static Expression BindAnyAttributeSelection(Expression expression,
+            ValueConstraint constraint, params PropertyInfo[] ifcAttributePropInfos)
+        {
+            // Build IEnumerable<TEntity>().Where(ent => ent.[AttributeName].Any(p => ValueConstraintExtensions.SatisfiesConstraint(constraint, p)));
+            // vs    IEnumerable<TEntity>().Where(ent => ValueConstraintExtensions.SatisfiesConstraint(constraint, ent.[AttributeName]))
+
+            // Get underlying collection type
+            var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
+
+            List<IValueConstraintComponent>? constraints = constraint?.AcceptedValues;
+
+            // call .Cast<EntityType>()
+            expression = Expression.Call(null, ExpressionHelperMethods.EnumerableCastGeneric.MakeGenericMethod(collectionType), expression);
+
+            // build IEnumerable.Where<TEntity>(...)
+            var whereMethod = ExpressionHelperMethods.EnumerableWhereGeneric.MakeGenericMethod(collectionType);
+
+            // build lambda param 'ent => ...'
+            ParameterExpression ifcTypeParam = Expression.Parameter(collectionType, "ent");
+
+            Expression querybody;
+            if (constraints?.Any() == true)
+            {
+                // constraint Constant
+                var constraintExpr = Expression.Constant(constraint, typeof(ValueConstraint));
+
+                // build ent => ent.[AttributeName].Any(p => ValueConstraintExtensions.SatisfiesConstraint(constraint, p))
+                querybody = BuildAnyAttributeQuery(ifcAttributePropInfos, ifcTypeParam, constraintExpr);
+
+            }
+            else
+            {
+                // If no constraints or nothing specified (null) just check not null
+
+                // TODO: Where(t => t.[Property].Any())
+
+                querybody = BuildAttributeNotNull(ifcAttributePropInfos, ifcTypeParam);
+            }
+
+            // Build Lambda expression for filter predicate (Func<T,bool>)
+            var filterExpression = Expression.Lambda(querybody, ifcTypeParam);
+
+            // Bind Lambda to Where method
+            return Expression.Call(null, whereMethod, new[] { expression, filterExpression });
+        }
+
         internal static Expression BuildAttributeQuery(PropertyInfo[] ifcAttributePropInfo, ParameterExpression ifcTypeParam, ConstantExpression constraintExpr)
         {
             Expression body = Expression.Constant(false);   // default false
-            foreach(var ifcAttribute in ifcAttributePropInfo)
+            foreach (var ifcAttribute in ifcAttributePropInfo)
             {
                 Expression nameProperty = Expression.Property(ifcTypeParam, ifcAttribute);
 
@@ -343,6 +420,41 @@ namespace Xbim.IDS.Validator.Core.Binders
                 Expression querybody = Expression.Call(null, ExpressionHelperMethods.IdsSatisifiesConstraintMethod, constraintExpr, valueExpr);
                 // Join into Or statement for multiple attributes - includes parenthesis
                 body = (body is ConstantExpression) ? querybody : Expression.OrElse(body, querybody);
+            }
+
+            return body;
+        }
+
+        internal static Expression BuildAnyAttributeQuery(PropertyInfo[] ifcAttributePropInfo, ParameterExpression ifcTypeParam, ConstantExpression constraintExpr)
+        {
+            // build ent => ent.[AttributeName].Any(p => ValueConstraintExtensions.SatisfiesConstraint(constraint, p)) || {another Attr}
+
+            Expression body = Expression.Constant(false);   // default false
+            foreach(var ifcAttribute in ifcAttributePropInfo)
+            {
+
+                var propType = TypeHelper.GetImplementedIEnumerableType(ifcAttribute.PropertyType);
+                
+                // build lambda param 'p => ...'
+                ParameterExpression attrParam = Expression.Parameter(propType, "p");
+
+                // ent.[AttributeName]
+                Expression collectionProperty = Expression.Property(ifcTypeParam, ifcAttribute);
+
+                MethodInfo anyMethod = ExpressionHelperMethods.EnumerableAnyGeneric.MakeGenericMethod(propType);
+               
+
+                // build: p => ValueConstraintExtensions.SatisfiesConstraint(constraint, p)
+                Expression querybody = Expression.Call(null, ExpressionHelperMethods.IdsSatisifiesConstraintMethod, constraintExpr, attrParam);
+
+                // Build Lambda expression for filter predicate (Func<T,bool>)
+                var filterExpression = Expression.Lambda(querybody, attrParam);
+
+
+                // Call Any(this collection, filterPredicate)
+                Expression anyQuery = Expression.Call(null, anyMethod, collectionProperty, filterExpression);
+                // Join into Or statement for multiple attributes - includes parenthesis
+                body = (body is ConstantExpression) ? anyQuery : Expression.OrElse(body, anyQuery);
             }
             
             return body;
@@ -367,6 +479,11 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
 
             return body;
+        }
+
+        public void SetOptions(VerificationOptions options)
+        {
+            _options = options;
         }
     }
 }

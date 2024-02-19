@@ -28,13 +28,33 @@ namespace Xbim.IDS.Validator.Core.Tests
         [InlineData(typeof(IfcPropertyFacet), typeof(PsetFacetBinder))]
         [InlineData(typeof(IfcClassificationFacet), typeof(IfcClassificationFacetBinder))]
         [InlineData(typeof(MaterialFacet), typeof(MaterialFacetBinder))]
-        // Docs, relations, Partof
+        [InlineData(typeof(PartOfFacet), typeof(PartOfFacetBinder))]
+        // Docs, relations
         [Theory]
-        public void ModelBinderFactoryResolvesIfcType(Type facetType, Type expectedType)
+        public void ModelBinderFactoryResolvesBindersForIfc(Type facetType, Type expectedType)
         {
+            // Arrange
             var factory = provider.GetRequiredService<IIdsFacetBinderFactory>();
+            var facet = (IFacet)Activator.CreateInstance(facetType);
+            // Act
+            var result = factory.Create(facet);
+            result.Should().NotBeNull().And.BeOfType(expectedType);
+        }
 
-            var result = factory.Create((IFacet)Activator.CreateInstance(facetType));
+        [InlineData(typeof(IfcTypeFacet), typeof(IfcTypeFacetBinder))]              // Maps to COBie Entities
+        [InlineData(typeof(AttributeFacet), typeof(AttributeFacetBinder))]          // Just works
+        [InlineData(typeof(MaterialFacet), typeof(NotSupportedBinder<MaterialFacet>))]             // No means of working on COBie2.4
+        [InlineData(typeof(IfcPropertyFacet), typeof(NotSupportedBinder<IfcPropertyFacet>))]          // TODO: Can use Attributes
+        [InlineData(typeof(IfcClassificationFacet), typeof(NotSupportedBinder<IfcClassificationFacet>))]    // TODO: Redirect to Category Attribute
+        [InlineData(typeof(PartOfFacet), typeof(NotSupportedBinder<PartOfFacet>))]               // TODO: Could query relations, Assemblies etc
+        [Theory]
+        public void ModelBinderFactoryResolvesBindersForCOBie(Type facetType, Type expectedType)
+        {
+            // Arrange
+            var factory = provider.GetRequiredService<IIdsFacetBinderFactory>();
+            var facet = (IFacet)Activator.CreateInstance(facetType);
+            // Act
+            var result = factory.Create(facet, Xbim.Common.Step21.XbimSchemaVersion.Cobie2X4);
             result.Should().NotBeNull().And.BeOfType(expectedType);
         }
 

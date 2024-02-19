@@ -93,6 +93,21 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
         /// <summary>
+        /// Gets all properties on an ExpressType, including Derived properties.
+        /// </summary>
+        /// <param name="expressType"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        protected static IEnumerable<ExpressMetaProperty> GetAllProperties(ExpressType expressType, VerificationOptions options)
+        {
+            if(options?.AllowDerivedAttributes == true)
+            {
+                return expressType.Derives.Union(expressType.Properties.Select(p => p.Value));
+            }
+            return expressType.Properties.Select(p => p.Value);
+        }
+
+        /// <summary>
         /// Filter the supplied expression to return only types matching the supplied <paramref name="expressType"/>
         /// </summary>
         /// <param name="expression"></param>
@@ -237,7 +252,18 @@ namespace Xbim.IDS.Validator.Core.Binders
             return expression;
         }
 
-
+        /// <summary>
+        /// Amends an expression to return no results
+        /// </summary>
+        /// <remarks>Used when a criteria may be invalid and so expression cannot be express.
+        /// E.g. Find all PropertySets with Classification 
+        /// </remarks>
+        /// <param name="expression">The expression to bind to</param>
+        /// <returns></returns>
+        protected static Expression BindNotFound(Expression expression)
+        {
+            return BindNotFound(expression, TypeHelper.GetImplementedIEnumerableType(expression.Type));
+        }
         /// <summary>
         /// Amends an expression to return no results
         /// </summary>
@@ -403,6 +429,11 @@ namespace Xbim.IDS.Validator.Core.Binders
             return Model.SchemaVersion == XbimSchemaVersion.Ifc4x3;
         }
 
+        protected bool IsCobieModel()
+        {
+            return Model.SchemaVersion == XbimSchemaVersion.Cobie2X4;
+        }
+
         protected static object HandleBoolConventions(object attrvalue)
         {
             if (attrvalue is IExpressBooleanType ifcbool)
@@ -429,7 +460,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         {
             if (attributeValue.AcceptedValues.Any(v => v is PatternConstraint))
             {
-                return (attrvalue is string);
+                return (attrvalue is string || attrvalue is IExpressStringType);
             }
             return true;
         }
