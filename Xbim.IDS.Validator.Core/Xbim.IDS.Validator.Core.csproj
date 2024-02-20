@@ -21,11 +21,6 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Xbim.CobieExpress.Exchanger" Version="6.0.162-develop" />
-    <PackageReference Include="Xbim.IO.CobieExpress" Version="6.0.162-develop" />
-  </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\Xbim.IDS.Validator.Common\Xbim.IDS.Validator.Common.csproj" />
