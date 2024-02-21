@@ -187,6 +187,9 @@ namespace Xbim.IDS.Validator.Core.Binders
             if (af.AttributeValue == null)
                 return;
 
+            if (af.AttributeValue.IsSingleExact(out _))
+                return;
+
             if(value is IIfcValue v)
             {
                 value = v.Value;    // Unpack again if required
