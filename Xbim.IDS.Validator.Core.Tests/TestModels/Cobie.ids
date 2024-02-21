@@ -1,0 +1,192 @@
+﻿<ids xmlns="http://standards.buildingsmart.org/IDS" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://standards.buildingsmart.org/IDS/ids_05.xsd">
+  <info>
+    <title>Tests COBie models for customer requirements</title>
+  </info>
+  <specifications>
+    <specification name="All COBie Types should have Model Reference" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
+      <applicability>
+        <entity>
+          <name>
+            <simpleValue>COBieType</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute minOccurs="1" maxOccurs="1">
+          <name>
+            <simpleValue>ModelReference</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="All COBie Types should Cost between £100 and £10k" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
+      <applicability>
+        <entity>
+          <name>
+            <simpleValue>COBieType</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute minOccurs="1" maxOccurs="1">
+          <name>
+            <simpleValue>ReplacementCost</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:number">
+              <xs:minExclusive value="100" fixed="false" />
+              <xs:maxExclusive value="10000" fixed="false" />
+            </xs:restriction>
+          </value>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="All COBie Components should have an installation Date" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
+      <applicability>
+        <entity>
+          <name>
+            <simpleValue>COBieComponent</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute minOccurs="1" maxOccurs="1">
+          <name>
+            <simpleValue>CreatedOn</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:minExclusive value="2020-12-01" fixed="false" />
+              <xs:maxExclusive value="2023-12-31" fixed="false" />
+            </xs:restriction>
+          </value>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="All mechanical components should have a SerialNumber between 2 and 20 in length" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
+      <applicability>
+        <entity>
+          <name>
+            <simpleValue>COBieComponent</simpleValue>
+          </name>
+        </entity>
+        <attribute>
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:pattern value="Mech.*" />
+            </xs:restriction>
+          </value>
+        </attribute>
+      </applicability>
+      <requirements>
+        <attribute minOccurs="1" maxOccurs="1">
+          <name>
+            <simpleValue>SerialNumber</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:minLength value="2" fixed="false" />
+              <xs:maxLength value="20" fixed="false" />
+            </xs:restriction>
+          </value>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="All COBie rows should have a valid CreatedOn date" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
+      <applicability>
+        <entity>
+          <name>
+            <simpleValue>COBieReferencedObject</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute minOccurs="1" maxOccurs="1">
+          <name>
+            <simpleValue>CreatedOn</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:pattern value="(\d{4})-(0\d|1[012])-([012]\d|3[01])(T([01]\d|2[0123])(:([0-5]\d)){2})?" />
+            </xs:restriction>
+          </value>
+        </attribute>
+      </requirements>
+    </specification>
+
+    <specification name="All COBie rows should have a CreatedOn in Range" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
+      <applicability>
+        <entity>
+          <name>
+            <simpleValue>COBieReferencedObject</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute minOccurs="1" maxOccurs="1">
+          <name>
+            <simpleValue>CreatedOn</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:minExclusive value="2020-12-01" fixed="false" />
+              <xs:maxExclusive value="2024-12-31" fixed="false" />
+            </xs:restriction>
+          </value>
+        </attribute>
+      </requirements>
+    </specification>
+
+    <specification name="All COBie Components should have a Space" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
+      <applicability>
+        <entity>
+          <name>
+            <simpleValue>COBieComponent</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute minOccurs="1" maxOccurs="1">
+          <name>
+            <simpleValue>Spaces</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="All COBie Spaces should be categorised" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
+      <applicability>
+        <entity>
+          <name>
+            <simpleValue>COBieSpace</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute minOccurs="1" maxOccurs="1">
+          <name>
+            <simpleValue>Categories</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="Every COBie Space should have at least one component" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
+      <applicability>
+        <entity>
+          <name>
+            <simpleValue>COBieSpace</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute minOccurs="1" maxOccurs="1">
+          <name>
+            <simpleValue>Components</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+  </specifications>
+</ids>

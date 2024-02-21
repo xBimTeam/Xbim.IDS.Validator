@@ -25,8 +25,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData(nameof(IIfcSite.RefElevation), "0", 1)]
         [InlineData(nameof(IIfcRoot.GlobalId), "2ru7YPT4T9MuTpOS4FRzxX", 1)]    // A WallType
         [InlineData(nameof(IIfcObject.ObjectType), null, 68)]    // Any object with an ObjectType defined (any IfcObject)
-        [InlineData(nameof(IIfcRoot.GlobalId), null, 95)]    // Any entity with an GlobalID (any Rooted object)
-        [InlineData(nameof(IIfcRoot.Description), null, 1)] // Any entity with a description
+        [InlineData(nameof(IIfcRoot.GlobalId), null, 96)]    // Any entity with an GlobalID (any Rooted object)
+        [InlineData(nameof(IIfcRoot.Description), null, 2)] // Any entity with a description
         [Theory]
         public void Can_Query_By_Attributes(string attributeFieldName, string attributeValue, int expectedCount)
         {
@@ -102,6 +102,35 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             ex.Should().NotBeNull();
             ex.Should().BeOfType<InvalidOperationException>();
             ex.Message.Should().Be($"Attribute Facet '{attributeFieldName?.Trim()}' is not valid");
+
+        }
+
+        [InlineData(82887, "RefElevation", 0d, 9999d)]  // Site Double
+        [InlineData(82887, "Name", "Boo", "ZZZZ")]      // Site Text
+        [InlineData(90000, "CountValue", 0d, 2000d)]  // Quantity
+        [InlineData(90001, "Priority", 1, 20)]  // IfcInteger
+
+        [Theory]
+        public void Can_Validate_AttributeRanges(int entityLabel, string attrName, object minValue, object maxValue)
+        {
+
+            var entity = Model.Instances[entityLabel];
+            var attrFacet = new AttributeFacet
+            {
+
+                AttributeName = attrName,
+                AttributeValue = new ValueConstraint()
+            };
+
+            attrFacet.AttributeValue.AddAccepted(new RangeConstraint(minValue.ToString(), true, maxValue.ToString(), true));
+            FacetGroup group = BuildGroup(attrFacet);
+            var result = new IdsValidationResult(entity, group);
+            Binder.ValidateEntity(entity, attrFacet, RequirementCardinalityOptions.Expected, result);
+
+            // Assert
+
+            result.Successful.Should().NotBeEmpty();
+            result.Failures.Should().BeEmpty();
 
         }
 

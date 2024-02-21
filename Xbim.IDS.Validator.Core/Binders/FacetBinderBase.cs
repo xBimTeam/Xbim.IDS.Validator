@@ -99,7 +99,10 @@ namespace Xbim.IDS.Validator.Core.Binders
         {
             if(options?.AllowDerivedAttributes == true)
             {
-                return expressType.Derives.Union(expressType.Properties.Select(p => p.Value));
+                return  expressType.Inverses.Union(
+                    expressType.Derives.Union(
+                        expressType.Properties.Select(p => p.Value)
+                        ));
             }
             return expressType.Properties.Select(p => p.Value);
         }
@@ -348,6 +351,8 @@ namespace Xbim.IDS.Validator.Core.Binders
                 case NetTypeName.Undefined:
                 case NetTypeName.Floating:
                     {
+                        // TODO: Review. We treat all integers as Doubles when not explicitly stated.
+                        // Impacts casting tests
                         if (value is long l)
                             return Convert.ToDouble(l);
 
@@ -356,7 +361,6 @@ namespace Xbim.IDS.Validator.Core.Binders
                             return Convert.ToDouble(i);
                         break;
                     }
-
             }
             
 

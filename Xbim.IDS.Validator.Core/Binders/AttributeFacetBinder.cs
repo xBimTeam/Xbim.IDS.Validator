@@ -138,6 +138,8 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             var candidates = GetAttributes(item, af);
 
+            FixDataType(af, candidates.FirstOrDefault().Value);
+
             foreach (var pair in candidates)
             {
                 var attrName = pair.Key;
@@ -177,6 +179,28 @@ namespace Xbim.IDS.Validator.Core.Binders
                 }
 
             }
+        }
+
+        // AttributeFacet needs BaseType setting correctly when dealing with numerics - causes issues with e.g RangeConstraints need BaseType set
+        private void FixDataType(AttributeFacet af, object value)
+        {
+            if (af.AttributeValue == null)
+                return;
+
+            if(value is IIfcValue v)
+            {
+                value = v.Value;    // Unpack again if required
+            }
+            
+            if(value is double || value is IIfcMeasureValue)
+            {
+                af.AttributeValue.BaseType = NetTypeName.Double;
+            }
+            else if (value is int || value is long )
+            {
+                af.AttributeValue.BaseType = NetTypeName.Integer;
+            }
+            
         }
 
         private IDictionary<string, object?> GetAttributes(IPersistEntity entity, AttributeFacet facet)
