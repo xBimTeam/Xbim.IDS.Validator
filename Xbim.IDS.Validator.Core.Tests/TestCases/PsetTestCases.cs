@@ -28,9 +28,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             // Unsupported tests
             { "fail-predefined_properties_are_supported_but_discouraged_2_2.ids", new [] { XbimSchemaVersion.Unsupported } }, // To implement IFCDOORPANELPROPERTIES edgecase
             { "pass-predefined_properties_are_supported_but_discouraged_1_2.ids", new [] { XbimSchemaVersion.Unsupported } }, // To implement IFCDOORPANELPROPERTIES edgecase
-            { "pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_1_4.ids", new [] { XbimSchemaVersion.Unsupported } }, // XIDS support?
-            { "pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_2_4.ids", new [] { XbimSchemaVersion.Unsupported } },
-            //
+            
 
         };
 

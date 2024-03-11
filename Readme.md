@@ -26,7 +26,7 @@ IModel model = IfcStore.Open(ifcModelFile);
 // Get IdsModelValidator from DI provider / or inject to your service
 var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
 
-ValidationOutcome outcome = idsValidator.ValidateAgainstIds(model, "example.ids", logger)
+ValidationOutcome outcome = await idsValidator.ValidateAgainstIdsAsync(model, "example.ids", logger)
 
 foreach (ValidationRequirement requirement in results.ExecutedRequirements)
 {
@@ -72,24 +72,30 @@ It currently supports:
     - [x] Patterns (Regex)
     - [x] Bounds
     - [x] Structure (Min/Max length)
-    - Restrictions can be used in both Applicability filtering and Requirements verification
+- Edge cases
+    - [x] Support for 1.e-6 precision tolerance
+- Restrictions can be used in both Applicability filtering and Requirements verification
 - Reading of IDS in v0.9 Schema in Xml and JSON formats
 - Optionality of Facets
 - Cardinality of Specification (Expected, Prohibited, Optional)
 - Support for validating models in following IFC Schemas
     - [x] IFC2x3
     - [x] IFC4 schemas
-    - [x] WIP support for IFC4x3
+    - [x] IFC4x3-ADD1
+- Extensions
+    - [x] Case Insensitivity testing
+    - [x] Optional Support for Ifc Type Inheritance
+    - [x] Optional Support for querying Derived Properties
+    - [x] Optional support for running IDS against COBie (using Xbim.COBieExpress extensions)
 
 The library has been tested against the [IDS test suite](https://github.com/buildingSMART/IDS/blob/master/Documentation/developer-guide.md#checking-ids-against-ifc)
 
-Currently only two minor cases are unimplemented. (See Skipped Tests). Plus 2 PartOf tests covering PredefinedType 
+Currently only one minor cases are unimplemented. (See PropertySet Skipped Tests).
 
 ## To-do list
 
-- [x] Support for PartOf facets
-    - [ ] Latest IDS 0.9 PartOf feature [See Issue](https://github.com/CBenghi/Xbim.Xids/issues/3)
 - [ ] Support for Xbim.XIDS extensions (Documents)
     - [ ] IfcType SubClasses extension
-- [x] Support for IFC4x3 (Partially implemented)
-- [ ] Support for 1.e-6 precision
+- [x] Support for IFC4x3
+
+- [ ] Testing Pre-defined Properties. e.g. IFCDOORPANELPROPERTIES.PanelOperation
