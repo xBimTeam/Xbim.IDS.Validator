@@ -505,7 +505,6 @@ namespace Xbim.IDS.Validator.Core.Binders
         {
             if (pf.PropertyValue != null)
             {
-                value = ApplyWorkarounds(value, pf.PropertyValue);
                 if (IsTypeAppropriateForConstraint(pf.PropertyValue, value) && pf.PropertyValue.IsSatisfiedBy(value, logger))
                 {
                     return true;

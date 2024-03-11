@@ -12,7 +12,6 @@ using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc4.Interfaces;
-using Xbim.Ifc4.MeasureResource;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Binders
@@ -343,39 +342,6 @@ namespace Xbim.IDS.Validator.Core.Binders
                 express = express.SuperType;
             }
             return typeof(IPersistEntity);
-        }
-
-        protected object? ApplyWorkarounds([MaybeNull] object? value, ValueConstraint constraint)
-        {
-            // Workaround for a bug in XIDS Satisfied test where we don't coerce numeric types correctly
-            switch(constraint.BaseType)
-            {
-                case NetTypeName.Integer:
-                    {
-                        if (value is double || value is float)
-                        {
-                            return Convert.ToInt32(value);
-                        }
-                        break;
-                    }
-
-                case NetTypeName.Double:
-                case NetTypeName.Undefined:
-                case NetTypeName.Floating:
-                    {
-                        if (value is long l)
-                            return Convert.ToDouble(l);
-
-
-                        if (value is int i)
-                            return Convert.ToDouble(i);
-                        break;
-                    }
-
-            }
-            
-
-            return value;
         }
 
         protected IIfcValue? UnwrapQuantity(IIfcPhysicalQuantity quantity)

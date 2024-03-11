@@ -54,9 +54,6 @@ namespace Xbim.IDS.Validator.Core.Binders
                 throw new NotSupportedException("Expected an unfiltered set of Instances");
             }
 
-            // So we can do case insensitive comparisons
-            ifcFacet.IfcType.BaseType = NetTypeName.String;
-
             var selectionCriteria = BuildSelectionCriteria(ifcFacet);
             if(!ExpressTypesAreValid(selectionCriteria.Select(e => e.ElementExpressType)))
             {
