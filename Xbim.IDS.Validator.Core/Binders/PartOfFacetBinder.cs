@@ -117,6 +117,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             if (facet.EntityType != null)
             {
+                // TODO: not required?
                 if(facet.EntityType.IfcType != null)
                 {
                     facet.EntityType.IfcType.BaseType = NetTypeName.String;
@@ -136,13 +137,23 @@ namespace Xbim.IDS.Validator.Core.Binders
                 foreach (var part in candidates)
                 {
                     var partType = part.GetType().Name;
+                    if(ctx.ExpectationMode != RequirementCardinalityOptions.Prohibited)
+                    {
+                        result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.EntityType!, partType, "Part found", part));
+                    }
+                    else
+                    {
+                        result.Fail(ValidationMessage.Failure(ctx, fn => fn.EntityType!, partType, "Expected no match", item));
+                    }
            
-                    result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.EntityType!, partType, "Part found", part));
                 }
             }
             else
             {
-                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.EntityType!, null, "No parts matching", item));
+                if (ctx.ExpectationMode != RequirementCardinalityOptions.Prohibited)
+                {
+                    result.Fail(ValidationMessage.Failure(ctx, fn => fn.EntityType!, null, "No parts matching", item));
+                }
             }
         }
 
@@ -151,6 +162,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         {
             if (item is IIfcObjectDefinition obj)
             {
+                // TODO: handle prohibited. 
                 var parts = IfcRelationsExtensions.GetPartsForEntity(obj, facet);
 
                 //if (obj is IIfcObject o && o.IsTypedBy!.Any())

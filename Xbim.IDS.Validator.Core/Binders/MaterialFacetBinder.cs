@@ -114,28 +114,42 @@ namespace Xbim.IDS.Validator.Core.Binders
             if (candidates.Any())
             {
                 bool? success = null;
-
-                
-                foreach (var material in candidates)
+                if (facet.Value != null)
                 {
-                    var materialName = material;
-                    
-                    if (facet.Value == null || facet.Value?.IsSatisfiedBy(materialName, true, logger) == true)
+
+                    foreach (var material in candidates)
                     {
-                        result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.Value!, materialName, "Material satisfied", item));
-                        success = true;
+                        var materialName = material;
+                    
+                        if (facet.Value.ExpectationIsSatisifedBy(materialName, ctx, logger, true))
+                        {
+                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.Value!, materialName, "Material matched", item));
+                            success = true;
+                        }
+                    }
+                }
+                else
+                {
+                    if(requirement == RequirementCardinalityOptions.Prohibited)
+                    {
+                        result.Fail(ValidationMessage.Failure(ctx, fn => fn.Value!, null, "Material Prohibited", item));
+                    }
+                    else
+                    {
+                        result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.Value!, null, "Found a material", item));
+                        success = true; // Found a material. Any will do
                     }
                 }
                 // If no matching value found after all the psets checked, mark as failed
                 if (success == default)
                 {
                     var materials = string.Join(",", candidates);
-                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Value!, materials, "No materials matched", item));
+                    result.Fail(ValidationMessage.Failure(ctx, fn => fn.Value!, materials, "No materials matched", item));
                 }
             }
             else
             {
-                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Value!, null, "No materials found", item));
+                result.Fail(ValidationMessage.Failure(ctx, fn => fn.Value!, null, "No materials found", item));
             }
         }
 

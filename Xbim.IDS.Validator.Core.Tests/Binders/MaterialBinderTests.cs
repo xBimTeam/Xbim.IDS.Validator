@@ -1,7 +1,9 @@
 ﻿using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Xbim.IDS.Validator.Core.Binders;
 using Xbim.InformationSpecifications;
 using Xunit.Abstractions;
+using Xbim.IDS.Validator.Core.Extensions;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
@@ -49,7 +51,39 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         }
 
-       
+        [InlineData(37554, "Steel, Chrome Plated")]
+        [InlineData(10993, "Door - Handle")]
+        [InlineData(1752, "Brick, Common")]
+        [InlineData(1752, "Plaster")]
+        [Theory]
+        public void CanValidateMaterialsForEntity(int entityLabel, string material)
+        {
+            var instance = Model.Instances[entityLabel];
+            MaterialFacet facet = new MaterialFacet()
+            {
+                Value = new ValueConstraint(material)
+            };
+
+#pragma warning disable CS0618 // Type or member is obsolete
+            var group = new FacetGroup();
+#pragma warning restore CS0618 // Type or member is obsolete
+            group.Facets.Add(facet);
+
+            var validationResult = new IdsValidationResult(instance, group);
+
+            Binder.ValidateEntity(instance, facet, group.GetCardinality(facet), validationResult);
+
+            foreach (var message in validationResult.Messages)
+            {
+                var level = message.Status == ValidationStatus.Fail ? LogLevel.Warning : LogLevel.Information;
+                logger.Log(level, "Message: {message}", message);
+            }
+
+            validationResult.Successful.Should().NotBeEmpty();
+            validationResult.Failures.Should().BeEmpty();
+            validationResult.ValidationStatus.Should().Be(ValidationStatus.Pass);
+
+        }
 
     }
 }

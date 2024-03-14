@@ -112,9 +112,10 @@ namespace Xbim.IDS.Validator.Core.Binders
             var entityType = Model.Metadata.ExpressType(item);
             if (entityType == null)
             {
-                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.IfcType!, null, "Invalid IFC Type", item));
+                result.FailWithError(ValidationMessage.Failure(ctx, fn => fn.IfcType!, null, "Invalid IFC Type", item)); 
+                return;
             }
-            var actualEntityType = entityType!.Name.ToUpperInvariant();
+            var actualEntityType = entityType.Name.ToUpperInvariant();
             var currentEntityType = entityType;
 
             
@@ -123,9 +124,9 @@ namespace Xbim.IDS.Validator.Core.Binders
             while(currentEntityType != null)
             {
                 var actualName = currentEntityType?.Name.ToUpperInvariant();
-                if (f?.IfcType?.IsSatisfiedBy(actualName, false, logger) == true)
+                if (f.IfcType.ExpectationIsSatisifedBy(actualName, ctx, logger))
                 {
-                    result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.IfcType!, actualName, "Correct IFC Type", item));
+                    result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.IfcType!, actualName, "Correct IFC Type", item));
                     break;
                 }
                 else
@@ -137,7 +138,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                     } 
                     else
                     {
-                        result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.IfcType!, actualEntityType, "IFC Type incorrect", item));
+                        result.Fail(ValidationMessage.Failure(ctx, fn => fn.IfcType!, actualEntityType, "IFC Type incorrect", item));
                         break;
                     }
                 }
@@ -147,13 +148,13 @@ namespace Xbim.IDS.Validator.Core.Binders
             if (f?.PredefinedType?.HasAnyAcceptedValue() == true)
             {
                 var preDefValue = GetPredefinedType(item);
-                if (f!.PredefinedType.IsSatisfiedBy(preDefValue, logger) == true)
+                if (f!.PredefinedType.ExpectationIsSatisifedBy(preDefValue, ctx, logger))
                 {
-                    result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PredefinedType!, preDefValue, "Correct Predefined Type", item));
+                    result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PredefinedType!, preDefValue, "Correct Predefined Type", item));
                 }
                 else
                 {
-                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PredefinedType!, preDefValue, "Predefined Type incorrect", item));
+                    result.Fail(ValidationMessage.Failure(ctx, fn => fn.PredefinedType!, preDefValue, "Predefined Type incorrect", item));
                 }
             }
         }

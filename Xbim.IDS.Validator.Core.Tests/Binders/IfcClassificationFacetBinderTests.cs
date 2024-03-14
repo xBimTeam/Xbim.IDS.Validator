@@ -71,7 +71,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData("Uniclass", null)]
         [InlineData(null, null)]
         [Theory]
-        public void CanGetClassificationsReferencesForEntity(string system, string identifier)
+        public void CanValidateClassificationsReferencesForEntity(string system, string identifier)
         {
             var instance = Model.Instances[59964];
             IfcClassificationFacet facet = new IfcClassificationFacet
@@ -101,10 +101,12 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             validationResult.Successful.Should().NotBeEmpty();
             validationResult.Failures.Should().BeEmpty();
 
+            validationResult.ValidationStatus.Should().Be(ValidationStatus.Pass);
+
         }
 
         [Fact]
-        public void CanGetClassificationsForEntity()
+        public void CanValidateClassificationsForEntity()
         {
             var project = Model.Instances[103];
             IfcClassificationFacet facet = new IfcClassificationFacet
@@ -133,7 +135,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             validationResult.Successful.Should().NotBeEmpty();
             validationResult.Failures.Should().BeEmpty();
-
+            validationResult.ValidationStatus.Should().Be(ValidationStatus.Pass);
         }
 
     }

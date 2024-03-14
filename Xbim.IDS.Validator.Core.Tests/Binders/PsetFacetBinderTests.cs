@@ -32,7 +32,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData("Constraints", "Sill Height", "900", 4, default(ConstraintType), default(ConstraintType), ConstraintType.Range)]
         [InlineData("Pset_MemberCommon", "Span", null, 20)]
         [InlineData("Pset_MemberCommon", "Span", "2043.570045136", 1)]
-        [InlineData("BaseQuantities", "Width", "1810", 5)]  // ElementQuantity
+        [InlineData("BaseQuantities", "Width", "1810", 5)]  // ElementQuantity  TODO: should factor in Unit Conversion?
         [Theory]
         public void Can_Query_By_Properties(string psetName, string propName, object propValue, int expectedCount,
             ConstraintType psetConstraint = ConstraintType.Exact,
@@ -82,10 +82,50 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             result.Successful.Should().NotBeEmpty();
             result.Failures.Should().BeEmpty();
-
+            result.ValidationStatus.Should().Be(ValidationStatus.Pass);
         }
 
-        
+        [InlineData(323, "Energy Analysis", "Area per Person", 100d)]
+        [InlineData(323, "Energy Analysis", "Area per Person", 28.571428d, false)]
+        [InlineData(33350, "BaseQuantities", "Width", 1.91d)]
+        [InlineData(33350, "BaseQuantities", "Width", 1.81d, false)]
+        [Theory]
+        public void Can_Validate_Properties_Prohibited(int entityLabel, string psetName, string propName, object expectedtext, bool shouldPass = true)
+        {
+
+            var entity = Model.Instances[entityLabel];
+            var propFacet = new IfcPropertyFacet
+            {
+
+                PropertyName = propName,
+                PropertyValue = new ValueConstraint()
+            };
+            if (psetName != null)
+            {
+                propFacet.PropertySetName = psetName;
+            }
+            SetPropertyValue(expectedtext, ConstraintType.Exact, propFacet);
+            FacetGroup group = BuildGroup(propFacet);
+
+            var result = new IdsValidationResult(entity, group);
+            Binder.ValidateEntity(entity, propFacet, RequirementCardinalityOptions.Prohibited, result);
+
+            // Assert
+            if (shouldPass)
+            {
+                result.ValidationStatus.Should().Be(ValidationStatus.Pass);
+                result.Successful.Should().BeEmpty();
+                result.Failures.Should().NotBeEmpty();
+            }
+            else
+            {
+                result.ValidationStatus.Should().Be(ValidationStatus.Fail);
+                result.Successful.Should().NotBeEmpty();
+                //result.Failures.Should().BeEmpty();
+            }
+        }
+
+
 
         [InlineData(177, "BaseQuantities", "GrossFloorArea", 51.9948250000001d)]
         [InlineData(177, "BaseQuantities", "Height", 2500d/1000)]
@@ -110,7 +150,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             result.Successful.Should().NotBeEmpty();
             result.Failures.Should().BeEmpty();
-
+            result.ValidationStatus.Should().Be(ValidationStatus.Pass);
 
 
         }

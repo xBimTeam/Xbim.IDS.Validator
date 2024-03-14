@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using Xbim.Common;
+using Xbim.IDS.Validator.Common;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core
@@ -27,7 +27,7 @@ namespace Xbim.IDS.Validator.Core
         public IdsValidationResult(IPersistEntity? entity, FacetGroup? requirement, bool logFullEntity = false)
         {
        
-            ValidationStatus = ValidationStatus.Inconclusive;
+            
             Entity = entity?.EntityLabel;
             if(logFullEntity)
                 FullEntity = entity;
@@ -37,7 +37,15 @@ namespace Xbim.IDS.Validator.Core
         /// <summary>
         /// The validation status of an individual entity for a requirement
         /// </summary>
-        public ValidationStatus ValidationStatus { get; set; }
+        public ValidationStatus ValidationStatus { get => TestStatus switch
+        {
+            EntityValidationResult.NotTested => ValidationStatus.Inconclusive,
+            EntityValidationResult.RequirementSatisfied => ValidationStatus.Pass,
+            EntityValidationResult.RequirementNotSatisfied => ValidationStatus.Fail,
+            EntityValidationResult.Error => ValidationStatus.Error,
+            _ => throw new NotImplementedException(),
+        };
+                }
         
         /// <summary>
         /// The Id of the model entity being tested against defined requirements
@@ -55,8 +63,9 @@ namespace Xbim.IDS.Validator.Core
         public IPersist? FullEntity { get; internal set; }
 
         /// <summary>
-        /// The set of messages raised by the validation process against this entity
+        /// The set of diagnostic messages raised by the validation process against this entity
         /// </summary>
+
         public IList<ValidationMessage> Messages { get; } = new List<ValidationMessage>();
 
         /// <summary>
@@ -71,6 +80,50 @@ namespace Xbim.IDS.Validator.Core
         /// The requirement the entity is tested against
         /// </summary>
         public FacetGroup? Requirement { get; set; }
+
+        /// <summary>
+        /// The status of the test
+        /// </summary>
+        internal EntityValidationResult TestStatus { get; private set; } = EntityValidationResult.NotTested;
+
+        /// <summary>
+        /// Marks the test as in error
+        /// </summary>
+        public void FailWithError(ValidationMessage error)
+        {
+            Messages.Add(error);
+            MarkStatus(EntityValidationResult.Error);
+        }
+
+        /// <summary>
+        /// Mark this test as Not Satisified
+        /// </summary>
+        public void Fail(ValidationMessage failureReason)
+        {
+            Messages.Add(failureReason);
+            if(failureReason.Expectation != RequirementCardinalityOptions.Optional)
+                MarkStatus(EntityValidationResult.RequirementNotSatisfied);
+        }
+
+        /// <summary>
+        /// Mark this test as Satisified
+        /// </summary>
+        public void MarkSatisified(ValidationMessage justification)
+        {
+            Messages.Add(justification);
+            MarkStatus(EntityValidationResult.RequirementSatisfied);
+        }
+
+        /// <summary>
+        /// Marks the test with the given status, where that status
+        /// </summary>
+        /// <param name="status"></param>
+        public void MarkStatus(EntityValidationResult status)
+        {
+            // Upgrade/Change the status if the new status is more significant than prior status
+            // Allows Failures to over-ride Success, and Errors to override Failures. But Success will never trump Failure.
+            if(TestStatus < status) TestStatus = status;
+        }
     }
 
     /// <summary>
@@ -242,7 +295,7 @@ namespace Xbim.IDS.Validator.Core
         /// <summary>
         /// The message status
         /// </summary>
-        public ValidationStatus Status { get; set; }
+        public ValidationStatus Status { get; set;}
         /// <summary>
         /// The reason for success or failure
         /// </summary>
@@ -362,7 +415,9 @@ namespace Xbim.IDS.Validator.Core
         /// <summary>
         /// Gets and sets the expectation mode
         /// </summary>
-        public RequirementCardinalityOptions ExpectationMode { get; set; } = RequirementCardinalityOptions.Expected;   // Default to Required, not Prohibited
+
+
+        public RequirementCardinalityOptions ExpectationMode { get; private set; } = RequirementCardinalityOptions.Expected;   // Default to Required, not Prohibited
         /// <summary>
         /// The Facet clause being validated
         /// </summary>

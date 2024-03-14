@@ -108,6 +108,86 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         }
 
 
+        [InlineData(33350, "Name", "Windows_Sgl_Plain:1810x1210mm:286105")]
+        [InlineData(33350, "PredefinedType", "WINDOW")]
+        [InlineData(33350, "OverallHeight", 1210)]
+        [InlineData(33350, "Tag", 286105)]
+        [Theory]
+        public void CanValidateAttributesForEntity(int entityLabel, string name, object value)
+        {
+            var instance = Model.Instances[entityLabel];
+            AttributeFacet facet = new AttributeFacet()
+            {
+                AttributeName = new ValueConstraint(name)
+            };
+
+            if(value != null)
+            {
+                facet.AttributeValue = new ValueConstraint(value.ToString());
+            }
+
+#pragma warning disable CS0618 // Type or member is obsolete
+            var group = new FacetGroup();
+#pragma warning restore CS0618 // Type or member is obsolete
+            group.Facets.Add(facet);
+
+            var validationResult = new IdsValidationResult(instance, group);
+
+            Binder.ValidateEntity(instance, facet, group.GetCardinality(facet), validationResult);
+
+            foreach (var message in validationResult.Messages)
+            {
+                var level = message.Status == ValidationStatus.Fail ? LogLevel.Warning  : LogLevel.Information;
+                logger.Log(level, "Message: {message}", message);
+            }
+
+            validationResult.Successful.Should().NotBeEmpty();
+            validationResult.Failures.Should().BeEmpty();
+            validationResult.ValidationStatus.Should().Be(ValidationStatus.Pass);
+        }
+
+        [InlineData(33350, "OverallHeight", 100)]
+        //[InlineData(33350, "OverallHeight", 1210)]
+
+        [Theory]
+        public void CanValidateProhibitedAttributesValuesForEntity(int entityLabel, string name, object value)
+        {
+            var instance = Model.Instances[entityLabel];
+            AttributeFacet facet = new AttributeFacet()
+            {
+                AttributeName = new ValueConstraint(name)
+            };
+
+            if (value != null)
+            {
+                facet.AttributeValue = new ValueConstraint(value.ToString());
+            }
+
+#pragma warning disable CS0618 // Type or member is obsolete
+            var group = new FacetGroup();
+#pragma warning restore CS0618 // Type or member is obsolete
+            group.Facets.Add(facet);
+            group.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>
+            {
+                RequirementCardinalityOptions.Prohibited
+            };
+
+            var validationResult = new IdsValidationResult(instance, group);
+
+            Binder.ValidateEntity(instance, facet, group.GetCardinality(facet), validationResult);
+
+            foreach (var message in validationResult.Messages)
+            {
+                var level = message.Status == ValidationStatus.Fail ? LogLevel.Warning : LogLevel.Information;
+                logger.Log(level, "Message: {message}", message);
+            }
+
+            validationResult.Failures.Should().NotBeEmpty();
+            validationResult.ValidationStatus.Should().Be(ValidationStatus.Pass);
+
+        }
+
+
         [Fact]
         public void SchemaInfoProvidesJustTopLevelClasses()
         {
@@ -136,9 +216,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         }
 
-
-
-            ILogger<AttributeFacetBinder> Logger { get => GetLogger<AttributeFacetBinder>(); }
+        ILogger<AttributeFacetBinder> Logger { get => GetLogger<AttributeFacetBinder>(); }
 
     }
 }

@@ -145,11 +145,13 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
                 result.Successful.Should().NotBeEmpty();
                 result.Failures.Should().BeEmpty();
+                result.ValidationStatus.Should().Be(ValidationStatus.Pass);
             }
             else
             {
                 result.Successful.Should().BeEmpty();
                 result.Failures.Should().NotBeEmpty();
+                result.ValidationStatus.Should().Be(ValidationStatus.Fail);
             }
 
         }

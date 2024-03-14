@@ -148,40 +148,47 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             if (candidates.Any())
             {
-                bool? success = false;
-                foreach (var classification in candidates)
-                {
-                    if(IsMatchingClassification(classification, facet, ctx, result))
+                var matching = candidates.Where(c => IsMatchingClassification(c, facet, ctx));
+                if(matching.Any()) 
+                { 
+                    // Potentially we could have multiple matches
+                    foreach (var match in matching)
                     {
-                        success = true;
-                        break;
+                        if(facet.Identification.IsNullOrEmpty() && facet.ClassificationSystem.IsNullOrEmpty())
+                        {
+                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.ClassificationSystem!, null, "Item classified", match));
+                        }
+                        if (!facet.Identification.IsNullOrEmpty())
+                        {
+                            var id = match.GetClassificationIdentifiers(logger)
+                                .First(id => facet.Identification.ExpectationIsSatisifedBy(id, ctx, null, true));
+                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.Identification!, id, "Classification Identifier found", match));
+                        }
+                        if (!facet.ClassificationSystem.IsNullOrEmpty())
+                        {
+                            var system = match.GetSystemName(logger);
+                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.ClassificationSystem!, system, "Classification System found", match));
+                        }
                     }
+                    return;
                 }
-                if(success == true)
-                {
-                    // Downgrade the Failures status as they were a false -ve if we later found a match
-                    foreach(var message in result.Messages.Where(m => m.Status == ValidationStatus.Fail))
-                    {
-                        message.Status = ValidationStatus.Inconclusive;
-                    }
-                }
+                // Classified but not satifying requirement
+            }
+            
+            // No classifications, or none matching
+            if (!facet.Identification.IsNullOrEmpty())
+            {
+                result.Fail(ValidationMessage.Failure(ctx, fn => fn.Identification!, null, "No classifications matching", item));
             }
             else
             {
-                
-                if (facet.ClassificationSystem != null)
-                {
-                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.ClassificationSystem!, null, "No classifications system matching", item));
-                }
-                else
-                {
-                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Identification!, null, "No classifications matching", item));
-                }
+                result.Fail(ValidationMessage.Failure(ctx, fn => fn.ClassificationSystem!, null, "No classifications system matching", item));
             }
         }
 
 
-        private bool IsMatchingClassification(IIfcClassificationSelect classification, IfcClassificationFacet facet, ValidationContext<IfcClassificationFacet> ctx, IdsValidationResult result)
+        private bool IsMatchingClassification(IIfcClassificationSelect classification, IfcClassificationFacet facet, 
+            ValidationContext<IfcClassificationFacet> ctx)
         {
             if (classification is null)
             {
@@ -190,43 +197,22 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             if (facet.Identification != null)
             {
-                var identifications = classification.GetClassificationIdentifiers(logger);
-                var isSatisfied = false;
-                foreach (var id in identifications)
+                var identifiers = classification.GetClassificationIdentifiers(logger);
+
+                if(!identifiers.Any(i => facet.Identification.ExpectationIsSatisifedBy(i, ctx, logger, true)))
                 {
-                    if (facet.Identification.IsSatisfiedBy(id, true))
-                    {
-                        isSatisfied = true;
-                        result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.Identification!, id, "Classification Identifier found", classification));
-                        break;
-                    }
-                }
-                if (!isSatisfied)
-                {
-                    var identifiers = string.Join(",", identifications.Distinct());
-                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Identification!, identifiers, "No classifications matching", classification));
                     return false;
                 }
+               
             }
 
             if (facet.ClassificationSystem != null)
             {
-                var system = classification.GetSystemName(logger);
-                var isSatisfied = facet.ClassificationSystem.IsSatisfiedBy(system, true);
-                if (isSatisfied)
-                {
-                    result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.ClassificationSystem!, system, "Classification System found", classification));
-                }
-                else
-                {
-                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.ClassificationSystem!, system, "No classification system matching", classification));
-                }
-                return isSatisfied;
+                var systemName = classification.GetSystemName(logger);
+                return facet.ClassificationSystem.ExpectationIsSatisifedBy(systemName, ctx, logger, true);
+               
             }
-            // else match any classification
-            var message = ValidationMessage.Success(ctx, fn => fn.Identification!, null, "Classification found", classification);
-            result.Messages.Add(message);
-            return message.Status == ValidationStatus.Pass; // Accounts for prohibited as well as required
+            return ctx.ExpectationMode != RequirementCardinalityOptions.Prohibited;    // We just want it to be classified. NotNull is enough...
         }
 
         /// <summary>
