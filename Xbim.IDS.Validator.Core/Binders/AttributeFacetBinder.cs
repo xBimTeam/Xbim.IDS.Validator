@@ -223,7 +223,6 @@ namespace Xbim.IDS.Validator.Core.Binders
                 }
                 if (af.AttributeValue != null)
                 {
-                    attrvalue = ApplyWorkarounds(attrvalue, af.AttributeValue);
                     if (IsTypeAppropriateForConstraint(af.AttributeValue, attrvalue) && af.AttributeValue.IsSatisfiedBy(attrvalue, logger))
                         result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.AttributeValue!, attrvalue, "Was populated", item));
                     else

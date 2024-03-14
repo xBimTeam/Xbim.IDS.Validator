@@ -19,8 +19,8 @@
   <ItemGroup>
     <PackageReference Include="ids-lib" Version="1.0.56" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
-    <PackageReference Include="Xbim.Essentials" Version="6.0.438-develop" />
-    <PackageReference Include="Xbim.InformationSpecifications" Version="0.3.38" />
+    <PackageReference Include="Xbim.Essentials" Version="6.0.445" />
+    <PackageReference Include="Xbim.InformationSpecifications" Version="0.96.1" />
   </ItemGroup>
 
 
