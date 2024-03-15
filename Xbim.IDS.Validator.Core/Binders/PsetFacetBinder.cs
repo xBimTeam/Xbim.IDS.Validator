@@ -493,7 +493,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             // allows us to just in time wild-card the psetname, enabling properties to be matched
             if(psetConstraint.IsNullOrEmpty())
             {
-                psetConstraint = new ValueConstraint(NetTypeName.String);
+                psetConstraint = new ValueConstraint();
                 psetConstraint.AddAccepted(new PatternConstraint(".*"));
             }
             if (entity is IIfcTypeObject type)

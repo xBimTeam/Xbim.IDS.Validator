@@ -41,7 +41,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         {
             var typeFacet = new IfcTypeFacet
             {
-                IfcType = new ValueConstraint(NetTypeName.String)
+                IfcType = new ValueConstraint()
             };
             PartOfFacet facet = new PartOfFacet
             {

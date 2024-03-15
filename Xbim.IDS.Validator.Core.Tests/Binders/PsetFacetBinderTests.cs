@@ -29,7 +29,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData("Other", "Categ.*", "Furnit.*", 14, default(ConstraintType), ConstraintType.Pattern, ConstraintType.Pattern)]
         [InlineData("Pset_PlateCommon", "ThermalTransmittance", "6.7069", 6)]
         [InlineData("Pset_Plate.*", "ThermalTransmittance", "6.7069", 6, ConstraintType.Pattern)]
-        [InlineData("Constraints", "Sill Height", "900", 4, default(ConstraintType), default(ConstraintType), ConstraintType.Range)]
+        [InlineData("Constraints", "Sill Height", 900, 4, default(ConstraintType), default(ConstraintType), ConstraintType.Range)]
         [InlineData("Pset_MemberCommon", "Span", null, 20)]
         [InlineData("Pset_MemberCommon", "Span", "2043.570045136", 1)]
         [InlineData("BaseQuantities", "Width", "1810", 5)]  // ElementQuantity  TODO: should factor in Unit Conversion?

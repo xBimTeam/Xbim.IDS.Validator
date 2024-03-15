@@ -224,8 +224,8 @@ namespace Xbim.IDS.Validator.Core.Binders
         // cloned from Attributes Binder as we need to special case - e.g. for Types
         private Expression BindPredefinedTypeFilter(IfcTypeFacet ifcFacet, Expression expression, EntitySelectionCriteria selection)
         {
-            if (ifcFacet?.PredefinedType?.AcceptedValues?.Any() == false ||
-                ifcFacet?.PredefinedType?.AcceptedValues?.FirstOrDefault()?.IsValid(ifcFacet.PredefinedType) == false) return expression;
+            if (ifcFacet?.PredefinedType?.AcceptedValues?.Any() != true ||
+                ifcFacet?.PredefinedType?.AcceptedValues?.FirstOrDefault()?.IsValid(ifcFacet.PredefinedType) != true) return expression;
 
 
             // Intent: match on PredefinedType or ObjectType on the instance (where present).
@@ -257,7 +257,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         internal static Expression BindPredefinedAttributeSelection(Expression expression,
             ValueConstraint constraint, List<PropertyInfo> ifcAttributePropInfos)
         {
-            if (constraint.AcceptedValues.Any() == false)
+            if (constraint.AcceptedValues?.Any() != true)
             {
                 return expression;
             }

@@ -32,8 +32,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             IfcClassificationFacet facet = new IfcClassificationFacet
             {
-                ClassificationSystem = new ValueConstraint(NetTypeName.String),
-                Identification = new ValueConstraint(NetTypeName.String),
+                ClassificationSystem = new ValueConstraint(),
+                Identification = new ValueConstraint(),
                 IncludeSubClasses = false
             };
             switch (sysConType)

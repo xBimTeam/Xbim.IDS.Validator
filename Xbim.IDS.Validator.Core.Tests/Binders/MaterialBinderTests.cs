@@ -30,7 +30,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             MaterialFacet facet = new MaterialFacet
             {
-                Value = new ValueConstraint(NetTypeName.String)
+                Value = new ValueConstraint()
             };
             switch(conType)
             {
