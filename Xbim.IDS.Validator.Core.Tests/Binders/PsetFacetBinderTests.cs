@@ -51,6 +51,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData(323, "Dimensions", "Area", 15.41678125d)]
         [InlineData(323, "Dimensions", "AREA", 15.41678125d)]
         [InlineData(323, "DIMENSIONS", "Area", 15.41678125d)]
+        [InlineData(323, "Dimensions", "Area", 15.41678125d, "IfcAreaMeasure")]
+
+        [InlineData(4705, "Pset_WallCommon", "IsExternal", "FALSE")]
+        [InlineData(4705, "Pset_WallCommon", "IsExternal", false)]
         [InlineData(323, null, "Area", 15.41678125d)]   // Technically not valid-Pset is required
         [InlineData(323, "", "Area", 15.41678125d)]     // ""
         [InlineData(323, " ", "Area", 15.41678125d)]    // ""
@@ -59,7 +63,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData(10942, "Other", "Category", "Doors")] // Type
         [InlineData(3951, "Dimensions", "Thickness", 25d/1000)] // Type Inheritance
         [Theory]
-        public void Can_Validate_Properties(int entityLabel, string psetName, string propName, object expectedtext)
+        public void Can_Validate_Properties(int entityLabel, string psetName, string propName, object expectedtext, string dataType = null)
         {
 
             var entity = Model.Instances[entityLabel];
@@ -73,11 +77,15 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             {
                 propFacet.PropertySetName = psetName;
             }
+            if (dataType != null)
+            {
+                propFacet.DataType = dataType;
+            }
             SetPropertyValue(expectedtext, ConstraintType.Exact, propFacet);
             FacetGroup group = BuildGroup(propFacet);
             var result = new IdsValidationResult(entity, group);
             Binder.ValidateEntity(entity, propFacet, RequirementCardinalityOptions.Expected, result);
-
+            OutputMessages(result);
             // Assert
 
             result.Successful.Should().NotBeEmpty();
@@ -85,47 +93,67 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             result.ValidationStatus.Should().Be(ValidationStatus.Pass);
         }
 
-        [InlineData(323, "Energy Analysis", "Area per Person", 100d)]
-        [InlineData(323, "Energy Analysis", "Area per Person", 28.571428d, false)]
-        [InlineData(33350, "BaseQuantities", "Width", 1.91d)]
-        [InlineData(33350, "BaseQuantities", "Width", 1.81d, false)]
+        [InlineData(323, "Energy Analysis", "Area per Person", null, 100d)]
+        [InlineData(33350, "BaseQuantities", "Width", null, 1.91d)]
+        [InlineData(33350, "BaseQuantities", "Width", "IfcLengthMeasure", 1.91d)]
+        [InlineData(33350, "BaseQuantities", "Depth", null, 0.2d)]
+        [InlineData(33350, "BaseQuantities", "Depth", null, null)]          // No depth on Window
+        [InlineData(37554, "BaseQuantities", "Width", null, null)]   // has no Base Quants
+        [InlineData(37554, "BaseQuantities", "Width", "IfcLengthMeasure", 1.91d)]   // has no Base Quants
+
+        [InlineData(323, "Energy Analysis", "Area per Person", null, 28.571428d, false)]
+        [InlineData(33350, "BaseQuantities", "Width", null, 1.81d, false)]
+        [InlineData(33350, "BaseQuantities", "Width", "IfcLengthMeasure", 1.81d, false)]
+
+        [InlineData(4705, "Constraints", "Base Offset", null, null, false)] // Prop with Value Exists
+        [InlineData(4705, "Other", "Category", null, "Walls", false)] // Value matches
+        [InlineData(4705, "Other", "Category", "IfcText", "Walls", false)] // Value matches
         [Theory]
-        public void Can_Validate_Properties_Prohibited(int entityLabel, string psetName, string propName, object expectedtext, bool shouldPass = true)
+        public void Can_Validate_Prohibited_Properties(int entityLabel, string psetName, string propName, string dataType,  object expectedtext, bool shouldPass = true)
         {
 
             var entity = Model.Instances[entityLabel];
             var propFacet = new IfcPropertyFacet
             {
-
+                PropertySetName = psetName,
                 PropertyName = propName,
                 PropertyValue = new ValueConstraint()
             };
-            if (psetName != null)
+            if (dataType != null)
             {
-                propFacet.PropertySetName = psetName;
+                propFacet.DataType = dataType;
             }
-            SetPropertyValue(expectedtext, ConstraintType.Exact, propFacet);
+            if(expectedtext != null)
+                SetPropertyValue(expectedtext, ConstraintType.Exact, propFacet);
             FacetGroup group = BuildGroup(propFacet);
 
             var result = new IdsValidationResult(entity, group);
             Binder.ValidateEntity(entity, propFacet, RequirementCardinalityOptions.Prohibited, result);
+            OutputMessages(result);
 
             // Assert
             if (shouldPass)
             {
                 result.ValidationStatus.Should().Be(ValidationStatus.Pass);
-                result.Successful.Should().BeEmpty();
-                result.Failures.Should().NotBeEmpty();
+                result.Successful.Should().NotBeEmpty();
+                result.Failures.Should().BeEmpty();
             }
             else
             {
                 result.ValidationStatus.Should().Be(ValidationStatus.Fail);
                 result.Successful.Should().NotBeEmpty();
-                //result.Failures.Should().BeEmpty();
+                result.Failures.Should().NotBeEmpty();
             }
         }
 
-
+        private void OutputMessages(IdsValidationResult result)
+        {
+            foreach (var message in result.Messages)
+            {
+                var level = message.Status == ValidationStatus.Fail ? LogLevel.Warning : LogLevel.Information;
+                logger.Log(level, "Message: {message}", message);
+            }
+        }
 
         [InlineData(177, "BaseQuantities", "GrossFloorArea", 51.9948250000001d)]
         [InlineData(177, "BaseQuantities", "Height", 2500d/1000)]

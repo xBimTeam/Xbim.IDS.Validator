@@ -113,11 +113,9 @@ namespace Xbim.IDS.Validator.Core.Binders
                 bool? failure = null;
                 foreach (var pset in psets)
                 {
-                    if (facet.PropertySetName?.IsEmpty() ?? true == false)
-                    {
-                        // If a constraint was defined acknowledge it, but otherwise this is not yet 'success'
-                        result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertySetName!, pset.Name, "Pset Matched", pset));
-                    }
+
+                    result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertySetName!, pset.Name, "Pset Matched", pset));
+                    
                     var props = GetPropertiesMatching<IIfcSimpleProperty>(item.EntityLabel, pset.Name, facet.PropertyName);
                     var quants = GetQuantitiesMatching(item.EntityLabel, pset.Name, facet.PropertyName);
                     if (props.Any() || quants.Any())
@@ -223,27 +221,53 @@ namespace Xbim.IDS.Validator.Core.Binders
                         }
                         else 
                         { 
-                            result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, "No properties matching in psets", pset));
-                            failure = true;
+                            if(requirement == RequirementCardinalityOptions.Expected)
+                            {
+                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, "No properties matching in psets", pset));
+                                failure = true;
+                            }
+                            
                         }
                     }
                 }
-                // If no matching value found after all the psets checked, mark as failed
+                // If no matching prop found after all the psets checked, mark as failed
                 if(success == default && failure == default)
                 {
-                    result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, "No properties matching", item));
+                    switch (requirement)
+                    {
+                        case RequirementCardinalityOptions.Expected:
+                            {
+                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, "No properties matching", item));
+                                break;
+                            }
+
+                        case RequirementCardinalityOptions.Optional:
+                        case RequirementCardinalityOptions.Prohibited:
+                            {
+                                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertyName!, null, $"Property not found", item));
+                                break;
+                            }
+                    }
                 }
             }
 
             else
             {
-                if(facet.PropertyName?.IsEmpty() == false)
+                // Not matching Pset
+                switch (requirement)
                 {
-                    result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, "No Property matching", item));
-                }
-                else
-                {
-                    result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertySetName!, null, "No Psets matching", item));
+                    case RequirementCardinalityOptions.Expected:
+                        {
+                            result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertySetName!, null, "No Psets matching", item));
+                            break;
+                        }
+
+                    case RequirementCardinalityOptions.Optional:
+                    case RequirementCardinalityOptions.Prohibited:
+                        {
+                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertySetName!, null, $"Pset not found", item));
+                            break;
+                        }
                 }
             }
 

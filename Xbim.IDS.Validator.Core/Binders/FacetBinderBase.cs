@@ -424,7 +424,8 @@ namespace Xbim.IDS.Validator.Core.Binders
         // We should not attempt pattern matches on anything but strings
         protected static bool IsTypeAppropriateForConstraint(ValueConstraint attributeValue, object? attrvalue)
         {
-            if (attributeValue.AcceptedValues.Any(v => v is PatternConstraint))
+            
+            if (!attributeValue.IsNullOrEmpty() && attributeValue.AcceptedValues.Any(v => v is PatternConstraint))
             {
                 return (attrvalue is string || attrvalue is IExpressStringType);
             }

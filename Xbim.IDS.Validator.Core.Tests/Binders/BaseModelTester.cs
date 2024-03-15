@@ -175,9 +175,11 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             {
                 case ConstraintType.Exact:
                     if (propValue is bool)
-                        propFacet.PropertyValue.BaseType = NetTypeName.Boolean;
-                    if (propValue is long)
-                        propFacet.PropertyValue.BaseType = NetTypeName.Integer;
+                    {
+                        // By convention bools are upper case. May need to review XIDS on this.
+                        propFacet.PropertyValue.AddAccepted(new ExactConstraint(propValue.ToString().ToUpperInvariant()));
+                        break;
+                    }
                     propFacet.PropertyValue.AddAccepted(new ExactConstraint(propValue.ToString()));
                     break;
 

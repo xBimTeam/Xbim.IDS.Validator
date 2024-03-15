@@ -91,6 +91,7 @@ namespace Xbim.IDS.Validator.Core
         /// </summary>
         public void FailWithError(ValidationMessage error)
         {
+            error.Status = ValidationStatus.Error;
             Messages.Add(error);
             MarkStatus(EntityValidationResult.Error);
         }
@@ -100,6 +101,7 @@ namespace Xbim.IDS.Validator.Core
         /// </summary>
         public void Fail(ValidationMessage failureReason)
         {
+            failureReason.Status = ValidationStatus.Fail;
             Messages.Add(failureReason);
             if(failureReason.Expectation != RequirementCardinalityOptions.Optional)
                 MarkStatus(EntityValidationResult.RequirementNotSatisfied);
@@ -110,6 +112,7 @@ namespace Xbim.IDS.Validator.Core
         /// </summary>
         public void MarkSatisified(ValidationMessage justification)
         {
+            justification.Status = ValidationStatus.Pass;
             Messages.Add(justification);
             MarkStatus(EntityValidationResult.RequirementSatisfied);
         }
@@ -127,7 +130,7 @@ namespace Xbim.IDS.Validator.Core
     }
 
     /// <summary>
-    /// A message from the IDS validation run
+    /// A diagnostic message from the IDS validation run
     /// </summary>
     public class ValidationMessage
     {
@@ -135,23 +138,9 @@ namespace Xbim.IDS.Validator.Core
 
 
         // Gets the status based on current Expectation mode - i.e. Failure to match in Prohibited model = Success
-        private static ValidationStatus GetStatus(RequirementCardinalityOptions expectation, bool? success)
+        private static ValidationStatus GetStatus(bool? success)
         {
-            switch (expectation)
-            {
-                case RequirementCardinalityOptions.Expected:
-                    return success == true ? ValidationStatus.Pass : success == false ? ValidationStatus.Fail : ValidationStatus.Inconclusive;
-
-                case RequirementCardinalityOptions.Prohibited:
-                    return success == true ? ValidationStatus.Fail : success == false ? ValidationStatus.Pass : ValidationStatus.Inconclusive;
-
-                case RequirementCardinalityOptions.Optional:
-                default:
-                    return ValidationStatus.Inconclusive;
-
-            }
-           
-            
+            return success == true ? ValidationStatus.Pass : success == false ? ValidationStatus.Fail : ValidationStatus.Inconclusive;
         }
 
 
@@ -160,11 +149,11 @@ namespace Xbim.IDS.Validator.Core
         {
             if(Status == ValidationStatus.Fail)
             {
-                return $"[{Status}] {Expectation} {Clause?.GetType().Name}.{ValidatedField} to be {ExpectedResult} - but actually found '{ActualResult}'";
+                return $"[{Status}] {Clause?.GetType().Name}.{ValidatedField} {Expectation} to be '{ExpectedResult}' - but actually found '{ActualResult}'";
             }
             else
             {
-                return $"[{Status}] {Expectation} {Clause?.GetType().Name}.{ValidatedField} to be {ExpectedResult} and found '{ActualResult}'";
+                return $"[{Status}] {Clause?.GetType().Name}.{ValidatedField} {Expectation} to be '{ExpectedResult}' and found '{ActualResult}'";
             }
         }
 
@@ -182,7 +171,7 @@ namespace Xbim.IDS.Validator.Core
         {
             return new ValidationMessage
             {
-                Status = GetStatus(context.ExpectationMode, true),
+                Status = GetStatus( true),
                 Clause = context.Clause,
                 ActualResult = actualResult,
                 Reason = reason,
@@ -208,7 +197,7 @@ namespace Xbim.IDS.Validator.Core
 
             return new ValidationMessage
             {
-                Status = GetStatus(context.ExpectationMode, false),
+                Status = GetStatus(false),
                 Clause = context.Clause,
                 ActualResult = actualResult,
                 Reason = reason,

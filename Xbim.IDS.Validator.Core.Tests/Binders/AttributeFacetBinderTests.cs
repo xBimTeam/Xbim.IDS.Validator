@@ -182,7 +182,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 logger.Log(level, "Message: {message}", message);
             }
 
-            validationResult.Failures.Should().NotBeEmpty();
+            validationResult.Successful.Should().NotBeEmpty();
+            validationResult.Failures.Should().BeEmpty();
             validationResult.ValidationStatus.Should().Be(ValidationStatus.Pass);
 
         }
