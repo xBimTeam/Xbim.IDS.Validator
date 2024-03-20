@@ -49,6 +49,9 @@
      <None Update="TestModels\Dormitory-ARC.ifczip">
        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
      </None>
+     <None Update="TestModels\DuplicatedElements.ids">
+       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+     </None>
     <None Update="TestModels\Example.ids">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

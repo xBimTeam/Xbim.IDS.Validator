@@ -151,7 +151,7 @@ namespace Xbim.IDS.Validator.Core
               
 
                 // Get the applicable items
-                IEnumerable<IPersistEntity> items = ModelBinder.SelectApplicableEntities(model, spec).Distinct();
+                IEnumerable<IPersistEntity> items = ModelBinder.SelectApplicableEntities(model, spec);
                 token.ThrowIfCancellationRequested();
                 logger.LogInformation("          Checking {count} applicable items", items.Count());
                 foreach (var item in items)

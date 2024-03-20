@@ -70,7 +70,7 @@ namespace Xbim.IDS.Validator.Core
             Expression expression;
             if (ifcFacet != null)
             {
-                // If possible start with an IFCType to narrow the selection down
+                // If possible start with an IFCType to narrow the selection down most efficiently
                 expression = BindSelection(ifcQuery?.InstancesExpression, ifcFacet);
                 foreach (var facet in facets.Except(new[] { ifcFacet }))
                 {
@@ -87,7 +87,7 @@ namespace Xbim.IDS.Validator.Core
                 }
             }
 
-            return ifcQuery.Execute(expression, model);
+            return ifcQuery.Execute(expression, model).Distinct();
         }
 
         private void ApplyOptions(Specification spec)

@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xbim.Common;
-using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Interfaces;
+using Xbim.IDS.Validator.Core.Tests.TestModels;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
@@ -84,6 +85,34 @@ namespace Xbim.IDS.Validator.Core.Tests
                 }
             }
         }
+
+        [Fact]
+        public void Should_Deduplicate_SelectedResults()
+        {
+            string modelFile = @"TestModels\SampleHouse4.ifc";
+            string idsScript = @"TestModels\DuplicatedElements.ids";
+
+            var model = BuildModel(modelFile);
+
+            var logger = TestEnvironment.GetXunitLogger<IdsModelValidatorTests>(output);
+            var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idsScript, logger);
+            var modelBinder = provider.GetRequiredService<IIdsModelBinder>();
+
+            var spec = idsSpec.AllSpecifications().First();
+
+            // Arrange
+            var options = new VerificationOptions { IncludeSubtypes = true };
+            modelBinder.SetOptions(options);
+
+            // Act
+            var results = modelBinder.SelectApplicableEntities(model, spec);
+
+            // Assert
+            results.Should().NotBeNull();
+
+            results.Should().HaveCount(5); // Not 5 + 2 duplicates
+        }
+
 
         private static void GetLogLevel(ValidationStatus status, out LogLevel level, out int pad)
         {
