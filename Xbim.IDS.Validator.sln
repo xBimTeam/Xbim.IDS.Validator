@@ -21,8 +21,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xbim.IDS.Validator.Console"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xbim.IDS.Validator.Common", "Xbim.IDS.Validator.Common\Xbim.IDS.Validator.Common.csproj", "{54773B8D-E7B0-4BC1-BB42-13E26C5AB009}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeGenerator", "CodeGenerator\CodeGenerator.csproj", "{A2382CC0-E7BE-4363-9143-B59BFEB56F8E}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,10 +43,6 @@ Global
 		{54773B8D-E7B0-4BC1-BB42-13E26C5AB009}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{54773B8D-E7B0-4BC1-BB42-13E26C5AB009}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{54773B8D-E7B0-4BC1-BB42-13E26C5AB009}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A2382CC0-E7BE-4363-9143-B59BFEB56F8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A2382CC0-E7BE-4363-9143-B59BFEB56F8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A2382CC0-E7BE-4363-9143-B59BFEB56F8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A2382CC0-E7BE-4363-9143-B59BFEB56F8E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
