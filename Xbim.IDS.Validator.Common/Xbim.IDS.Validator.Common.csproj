@@ -1,20 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <ImplicitUsings>false</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <Description>Common interfaces for IDS validation of IFC models using xbim Toolkit</Description>
-    <GenerateDocumentationFile>True</GenerateDocumentationFile>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<ImplicitUsings>false</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Version>1.0.1</Version>
+		<VersionSuffix>Beta</VersionSuffix>
+		<Description>Enables validation of IFC models using BuildingSmart IDS</Description>
+		<Copyright>xbim Ltd</Copyright>
+		<PackageReadmeFile>Readme.md</PackageReadmeFile>
+		<PackageTags>xbim ifc ids bim validation</PackageTags>
+		<AssemblyVersion>1.0.0.0</AssemblyVersion>
+		<PackageLicenseExpression>CDDL-1.0</PackageLicenseExpression>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Include="..\.editorconfig" Link=".editorconfig" />
-    <None Include="..\Readme.md">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="..\.editorconfig" Link=".editorconfig" />
+		<None Include="..\Readme.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
@@ -24,5 +30,10 @@
 		<PackageReference Include="Xbim.IO.CobieExpress" Version="6.0.167-develop" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<None Update="Example.ids">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
 </Project>
