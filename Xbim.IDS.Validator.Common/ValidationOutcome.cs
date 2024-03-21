@@ -12,18 +12,10 @@ namespace Xbim.IDS.Validator.Common
     /// </summary>
     public class ValidationOutcome
     {
-        /// <summary>
-        /// Constructs a new Outcome
-        /// </summary>
-        /// <param name="idsDocument"></param>
         public ValidationOutcome(Xids idsDocument)
         {
             IdsDocument = idsDocument;
         }
-
-        /// <summary>
-        /// The IDS specification object
-        /// </summary>
         public Xids IdsDocument { get; private set; }
 
         /// <summary>
@@ -36,15 +28,8 @@ namespace Xbim.IDS.Validator.Common
         /// </summary>
         public ValidationStatus Status { get; set; } = ValidationStatus.Inconclusive;
 
-        /// <summary>
-        /// The overall message from the run
-        /// </summary>
         public string? Message { get; private set; }
 
-        /// <summary>
-        /// Marks the outcome as catestrophically failed
-        /// </summary>
-        /// <param name="mesg"></param>
         public void MarkCompletelyFailed(string mesg)
         {
             Status = ValidationStatus.Error;
@@ -58,10 +43,6 @@ namespace Xbim.IDS.Validator.Common
     /// <remarks>E.g. all Doors must have a Firerating</remarks>
     public class ValidationRequirement
     {
-        /// <summary>
-        /// Constructs a new requirement
-        /// </summary>
-        /// <param name="spec"></param>
         public ValidationRequirement(Specification spec)
         {
             Specification = spec;
@@ -118,7 +99,7 @@ namespace Xbim.IDS.Validator.Common
         /// <returns></returns>
         public bool IsFailure(IdsValidationResult result)
         {
-            return (Specification.Cardinality.AllowsRequirements && result.ValidationStatus != ValidationStatus.Pass) ||
+            return (Specification.Cardinality.ExpectsRequirements && result.ValidationStatus != ValidationStatus.Pass) ||
                 (Specification.Cardinality.NoMatchingEntities && result.ValidationStatus != ValidationStatus.Fail);
         }
 

@@ -30,7 +30,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
 
             // Unsupported tests
-            // None
+            { "pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_1_4.ids", new [] { XbimSchemaVersion.Unsupported } }, // Awaiting Tolerance support
+            { "pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_2_4.ids", new [] { XbimSchemaVersion.Unsupported } }, // Awaiting Tolerance support
+
         };
 
        
@@ -60,6 +62,21 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                 outcome.Status.Should().Be(ValidationStatus.Pass, schema.ToString());
             }
         }
+
+
+
+        [MemberData(nameof(GetUnsupportedTestCases))]
+        [SkippableTheory]
+        public async Task ToImplement(string idsFile)
+        {
+            var outcome = await VerifyIdsFile(idsFile);
+
+            Skip.If(outcome.Status != ValidationStatus.Pass, "Not yet supported");
+            
+            outcome.Status.Should().Be(ValidationStatus.Pass);
+            
+        }
+
 
         public static IEnumerable<object[]> GetFailureTestCases()
         {

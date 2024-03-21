@@ -19,7 +19,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         /// </summary>
         IfcClassificationFacetBinder Binder { get; }
 
-      
+
         [InlineData("Uniclass", "EF_25_30_97", 5)] // Via Type
         [InlineData("Uniclass", "Pr_40_50_12", 7)]
         [InlineData("uniclass", "PR_40_50_12", 7)]
@@ -39,7 +39,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             switch (sysConType)
             {
                 case ConstraintType.Exact:
-                    if(!string.IsNullOrEmpty(system)) facet.ClassificationSystem.AddAccepted(new ExactConstraint(system)); break;
+                    if (!string.IsNullOrEmpty(system)) facet.ClassificationSystem.AddAccepted(new ExactConstraint(system)); break;
 
                 case ConstraintType.Pattern:
                     facet.ClassificationSystem.AddAccepted(new PatternConstraint(system)); break;
@@ -90,10 +90,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             Binder.ValidateEntity(instance, facet, group.GetCardinality(facet), validationResult);
 
-            foreach(var message in validationResult.Messages) 
+            foreach (var message in validationResult.Messages)
             {
                 var level = LogLevel.Information;
-                if(message.Status == ValidationStatus.Fail)
+                if (message.Status == ValidationStatus.Fail)
                     level = LogLevel.Warning;
                 logger.Log(level, "Message: {message}", message);
             }
@@ -113,7 +113,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             };
 
             facet.ClassificationSystem = new ValueConstraint("Uniclass");
-            
+
 #pragma warning disable CS0618 // Type or member is obsolete
             var group = new FacetGroup();
 #pragma warning restore CS0618 // Type or member is obsolete

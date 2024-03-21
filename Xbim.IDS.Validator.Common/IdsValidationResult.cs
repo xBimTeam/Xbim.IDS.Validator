@@ -26,10 +26,10 @@ namespace Xbim.IDS.Validator.Core
         /// <param name="logFullEntity">Determines if the full xbim entity is returned in the result, or just the entityId</param>
         public IdsValidationResult(IPersistEntity? entity, FacetGroup? requirement, bool logFullEntity = false)
         {
-       
+
             ValidationStatus = ValidationStatus.Inconclusive;
             Entity = entity?.EntityLabel;
-            if(logFullEntity)
+            if (logFullEntity)
                 FullEntity = entity;
             Requirement = requirement;
         }
@@ -38,16 +38,11 @@ namespace Xbim.IDS.Validator.Core
         /// The validation status of an individual entity for a requirement
         /// </summary>
         public ValidationStatus ValidationStatus { get; set; }
-        
-        /// <summary>
-        /// The Id of the model entity being tested against defined requirements
-        /// </summary>
-        public int? Entity { get; internal set; }
 
         /// <summary>
         /// The Id of the model entity being tested against defined requirements
         /// </summary>
-        public int? ParentEntity { get; set; }
+        public int? Entity { get; internal set; }
 
         /// <summary>
         ///  The Full entity being tested against defined requirements
@@ -62,23 +57,20 @@ namespace Xbim.IDS.Validator.Core
         /// <summary>
         /// The set of all success messages for this entity
         /// </summary>
-        public IEnumerable<string?> Successful { get => Messages.Where(m => m.Status == ValidationStatus.Pass).Select(m => m.ToString()); } 
+        public IEnumerable<string?> Successful { get => Messages.Where(m => m.Status == ValidationStatus.Pass).Select(m => m.ToString()); }
         /// <summary>
         /// The set of all failure messages for this entity
         /// </summary>
-        public IEnumerable<string?> Failures { get => Messages.Where(m => m.Status == ValidationStatus.Fail).Select(m=> m.ToString()); }
+        public IEnumerable<string?> Failures { get => Messages.Where(m => m.Status == ValidationStatus.Fail).Select(m => m.ToString()); }
         /// <summary>
         /// The requirement the entity is tested against
         /// </summary>
         public FacetGroup? Requirement { get; set; }
     }
 
-    /// <summary>
-    /// A message from the IDS validation run
-    /// </summary>
     public class ValidationMessage
     {
-        
+
 
 
         // Gets the status based on current Expectation mode - i.e. Failure to match in Prohibited model = Success
@@ -97,21 +89,20 @@ namespace Xbim.IDS.Validator.Core
                     return ValidationStatus.Inconclusive;
 
             }
-           
-            
+
+
         }
 
-
-        /// <inheritDoc/>
         public override string ToString()
         {
-            if(Status == ValidationStatus.Fail)
+            var actualResultString = string.IsNullOrEmpty(ActualResult?.ToString()) ? " " : ActualResult?.ToString();
+            if (Status == ValidationStatus.Fail)
             {
-                return $"[{Status}] {Expectation} {Clause?.GetType().Name}.{ValidatedField} to be {ExpectedResult} - but actually found '{ActualResult}'";
+                return $"{Expectation} {Clause?.GetType().Name}.{ValidatedField} to be {ExpectedResult} - but actually found '{actualResultString}'";
             }
             else
             {
-                return $"[{Status}] {Expectation} {Clause?.GetType().Name}.{ValidatedField} to be {ExpectedResult} and found '{ActualResult}'";
+                return $"{Expectation} {Clause?.GetType().Name}.{ValidatedField} to be {ExpectedResult} and found '{actualResultString}'";
             }
         }
 
@@ -125,7 +116,7 @@ namespace Xbim.IDS.Validator.Core
         /// <param name="reason"></param>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public static ValidationMessage Success<T>(ValidationContext<T> context, [NotNull] Expression<Func<T, object>> memberField, object? actualResult, string? reason = default, IPersist? entity = null) where T: IFacet
+        public static ValidationMessage Success<T>(ValidationContext<T> context, [NotNull] Expression<Func<T, object>> memberField, object? actualResult, string? reason = default, IPersist? entity = null) where T : IFacet
         {
             return new ValidationMessage
             {
@@ -150,7 +141,7 @@ namespace Xbim.IDS.Validator.Core
         /// <param name="reason"></param>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public static ValidationMessage Failure<T>(ValidationContext<T> context, Expression<Func<T, object>> memberField, object? actualResult, string? reason = default, IPersist? entity = null) where T: IFacet
+        public static ValidationMessage Failure<T>(ValidationContext<T> context, Expression<Func<T, object>> memberField, object? actualResult, string? reason = default, IPersist? entity = null) where T : IFacet
         {
 
             return new ValidationMessage
@@ -166,37 +157,6 @@ namespace Xbim.IDS.Validator.Core
             };
         }
 
-        /// <summary>
-        /// Builds a message representing an inconclusive check
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="context"></param>
-        /// <param name="memberField"></param>
-        /// <param name="actualResult"></param>
-        /// <param name="reason"></param>
-        /// <param name="entity"></param>
-        /// <returns></returns>
-        public static ValidationMessage Inconclusive<T>(ValidationContext<T> context, Expression<Func<T, object>> memberField, object? actualResult, string? reason = default, IPersist? entity = null) where T : IFacet
-        {
-
-            return new ValidationMessage
-            {
-                Status = ValidationStatus.Inconclusive,
-                Clause = context.Clause,
-                ActualResult = actualResult,
-                Reason = reason,
-                ExpectedResult = context.GetExpected(memberField),
-                Expectation = context.ExpectationMode,
-                ValidatedField = context.GetMember(memberField),
-                EntityAffected = entity
-            };
-        }
-
-        /// <summary>
-        /// Builds a messge representing an Error when validating
-        /// </summary>
-        /// <param name="reason"></param>
-        /// <returns></returns>
         public static ValidationMessage Error(string reason)
         {
             return new ValidationMessage
@@ -207,22 +167,9 @@ namespace Xbim.IDS.Validator.Core
             };
         }
 
-        /// <summary>
-        /// Default Constructot
-        /// </summary>
         public ValidationMessage()
         {
         }
-
-        /// <summary>
-        /// Constructs a new message with the provided parameters
-        /// </summary>
-        /// <param name="status"></param>
-        /// <param name="expectation"></param>
-        /// <param name="clause"></param>
-        /// <param name="reason"></param>
-        /// <param name="expectedResult"></param>
-        /// <param name="actualResult"></param>
         public ValidationMessage(ValidationStatus status, RequirementCardinalityOptions expectation, IFacet clause, string? reason = null, object? expectedResult = null, object? actualResult = null)
         {
             Status = status;
@@ -234,52 +181,19 @@ namespace Xbim.IDS.Validator.Core
 
         }
 
-        /// <summary>
-        /// String represenying the affected entity
-        /// </summary>
         public string? Entity => (EntityAffected != null) ? EntityAffected.ToString() : "n/a";
 
-        /// <summary>
-        /// The message status
-        /// </summary>
         public ValidationStatus Status { get; set; }
-        /// <summary>
-        /// The reason for success or failure
-        /// </summary>
         public string? Reason { get; set; }
-        /// <summary>
-        /// Object representing the expected result
-        /// </summary>
         public object? ExpectedResult { get; set; }
-        /// <summary>
-        /// The actual result found
-        /// </summary>
         public object? ActualResult { get; set; }
-        /// <summary>
-        /// Represents the Expectation - Required/Prohibited etc
-        /// </summary>
         public RequirementCardinalityOptions Expectation { get; set; }
-        /// <summary>
-        /// A link to the <see cref="IFacet"/> tested
-        /// </summary>
-        public IFacet? Clause { get; set; }
-        /// <summary>
-        /// The facet field checked
-        /// </summary>
-        public string? ValidatedField { get; set; }
 
-        /// <summary>
-        /// A reference to the xbim entity of the affected item
-        /// </summary>
+        public IFacet? Clause { get; set; }
+        public string? ValidatedField { get; set; }
         public IPersist? EntityAffected { get; set; }
 
-        /// <summary>
-        /// A formatted string presenting the actual result
-        /// </summary>
-        public string FormatedActualResult => string.IsNullOrEmpty(ActualResult?.ToString()) ? "<nothing>" : ActualResult.ToString()
-
-
-;    }
+    }
 
     /// <summary>
     /// Represents the validation status of a specification or one of its requirements
@@ -303,34 +217,40 @@ namespace Xbim.IDS.Validator.Core
         /// </summary>
         Error
     }
-    
+
+    public enum Expectation
+    {
+        Optional,
+        Required,
+        Prohibited,
+    }
+
+    public enum FacetType
+    {
+        IfcType,
+        Attribute,
+        Property,
+        Relation,
+        Document,
+        Material,
+        PartOf
+    }
 
     /// <summary>
     /// Class to hold validation context when executing a validation
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class ValidationContext<T> where T: IFacet
+    public class ValidationContext<T> where T : IFacet
     {
-        private static readonly Dictionary<Expression<Func<T, object>>, Func<T, object>> compiledCache = 
+        private static readonly Dictionary<Expression<Func<T, object>>, Func<T, object>> compiledCache =
             new Dictionary<Expression<Func<T, object>>, Func<T, object>>(new MemberExpressionComparer());
 
-        /// <summary>
-        /// Constructs a new <see cref="ValidationContext{T}"/>
-        /// </summary>
-        /// <param name="clause"></param>
-        /// <param name="expectationMode"></param>
         public ValidationContext(T clause, RequirementCardinalityOptions expectationMode)
         {
             ExpectationMode = expectationMode;
             Clause = clause;
         }
 
-        /// <summary>
-        /// Gets the expected string value of member on a Facet
-        /// </summary>
-        /// <param name="memberField">The Facet Constraint</param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
         public string GetExpected(Expression<Func<T, object>> memberField)
         {
             if (memberField is null)
@@ -343,12 +263,6 @@ namespace Xbim.IDS.Validator.Core
             return accessor?.Invoke(Clause)?.ToString() ?? "<any>";
         }
 
-        /// <summary>
-        /// Gets the name of the Facet Constraint being validated
-        /// </summary>
-        /// <param name="memberField">The Facet Constraint</param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
         public string GetMember(Expression<Func<T, object>> memberField)
         {
             if (memberField is null)
@@ -357,18 +271,13 @@ namespace Xbim.IDS.Validator.Core
             }
 
             return (memberField!.Body as MemberExpression)?.Member?.Name ?? "";
-            
+
         }
-        /// <summary>
-        /// Gets and sets the expectation mode
-        /// </summary>
+
         public RequirementCardinalityOptions ExpectationMode { get; set; } = RequirementCardinalityOptions.Expected;   // Default to Required, not Prohibited
-        /// <summary>
-        /// The Facet clause being validated
-        /// </summary>
         public T Clause { get; set; }
 
-        private Func<T, object> GetCompiled([NotNull]Expression<Func<T, object>> expression)
+        private Func<T, object> GetCompiled([NotNull] Expression<Func<T, object>> expression)
         {
             if (compiledCache.TryGetValue(expression, out var compiled))
                 return compiled;

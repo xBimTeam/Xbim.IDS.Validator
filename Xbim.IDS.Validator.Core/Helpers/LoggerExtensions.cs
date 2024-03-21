@@ -8,18 +8,15 @@ namespace Xbim.IDS.Validator.Core.Helpers
     {
         public static void LogNotImplemented(this ILogger? logger, string message, [CallerMemberName] string callerMethodName = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
         {
-#if DEBUG
-            throw new NotImplementedException(string.Format("In {0} at line {1} of {2}: {3}", callerMethodName, line, file, message));
-#else
-            if(logger == null)
+            if (logger == null)
             {
                 throw new NotImplementedException(string.Format("In {0} at line {1} of {2}: {3}", callerMethodName, line, file, message));
             }
             else
             {
                 logger.LogError("Not Implemented in method {file}.{method} at line {line}. {message}", file, callerMethodName, line, message);
+
             }
-#endif
         }
     }
 }

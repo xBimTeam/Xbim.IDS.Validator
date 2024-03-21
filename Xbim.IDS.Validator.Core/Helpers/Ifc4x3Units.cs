@@ -34,7 +34,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
         /// <returns></returns>
         public static double LengthUnitPower(this IfcUnitAssignment unit)
         {
-      
+
             var si = unit.Units.OfType<IfcSIUnit>().FirstOrDefault(u => u.UnitType == IfcUnitEnum.LENGTHUNIT);
             if (si != null && si.Prefix.HasValue)
                 return si.Power;
@@ -57,7 +57,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
                 cFactor = (long)et.Value;
 
             return uc.Power * cFactor;
-            
+
         }
 
         public static double Power(this IfcUnitAssignment unit, IfcUnitEnum unitType)
@@ -89,7 +89,6 @@ namespace Xbim.IDS.Validator.Core.Helpers
         /// <summary>
         /// Sets the Length Unit to be SIUnit and SIPrefix, returns false if the units are not SI
         /// </summary>
-        /// <param name="unit"></param>
         /// <param name = "siUnitName"></param>
         /// <param name = "siPrefix"></param>
         /// <returns></returns>
@@ -148,11 +147,11 @@ namespace Xbim.IDS.Validator.Core.Helpers
             else if (property.NominalValue is IfcAmountOfSubstanceMeasure)
                 requiredUnit = IfcUnitEnum.AMOUNTOFSUBSTANCEUNIT;
             else if (property.NominalValue is IfcContextDependentMeasure)
-                requiredUnit = null; 
+                requiredUnit = null;
             else if (property.NominalValue is IfcCountMeasure)
-                requiredUnit = null; 
+                requiredUnit = null;
             else if (property.NominalValue is IfcDescriptiveMeasure)
-                requiredUnit = null; 
+                requiredUnit = null;
             else if (property.NominalValue is IfcElectricCurrentMeasure)
                 requiredUnit = IfcUnitEnum.ELECTRICCURRENTUNIT;
             else if (property.NominalValue is IfcLuminousIntensityMeasure)
@@ -160,19 +159,19 @@ namespace Xbim.IDS.Validator.Core.Helpers
             else if (property.NominalValue is IfcMassMeasure)
                 requiredUnit = IfcUnitEnum.MASSUNIT;
             else if (property.NominalValue is IfcNormalisedRatioMeasure)
-                requiredUnit = null; 
+                requiredUnit = null;
             else if (property.NominalValue is IfcNumericMeasure)
-                requiredUnit = null; 
+                requiredUnit = null;
             else if (property.NominalValue is IfcParameterValue)
-                requiredUnit = null; 
+                requiredUnit = null;
             else if (property.NominalValue is IfcPlaneAngleMeasure)
                 requiredUnit = IfcUnitEnum.PLANEANGLEUNIT;
             else if (property.NominalValue is IfcPositiveRatioMeasure)
-                requiredUnit = null; 
+                requiredUnit = null;
             else if (property.NominalValue is IfcPositivePlaneAngleMeasure)
                 requiredUnit = IfcUnitEnum.PLANEANGLEUNIT;
             else if (property.NominalValue is IfcRatioMeasure)
-                requiredUnit = null; 
+                requiredUnit = null;
             else if (property.NominalValue is IfcSolidAngleMeasure)
                 requiredUnit = IfcUnitEnum.SOLIDANGLEUNIT;
             else if (property.NominalValue is IfcThermodynamicTemperatureMeasure)
@@ -180,7 +179,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
             else if (property.NominalValue is IfcTimeMeasure)
                 requiredUnit = IfcUnitEnum.TIMEUNIT;
             else if (property.NominalValue is IfcComplexNumber)
-                requiredUnit = null; 
+                requiredUnit = null;
             // types from IfcSimpleValue
             else if (property.NominalValue is IfcSimpleValue)
                 requiredUnit = null;
@@ -231,38 +230,38 @@ namespace Xbim.IDS.Validator.Core.Helpers
 
         public static IfcNamedUnit? AreaUnit(this IfcUnitAssignment unit)
         {
-          
+
             IfcNamedUnit? nu = unit.Units.OfType<IfcSIUnit>().FirstOrDefault(u => u.UnitType == IfcUnitEnum.AREAUNIT);
             if (nu == null)
                 nu = unit.Units.OfType<IfcConversionBasedUnit>().FirstOrDefault(u => u.UnitType == IfcUnitEnum.AREAUNIT);
             return nu;
-            
+
         }
         public static IfcNamedUnit? LengthUnit(this IfcUnitAssignment unit)
         {
-            
+
             IfcNamedUnit? nu = unit.Units.OfType<IfcSIUnit>().FirstOrDefault(u => u.UnitType == IfcUnitEnum.LENGTHUNIT);
             if (nu == null)
                 nu =
                     unit.Units.OfType<IfcConversionBasedUnit>()
                         .FirstOrDefault(u => u.UnitType == IfcUnitEnum.LENGTHUNIT);
             return nu;
-            
+
         }
         public static IfcNamedUnit? VolumeUnit(this IfcUnitAssignment unit)
         {
-       
+
             IfcNamedUnit? nu = unit.Units.OfType<IfcSIUnit>().FirstOrDefault(u => u.UnitType == IfcUnitEnum.VOLUMEUNIT);
             if (nu == null)
                 nu =
                     unit.Units.OfType<IfcConversionBasedUnit>()
                         .FirstOrDefault(u => u.UnitType == IfcUnitEnum.VOLUMEUNIT);
             return nu;
-            
+
         }
         public static string LengthUnitName(this IfcUnitAssignment unit)
         {
-           
+
             var si = unit.Units.OfType<IfcSIUnit>().FirstOrDefault(u => u.UnitType == IfcUnitEnum.LENGTHUNIT);
             if (si != null)
             {
@@ -292,7 +291,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
                 }
             }
             return "";
-            
+
         }
         public static void SetOrChangeConversionUnit(this IfcUnitAssignment u, IfcUnitEnum unitType, ConversionBasedUnit unit)
         {

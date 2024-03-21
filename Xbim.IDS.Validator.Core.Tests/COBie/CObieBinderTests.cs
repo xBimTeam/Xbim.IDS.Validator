@@ -22,7 +22,7 @@ namespace Xbim.IDS.Validator.Core.Tests.COBie
         private readonly IServiceProvider provider;
         private IIdsFacetBinderFactory facetBinderFactory;
 
-        public COBieBinderTests(ITestOutputHelper testOutput) : base(testOutput) 
+        public COBieBinderTests(ITestOutputHelper testOutput) : base(testOutput)
         {
             staticOutput = testOutput;
             provider = TestEnvironment.ServiceProvider;
@@ -114,7 +114,7 @@ namespace Xbim.IDS.Validator.Core.Tests.COBie
             var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
 
             var attrbinder = new AttributeFacetBinder(BinderContext, GetLogger<AttributeFacetBinder>());
-            attrbinder.SetOptions(new VerificationOptions { AllowDerivedAttributes = true, IncludeSubtypes = true }) ;
+            attrbinder.SetOptions(new VerificationOptions { AllowDerivedAttributes = true, IncludeSubtypes = true });
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
             expression = attrbinder.BindWhereExpression(expression, attrFacet);
@@ -157,7 +157,7 @@ namespace Xbim.IDS.Validator.Core.Tests.COBie
 
         }
 
-        [Fact(Skip="Used to generate SampleHouse4.xlsx")]
+        [Fact(Skip = "Used to generate SampleHouse4.xlsx")]
         public void CreatesCOBie()
         {
             const string input = @"TestModels/SampleHouse4.ifc";
@@ -252,7 +252,7 @@ namespace Xbim.IDS.Validator.Core.Tests.COBie
             };
         }
 
-        
+
         private void SetContext()
         {
             var context = provider.GetRequiredService<BinderContext>();

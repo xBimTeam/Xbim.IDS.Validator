@@ -18,7 +18,7 @@ namespace Xbim.IDS.Validator.Core.Binders
     {
         private readonly ILogger<IfcTypeFacetBinder> logger;
 
-        public IfcTypeFacetBinder(BinderContext binderContext, ILogger<IfcTypeFacetBinder> logger) : base(binderContext, logger)
+        public IfcTypeFacetBinder(BinderContext binderContext, ILogger<IfcTypeFacetBinder> logger) : base(binderContext)
         {
             this.logger = logger;
         }
@@ -54,22 +54,25 @@ namespace Xbim.IDS.Validator.Core.Binders
                 throw new NotSupportedException("Expected an unfiltered set of Instances");
             }
 
+            // So we can do case insensitive comparisons
+            ifcFacet.IfcType.BaseType = NetTypeName.String;
+
             var selectionCriteria = BuildSelectionCriteria(ifcFacet);
-            if(!ExpressTypesAreValid(selectionCriteria.Select(e => e.ElementExpressType)))
+            if (!ExpressTypesAreValid(selectionCriteria.Select(e => e.ElementExpressType)))
             {
                 var types = ifcFacet.IfcType.ToString();
                 logger.LogWarning("Unexpected IFC Type: {ifcTypes} for schema {ifcSchema}", types, Model.SchemaVersion);
-                
-                throw new InvalidOperationException($"Invalid IFC Type '{types}' for {Model.SchemaVersion}" );
+
+                throw new InvalidOperationException($"Invalid IFC Type '{types}' for {Model.SchemaVersion}");
             }
 
-           
+
             bool doConcat = false;
             foreach (var selection in selectionCriteria)
             {
                 var rightExpr = baseExpression;
                 rightExpr = BindIfcExpressType(rightExpr, selection.ElementExpressType, ifcFacet.IncludeSubtypes);
-                if(selection.DefiningExpressType != null)
+                if (selection.DefiningExpressType != null)
                 {
                     rightExpr = BindDefiningType(rightExpr, selection);
                 }
@@ -98,7 +101,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             // A real edge case, since we always try to start with a Ifc Type. 
             // e.g. Select all items with materials 'wood', where IfcType is IfcDoor - we should filter the entities from first predicate
             // But we reverse the predicate upstream as it's likely more efficient that way anyway
-            throw new NotImplementedException("Filtering by IfcType after initial selection not implemented");
+            throw new NotImplementedException();
         }
 
         public override void ValidateEntity(IPersistEntity item, IfcTypeFacet f, RequirementCardinalityOptions requirement, IdsValidationResult result)
@@ -117,10 +120,10 @@ namespace Xbim.IDS.Validator.Core.Binders
             var actualEntityType = entityType!.Name.ToUpperInvariant();
             var currentEntityType = entityType;
 
-            
+
             // We can't easily get IfcType Subtypes since the constraint could be complex
             // Instead when IncludeSubtypes = true, we get the supertypes and see if any of them satisfy
-            while(currentEntityType != null)
+            while (currentEntityType != null)
             {
                 var actualName = currentEntityType?.Name.ToUpperInvariant();
                 if (f?.IfcType?.IsSatisfiedBy(actualName, false, logger) == true)
@@ -134,7 +137,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                     {
                         // Get entity's supertype and test that
                         currentEntityType = currentEntityType?.SuperType;
-                    } 
+                    }
                     else
                     {
                         result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.IfcType!, actualEntityType, "IFC Type incorrect", item));
@@ -142,8 +145,8 @@ namespace Xbim.IDS.Validator.Core.Binders
                     }
                 }
             }
-            
-           
+
+
             if (f?.PredefinedType?.HasAnyAcceptedValue() == true)
             {
                 var preDefValue = GetPredefinedType(item);
@@ -171,18 +174,18 @@ namespace Xbim.IDS.Validator.Core.Binders
                 yield break;
             }
 
-            if(ifcFacet?.IfcType?.IsSingleExact(out string? ifcTypeName) == true)
+            if (ifcFacet?.IfcType?.IsSingleExact(out string? ifcTypeName) == true)
             {
                 // Optimise for the typical scenario
                 var metaData = Model.Metadata.ExpressType(ifcTypeName.ToUpperInvariant());
-                if(metaData != null) 
+                if (metaData != null)
                 {
                     // Found in Schema
                     yield return new EntitySelectionCriteria(metaData);
                 }
                 else
                 {
-                    
+
                     // Check for direct subtitutes E.g. IfcDoorStyle => IfcDoorType
                     var equivalent = SchemaTypeMap.GetSchemaEquivalent(Model, ifcTypeName.ToUpperInvariant());
                     if (equivalent != null)
@@ -202,7 +205,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                         yield return new EntitySelectionCriteria(element, type);
                     }
                 }
-               
+
             }
             else
             {
@@ -264,8 +267,8 @@ namespace Xbim.IDS.Validator.Core.Binders
             // Get underlying collection type
             var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
 
-            
-            var x= Enumerable.Empty<Ifc4x3.SharedBldgElements.IfcWall>();
+
+            var x = Enumerable.Empty<Ifc4x3.SharedBldgElements.IfcWall>();
             x.Where(e => e.IsTypedBy is IIfcElementType et && ValueConstraintExtensions.SatisfiesConstraint(constraint, et.ElementType));
 
 
@@ -286,7 +289,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             // Build Lambda expression for filter predicate (Func<T,bool>)
             var filterExpression = Expression.Lambda(querybody, ifcTypeParam);
-            
+
             // Bind Lambda to Where method
             return Expression.Call(null, whereMethod, new[] { expression, filterExpression });
         }
@@ -303,7 +306,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 var ifcAttributePropInfo = propertyMeta.PropertyInfo;
                 value = ifcAttributePropInfo.GetValue(entity)?.ToString();
             }
-            
+
             if (value == "USERDEFINED" || value == null)
             {
                 if (entity is IIfcObject obj)
@@ -325,7 +328,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             return value;
         }
 
-        
+
     }
 
     /// <summary>

@@ -38,7 +38,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         }
 
 
-        
+
         [InlineData("IfcWall", 3, typeof(IIfcWall))]
         [InlineData("IfcBuildingElement", 0, typeof(IIfcBuildingElement))] //
         [InlineData("IfcFurnishingElement", 0, typeof(IIfcFurnishingElement))]
@@ -130,17 +130,17 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 IfcType = expectedType,
                 IncludeSubtypes = allowSubType
             };
-            if(expectedPredefined != null)
+            if (expectedPredefined != null)
             {
                 propFacet.PredefinedType = expectedPredefined;
             }
-            
+
             FacetGroup group = BuildGroup(propFacet);
             var result = new IdsValidationResult(entity, group);
             Binder.ValidateEntity(entity, propFacet, RequirementCardinalityOptions.Expected, result);
 
             // Assert
-            if(shouldPass)
+            if (shouldPass)
             {
 
                 result.Successful.Should().NotBeEmpty();

@@ -3,7 +3,7 @@
         <title>New attributes in 4x3 can be accessed</title>
     </info>
     <specifications>
-        <specification name="New attributes in 4x3 can be accessed" ifcVersion="IFC4X3" minOccurs="1" maxOccurs="unbounded">
+        <specification name="New attributes in 4x3 can be accessed" ifcVersion="IFC2X3 IFC4" minOccurs="1" maxOccurs="unbounded">
             <applicability>
                 <entity>
                     <name>
@@ -12,7 +12,7 @@
                 </entity>
             </applicability>
             <requirements>
-              <attribute minOccurs="1" maxOccurs="unbounded">
+              <attribute minOccurs="1" maxOccurs="1">
                 <name>
                   <simpleValue>LongName</simpleValue>
                 </name>

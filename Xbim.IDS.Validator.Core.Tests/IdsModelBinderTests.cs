@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xbim.Common;
-using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Interfaces;
+using Xbim.IDS.Validator.Core.Tests.TestModels;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
@@ -13,7 +14,7 @@ namespace Xbim.IDS.Validator.Core.Tests
     [Collection(nameof(TestEnvironment))]
     public class IdsModelBinderTests
     {
-        
+
         private readonly ITestOutputHelper output;
         private readonly IServiceProvider provider;
 
@@ -38,28 +39,28 @@ namespace Xbim.IDS.Validator.Core.Tests
             var logger = TestEnvironment.GetXunitLogger<IdsModelBinderTests>(output);
 
             var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idcFile, logger);
-            
 
-            foreach(var group in idsSpec.SpecificationsGroups)
+
+            foreach (var group in idsSpec.SpecificationsGroups)
             {
                 logger.LogInformation("opening '{group}'", group.Name);
-                foreach(var spec in group.Specifications)
+                foreach (var spec in group.Specifications)
                 {
                     logger.LogInformation(" -- Spec '{spec}' : versions {ifcVersions}", spec.Name, spec.IfcVersion);
                     var applicableIfc = spec.Applicability.Facets.OfType<IfcTypeFacet>().FirstOrDefault();
                     logger.LogInformation("    Applicable to : {entity} with PredefinedType {predefined}", applicableIfc.IfcType.Short(), applicableIfc.PredefinedType?.Short());
-                    foreach(var applicableFacet in spec.Applicability.Facets)
+                    foreach (var applicableFacet in spec.Applicability.Facets)
                     {
-                        logger.LogInformation("       - {facetType}: where {description} ", applicableFacet.GetType().Name, applicableFacet.Short() );
+                        logger.LogInformation("       - {facetType}: where {description} ", applicableFacet.GetType().Name, applicableFacet.Short());
                     }
 
-                    logger.LogInformation("    Requirements {reqCount}: {expectation}", spec.Requirement.Facets.Count, spec.Requirement.RequirementOptions?.FirstOrDefault().ToString() ?? "" );
+                    logger.LogInformation("    Requirements {reqCount}: {expectation}", spec.Requirement.Facets.Count, spec.Requirement.RequirementOptions?.FirstOrDefault().ToString() ?? "");
                     int idx = 1;
                     foreach (var reqFacet in spec.Requirement.Facets)
                     {
                         logger.LogInformation("       [{i}] {facetType}: check {description} ", idx++, reqFacet.GetType().Name, reqFacet.Short());
                     }
-                    IEnumerable <IPersistEntity> items = modelBinder.SelectApplicableEntities(model, spec);
+                    IEnumerable<IPersistEntity> items = modelBinder.SelectApplicableEntities(model, spec);
                     logger.LogInformation("          Checking {count} applicable items", items.Count());
                     foreach (var item in items)
                     {
@@ -84,6 +85,34 @@ namespace Xbim.IDS.Validator.Core.Tests
                 }
             }
         }
+
+        [Fact]
+        public void Should_Deduplicate_SelectedResults()
+        {
+            string modelFile = @"TestModels\SampleHouse4.ifc";
+            string idsScript = @"TestModels\DuplicatedElements.ids";
+
+            var model = BuildModel(modelFile);
+
+            var logger = TestEnvironment.GetXunitLogger<IdsModelValidatorTests>(output);
+            var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idsScript, logger);
+            var modelBinder = provider.GetRequiredService<IIdsModelBinder>();
+
+            var spec = idsSpec.AllSpecifications().First();
+
+            // Arrange
+            var options = new VerificationOptions { IncludeSubtypes = true };
+            modelBinder.SetOptions(options);
+
+            // Act
+            var results = modelBinder.SelectApplicableEntities(model, spec);
+
+            // Assert
+            results.Should().NotBeNull();
+
+            results.Should().HaveCount(5); // Not 5 + 2 duplicates
+        }
+
 
         private static void GetLogLevel(ValidationStatus status, out LogLevel level, out int pad)
         {

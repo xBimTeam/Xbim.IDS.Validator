@@ -32,7 +32,7 @@ class Program
     {
         var command = SetupParams();
         logger = provider.GetRequiredService<ILogger<Program>>();
-        var result =  await command.InvokeAsync(args);
+        var result = await command.InvokeAsync(args);
         Console.ReadLine();
 
         return result;
@@ -60,10 +60,12 @@ class Program
             (aliases: new[] { "--modelFile", "-ifc" },
             description: "Path to an IFC file");
 
+
+
         idsOption.Arity = ArgumentArity.ExactlyOne;
-        idsOption.IsRequired= true; 
+        idsOption.IsRequired = true;
         modelOption.Arity = ArgumentArity.ExactlyOne;
-        modelOption.IsRequired= true;
+        modelOption.IsRequired = true;
 
         var rootCommand = new RootCommand
         {
@@ -106,7 +108,7 @@ class Program
         var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
 
         Console.WriteLine("Validating...");
-        var options = new VerificationOptions { IncludeSubtypes = true, OutputFullEntity = true };
+        var options = new VerificationOptions { IncludeSubtypes = true, OutputFullEntity = true, AllowDerivedAttributes = true };
         var results = await idsValidator.ValidateAgainstIdsAsync(model, ids, logger, OutputRequirement, options);
 
         sw.Stop();
@@ -117,7 +119,7 @@ class Program
             Console.Error.WriteLine($"Validation failed to run: {results.Message}");
             return;
         }
-        
+
 
         model.Dispose();
     }
@@ -136,20 +138,24 @@ class Program
         var totalFail = results.ExecutedRequirements.Count(r => r.Status == ValidationStatus.Fail);
         var totalError = results.ExecutedRequirements.Count(r => r.Status == ValidationStatus.Error);
 
-        var totalElementsTested = results.ExecutedRequirements.Sum(r=> r.ApplicableResults.Count());
+        var totalElementsTested = results.ExecutedRequirements.Sum(r => r.ApplicableResults.Count());
         var totalPassedResults = results.ExecutedRequirements.Sum(r => r.PassedResults.Count());
+        var totalFailedResults = results.ExecutedRequirements.Sum(r => r.FailedResults.Count());
         var totalPercent = totalElementsTested > 0 ? ((float)totalPassedResults) / totalElementsTested * 100 : 0;
 
 
         foreach (var req in results.ExecutedRequirements)
         {
             var passed = req.PassedResults.Count();
+            var failed = req.FailedResults.Count();
             var percent = req.ApplicableResults.Count() > 0 ? ((float)passed) / req.ApplicableResults.Count() * 100 : 0;
             WriteColored(req.Status, req.Status.ToString());
             WriteColored($" {passed,5}", ConsoleColor.White);
             WriteColored($" /", ConsoleColor.Gray);
             WriteColored($"{req.ApplicableResults.Count,5}", ConsoleColor.White);
             WriteColored($" passed ", ConsoleColor.Gray);
+            WriteColored($"{failed,5}", ConsoleColor.Red);
+            WriteColored($" failed ", ConsoleColor.Gray);
             WriteColored($"{percent,5:0.0}% ", ConsoleColor.DarkYellow);
             WriteColored($": {req.Specification.Name}\n", ConsoleColor.Gray);
             // [{passed} passed from {req.ApplicableResults.Count}]", 
@@ -160,6 +166,8 @@ class Program
         WriteColored($" /", ConsoleColor.Gray);
         WriteColored($"{totalElementsTested,5}", ConsoleColor.White);
         WriteColored($" tested ", ConsoleColor.Gray);
+        WriteColored($"{totalFailedResults,5}", ConsoleColor.Red);
+        WriteColored($" failed ", ConsoleColor.Gray);
         WriteColored($"{totalPercent,5:0.0}% ", ConsoleColor.DarkYellow);
         WriteColored($" in {sw.Elapsed.TotalSeconds} secs\n\n", ConsoleColor.DarkGreen);
 
@@ -171,7 +179,7 @@ class Program
 
     }
 
-    private static void OutputRequirement(ValidationRequirement req)
+    private static Task OutputRequirement(ValidationRequirement req)
     {
         var passed = req.PassedResults.Count();
 
@@ -184,24 +192,24 @@ class Program
         Console.ForegroundColor = ConsoleColor.White;
         foreach (var itm in req.ApplicableResults)
         {
-            if(req.Status == ValidationStatus.Error)
+            if (req.Status == ValidationStatus.Error)
             {
                 WriteColored(itm.ValidationStatus, "    " + itm.ValidationStatus.ToString());
-                foreach(var msg in itm.Messages.Where(m => m.Status != ValidationStatus.Pass))
+                foreach (var msg in itm.Messages.Where(m => m.Status != ValidationStatus.Pass))
                 {
                     WriteColored(ValidationStatus.Error, $": {msg?.Reason}\n");
-                    WriteColored($"               {msg?.Expectation} {msg?.Clause?.GetType().Name}.{msg?.ValidatedField} to be {msg?.ExpectedResult} - but actually found '{msg?.FormatedActualResult}'\n", ConsoleColor.DarkGray);
+                    WriteColored($"               {msg?.Expectation} {msg?.Clause?.GetType().Name}.{msg?.ValidatedField} to be {msg?.ExpectedResult} - but actually found '{msg?.ActualResult}'\n", ConsoleColor.DarkGray);
                 }
 
             }
-            else if(req.IsFailure(itm))
+            else if (req.IsFailure(itm))
             {
                 WriteColored(itm.ValidationStatus, "    " + itm.ValidationStatus.ToString());
                 WriteColored($":{itm.Requirement?.Name} - {itm.Requirement?.Description}", ConsoleColor.Red);
                 WriteColored($": {itm.FullEntity}\n", ConsoleColor.White);
                 foreach (var msg in itm.Messages.Where(m => m.Status != ValidationStatus.Pass))
                 {
-                    WriteColored($"               {msg?.Expectation} {msg?.Clause?.GetType().Name}.{msg?.ValidatedField} to be {msg?.ExpectedResult} - but actually found '{msg?.FormatedActualResult}' - {msg?.Reason}\n", ConsoleColor.DarkGray);
+                    WriteColored($"               {msg?.Expectation} {msg?.Clause?.GetType().Name}.{msg?.ValidatedField} to be {msg?.ExpectedResult} - but actually found '{msg?.ActualResult}' - {msg?.Reason}\n", ConsoleColor.DarkGray);
                 }
             }
             //else
@@ -217,15 +225,16 @@ class Program
         }
         Console.WriteLine();
         Console.WriteLine("------------------------------");
+        return Task.CompletedTask;
     }
 
     private static void WriteColored(ValidationStatus status, string text)
     {
-        
-        switch(status)
+
+        switch (status)
         {
             case ValidationStatus.Pass:
-                WriteColored(text,ConsoleColor.Green);
+                WriteColored(text, ConsoleColor.Green);
                 break;
             case ValidationStatus.Inconclusive:
                 WriteColored(text, ConsoleColor.Yellow);
@@ -240,7 +249,7 @@ class Program
     }
     private static void WriteColored(string text, ConsoleColor color)
     {
-        
+
         var originalColor = Console.ForegroundColor;
         try
         {
@@ -253,13 +262,18 @@ class Program
             Console.ForegroundColor = originalColor;
         }
     }
-    private static IModel BuildModel(string ifcFile)
+    private static IModel BuildModel(string modelFile)
     {
-        if (ifcFile.EndsWith(".db", StringComparison.OrdinalIgnoreCase))
+        if (modelFile.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+        {
+            return OpenCOBie(modelFile);
+        }
+
+        if (modelFile.EndsWith(".db", StringComparison.OrdinalIgnoreCase))
         {
             // return Flex DB
             var flexdb = new IfcFlexDb();
-            flexdb.Open(ifcFile);
+            flexdb.Open(modelFile);
             flexdb.BeginTypeCaching();
 
             flexdb.AddActivationDepth<IIfcRelDefinesByProperties>(2);
@@ -270,8 +284,24 @@ class Program
             return flexdb;
         }
 
-        return MemoryModel.OpenRead(ifcFile);
+        return MemoryModel.OpenRead(modelFile);
     }
+
+    private static IModel OpenCOBie(string file)
+    {
+        var mapping = Xbim.IO.CobieExpress.CobieModel.GetMapping();
+        mapping.ClassMappings.RemoveAll(m => m.Class == "System");
+        mapping.ClassMappings.RemoveAll(m => m.Class.StartsWith("Attribute"));
+        mapping.ClassMappings.RemoveAll(m => m.Class.StartsWith("Zone"));
+        //foreach(var map in mapping.ClassMappings)
+        //{
+        //    Console.WriteLine(map.Class);
+        //}
+        var model = Xbim.IO.CobieExpress.CobieModel.ImportFromTable(file, out string report, mapping);
+
+        return model;
+    }
+
 
 #if SqlLite
     private static IModel BuildModelSqlLite(string ifcFile)

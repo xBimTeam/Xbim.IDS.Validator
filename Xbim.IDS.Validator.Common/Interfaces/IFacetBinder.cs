@@ -1,13 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Interfaces
 {
-    /// <summary>
-    /// Interface defining how IDS <see cref="IFacet"/>s build queries against a xbim model.
-    /// </summary>
     public interface IFacetBinder
     {
 

@@ -4,8 +4,6 @@ using Xbim.IDS.Validator.Core.Binders;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 using Xunit.Abstractions;
-using Xbim.Common.Metadata;
-using Xbim.IDS.Validator.Core.Extensions;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
@@ -27,8 +25,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData(nameof(IIfcSite.RefElevation), "0", 1)]
         [InlineData(nameof(IIfcRoot.GlobalId), "2ru7YPT4T9MuTpOS4FRzxX", 1)]    // A WallType
         [InlineData(nameof(IIfcObject.ObjectType), null, 68)]    // Any object with an ObjectType defined (any IfcObject)
-        [InlineData(nameof(IIfcRoot.GlobalId), null, 1113)]    // Any entity with an GlobalID (any Rooted object)
-        [InlineData(nameof(IIfcRoot.Description), null, 89)] // Any entity with a description
+        [InlineData(nameof(IIfcRoot.GlobalId), null, 96)]    // Any entity with an GlobalID (any Rooted object)
+        [InlineData(nameof(IIfcRoot.Description), null, 2)] // Any entity with a description
         [Theory]
         public void Can_Query_By_Attributes(string attributeFieldName, string attributeValue, int expectedCount)
         {
@@ -94,7 +92,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 AttributeName = attributeFieldName,
                 AttributeValue = new ValueConstraint("not relevant")
             };
-            var ifcBinder = new IfcTypeFacetBinder(new BinderContext { Model = Model}, GetLogger<IfcTypeFacetBinder>());
+            var ifcBinder = new IfcTypeFacetBinder(new BinderContext { Model = Model }, GetLogger<IfcTypeFacetBinder>());
 
 
             var expression = ifcBinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -107,38 +105,36 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         }
 
+        [InlineData(82887, "RefElevation", 0d, 9999d)]  // Site Double
+        [InlineData(82887, "Name", "Boo", "ZZZZ")]      // Site Text
+        [InlineData(90000, "CountValue", 0d, 2000d)]  // Quantity
+        [InlineData(90001, "Priority", 1, 20)]  // IfcInteger
 
-        [Fact]
-        public void SchemaInfoProvidesJustTopLevelClasses()
+        [Theory]
+        public void Can_Validate_AttributeRanges(int entityLabel, string attrName, object minValue, object maxValue)
         {
 
-            var newTypes = IdsLib.IfcSchema.SchemaInfo.SchemaIfc4.GetAttributeClasses("ObjectType", onlyTopClasses: true);
+            var entity = Model.Instances[entityLabel];
+            var attrFacet = new AttributeFacet
+            {
 
-            newTypes.Should().Contain("IFCOBJECT");
+                AttributeName = attrName,
+                AttributeValue = new ValueConstraint()
+            };
 
-            newTypes.Should().NotContain("IFCPRODUCT");
-        }
+            attrFacet.AttributeValue.AddAccepted(new RangeConstraint(minValue.ToString(), true, maxValue.ToString(), true));
+            FacetGroup group = BuildGroup(attrFacet);
+            var result = new IdsValidationResult(entity, group);
+            Binder.ValidateEntity(entity, attrFacet, RequirementCardinalityOptions.Expected, result);
 
-        [Fact]
-        public void SchemaInfoCanBeFiltered()
-        {
+            // Assert
 
-            var newTypes = IdsLib.IfcSchema.SchemaInfo.SchemaIfc4.GetAttributeClasses("Description", onlyTopClasses: true);
-
-            newTypes.Should().Contain("IFCORGANIZATION");
-
-            newTypes.Should().NotContain("IFCPRODUCT");
-            var metaData = ExpressMetaData.GetMetadata(typeof(Ifc4.EntityFactoryIfc4).Module);
-
-            var filtered = newTypes.AsEnumerable().FilterToBaseType("IFCROOT", metaData).ToArray();
-
-            filtered.Should().NotContain("IFCORGANIZATION");
+            result.Successful.Should().NotBeEmpty();
+            result.Failures.Should().BeEmpty();
 
         }
 
-
-
-            ILogger<AttributeFacetBinder> Logger { get => GetLogger<AttributeFacetBinder>(); }
+        ILogger<AttributeFacetBinder> Logger { get => GetLogger<AttributeFacetBinder>(); }
 
     }
 }

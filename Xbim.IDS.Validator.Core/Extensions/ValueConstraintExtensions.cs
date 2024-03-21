@@ -47,17 +47,17 @@ namespace Xbim.IDS.Validator.Core.Extensions
             {
                 return false;
             }
-            if(patternConstraint.Pattern != ".*")
+            if (patternConstraint.Pattern != ".*")
             {
                 return false;
             }
-          
+
             return true;
         }
 
         public static RequirementCardinalityOptions? GetCardinality(this FacetGroup requirement, int idx)
         {
-            if(requirement.RequirementOptions == null)
+            if (requirement.RequirementOptions == null)
             {
                 // Workaround for Options being null when any facet is invalid. Expected is the default
                 requirement.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>(requirement.Facets.Select(f => RequirementCardinalityOptions.Expected));
@@ -92,7 +92,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
         {
             // Requirements cardinality is not stored on the applicable factet, but as a separate collection on Facet Group to requirements with the same ordinal
             var idx = requirement.Facets.IndexOf(currentFacet);
-            if(idx != -1)
+            if (idx != -1)
             {
                 switch (requirement.GetCardinality(idx))
                 {
@@ -123,11 +123,11 @@ namespace Xbim.IDS.Validator.Core.Extensions
             }
 
             // Convert 2x3 Values to Ifc4 equivqlents. To minimise code
-            if(value is Ifc2x3.MeasureResource.IfcValue ifc2x3Value)
+            if (value is Ifc2x3.MeasureResource.IfcValue ifc2x3Value)
             {
                 value = ifc2x3Value.ToIfc4();
             }
-            
+
             var valueType = value.GetType();
             var isNullWrapped = TypeHelper.IsNullable(valueType) && TypeHelper.IsValueType(valueType);
             var underlyingType = isNullWrapped ? Nullable.GetUnderlyingType(valueType) : valueType;
@@ -177,7 +177,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
                     _ => throw new NotImplementedException($"Filtering on Ifc type {value?.GetType()?.Name} not implemented")
                 };
             }
-            
+
 
         }
 

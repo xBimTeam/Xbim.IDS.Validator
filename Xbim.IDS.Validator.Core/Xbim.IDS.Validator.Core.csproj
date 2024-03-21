@@ -24,12 +24,12 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Xbim.CobieExpress.Exchanger" Version="6.0.166-develop" />
-    <PackageReference Include="Xbim.IO.CobieExpress" Version="6.0.166-develop" />
-  </ItemGroup>
-  
-  <ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Xbim.IDS.Validator.Common\Xbim.IDS.Validator.Common.csproj" />
+	</ItemGroup>
+
+
+	<ItemGroup>
     <ProjectReference Include="..\Xbim.IDS.Validator.Common\Xbim.IDS.Validator.Common.csproj" />
   </ItemGroup>
 

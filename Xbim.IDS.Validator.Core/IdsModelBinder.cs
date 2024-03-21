@@ -18,7 +18,7 @@ namespace Xbim.IDS.Validator.Core
     /// </summary>
     public class IdsModelBinder : IIdsModelBinder
     {
-        
+
         private readonly BinderContext binderContext;
         private IfcQuery? ifcQuery;
         private VerificationOptions? options;
@@ -44,8 +44,7 @@ namespace Xbim.IDS.Validator.Core
         /// <summary>
         /// Returns all entities in the model that apply to a specification
         /// </summary>
-        /// <param name="model"></param>
-        /// <param name="spec"></param>
+        /// <param name="facets"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         public IEnumerable<IPersistEntity> SelectApplicableEntities(IModel model, Specification spec)
@@ -60,10 +59,10 @@ namespace Xbim.IDS.Validator.Core
                 throw new ArgumentNullException(nameof(spec));
             }
             Initialise(model);
-           
+
             ApplyOptions(spec);
-            
-    
+
+
 
             var facets = spec.Applicability.Facets;
 
@@ -71,7 +70,7 @@ namespace Xbim.IDS.Validator.Core
             Expression expression;
             if (ifcFacet != null)
             {
-                // If possible start with an IFCType to narrow the selection down
+                // If possible start with an IFCType to narrow the selection down most efficiently
                 expression = BindSelection(ifcQuery?.InstancesExpression, ifcFacet);
                 foreach (var facet in facets.Except(new[] { ifcFacet }))
                 {
@@ -88,7 +87,7 @@ namespace Xbim.IDS.Validator.Core
                 }
             }
 
-            return ifcQuery.Execute(expression, model);
+            return ifcQuery.Execute(expression, model).Distinct();
         }
 
         private void ApplyOptions(Specification spec)
@@ -97,16 +96,16 @@ namespace Xbim.IDS.Validator.Core
             {
                 return;
             }
-            if(options.IncludeSubtypes)
+            if (options.IncludeSubtypes)
             {
-                foreach(var facet in spec.Applicability.Facets)
+                foreach (var facet in spec.Applicability.Facets)
                 {
-                    if(facet is IfcTypeFacet ifc)
+                    if (facet is IfcTypeFacet ifc)
                     {
                         ifc.IncludeSubtypes = true;
                     }
                 }
-                if(spec.Requirement != null)
+                if (spec.Requirement != null)
                 {
                     foreach (var facet in spec.Requirement!.Facets)
                     {
@@ -126,7 +125,7 @@ namespace Xbim.IDS.Validator.Core
         /// Validate an IFC entity meets its requirements against the defined Constraints
         /// </summary>
         /// <param name="item"></param>
-        /// <param name="requirement"></param>
+        /// <param name="requirement"
         /// <param name="logger"></param>
         /// <returns></returns>
         public IdsValidationResult ValidateRequirement(IPersistEntity item, FacetGroup requirement, ILogger? logger)
@@ -134,16 +133,11 @@ namespace Xbim.IDS.Validator.Core
 
             var result = new IdsValidationResult(item, requirement, options?.OutputFullEntity ?? false);
 
-            if(requirement == null)
-            {
-                return result;
-            }
-
             foreach (var facet in requirement.Facets)
             {
                 var binder = FacetBinderFactory.Create(facet, Schema);
 
-                if(binder is ISupportOptions opts)
+                if (binder is ISupportOptions opts)
                 {
                     opts.SetOptions(options);
                 }
@@ -173,8 +167,8 @@ namespace Xbim.IDS.Validator.Core
         private Expression BindSelection(Expression baseExpression, IFacet facet)
         {
             var binder = FacetBinderFactory.Create(facet, Schema);
-            return binder.BindSelectionExpression(baseExpression, facet); 
-           
+            return binder.BindSelectionExpression(baseExpression, facet);
+
         }
 
         private Expression BindFilters(Expression baseExpression, IFacet facet)

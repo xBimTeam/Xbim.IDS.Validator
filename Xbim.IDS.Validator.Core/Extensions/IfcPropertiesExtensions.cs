@@ -15,7 +15,8 @@ namespace Xbim.IDS.Validator.Core.Extensions
         /// Gets all <see cref="IIfcObjectDefinition"/>s defined by the propertyset and name
         /// </summary>
         /// <param name="relDefines"></param>
-        /// <param name="facet"></param>
+        /// <param name="psetName"></param>
+        /// <param name="propName"></param>
         /// <returns></returns>
         public static IEnumerable<IIfcObjectDefinition> GetIfcObjectsWithProperties(this IEnumerable<IIfcRelDefinesByProperties> relDefines,
             IfcPropertyFacet facet)

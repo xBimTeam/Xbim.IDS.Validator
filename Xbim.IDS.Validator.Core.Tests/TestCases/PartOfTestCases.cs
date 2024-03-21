@@ -22,7 +22,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
 
 
-            // Unsupported tests: None
+            // Unsupported tests
+            { "pass-an_aggregate_may_specify_the_predefined_type_of_the_whole_1_2.ids", new [] { XbimSchemaVersion.Unsupported } }, // 
+            { "fail-an_aggregate_may_specify_the_predefined_type_of_the_whole_2_2.ids", new [] { XbimSchemaVersion.Unsupported } },
 
         };
 
@@ -41,6 +43,18 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             }
         }
 
+
+       
+        [MemberData(nameof(GetUnsupportedPassTestCases))]
+        [SkippableTheory]
+        public async Task UnsupportedPasses(string idsFile)
+        {
+            var outcome = await VerifyIdsFile(idsFile);
+
+            Skip.If(outcome.Status != ValidationStatus.Pass, "Not yet supported");
+
+            outcome.Status.Should().Be(ValidationStatus.Pass);
+        }
 
 
 
@@ -61,6 +75,17 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
 
 
+        [MemberData(nameof(GetUnsupportedFailTestCases))]
+        [SkippableTheory]
+        public async Task UnsupportedFailures(string idsFile)
+        {
+            var outcome = await VerifyIdsFile(idsFile);
+
+
+            Skip.If(outcome.Status != ValidationStatus.Inconclusive, "Not yet supported");
+
+            outcome.Status.Should().Be(ValidationStatus.Fail);
+        }
 
         public static IEnumerable<object[]> GetFailureTestCases()
         {

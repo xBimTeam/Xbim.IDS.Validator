@@ -13,12 +13,12 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
     public abstract class BaseModelTester
     {
 
-        private static Lazy<IModel> lazyIfc4Model = new Lazy<IModel>(()=> BuildIfc4Model());
+        private static Lazy<IModel> lazyIfc4Model = new Lazy<IModel>(() => BuildIfc4Model());
         private static Lazy<IModel> lazyIfc2x3Model = new Lazy<IModel>(() => BuildIfc2x3Model());
 
         private BinderContext _context = new BinderContext();
-        
-      
+
+
 
         public virtual IModel Model
         {
@@ -57,11 +57,11 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             this.output = output;
             _schema = schema;
             query = new IfcQuery();
-            
+
             logger = TestEnvironment.GetXunitLogger<BaseModelTester>(output);
         }
 
-       
+
 
         private static IModel BuildIfc4Model()
         {

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Xbim.IDS.Validator.Core.Helpers
 {
- 
+
     public static class TypeHelper
     {
         /// <summary>
@@ -96,7 +96,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
 
             elementType = clrType;
 
-     
+
 
             Type? collectionInterface
                 = clrType.GetInterfaces()
