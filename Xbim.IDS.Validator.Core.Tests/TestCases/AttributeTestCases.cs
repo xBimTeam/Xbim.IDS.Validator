@@ -61,9 +61,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             }
         }
 
-
         [MemberData(nameof(GetInvalidTestCases))]
-
         [Theory]
         public async Task ExpectedInvalid(string idsFile, params XbimSchemaVersion[] schemas)
         {
@@ -75,6 +73,10 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             }
         }
 
+        public static IEnumerable<object[]> GetInvalidTestCases()
+        {
+            return GetApplicableTestCases(TestCaseFolder, "invalid", testExceptions);
+        }
 
         public static IEnumerable<object[]> GetFailureTestCases()
         {
@@ -86,10 +88,6 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             return GetApplicableTestCases(TestCaseFolder, "pass", testExceptions);
         }
 
-        public static IEnumerable<object[]> GetInvalidTestCases()
-        {
-            return GetApplicableTestCases(TestCaseFolder, "invalid", testExceptions);
-        }
 
         public static IEnumerable<object[]> GetUnsupportedTestCases()
         {
