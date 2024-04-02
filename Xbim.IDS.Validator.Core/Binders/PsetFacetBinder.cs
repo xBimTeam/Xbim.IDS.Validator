@@ -378,6 +378,8 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <returns></returns>
         private IEnumerable<T> GetPropertiesMatching<T>(int entityLabel, string psetName, ValueConstraint constraint, ILogger? logger = null) where T : IIfcProperty
         {
+            if(constraint == null)
+                return Enumerable.Empty<T>();
             var entity = Model.Instances[entityLabel];
             if (entity is IIfcTypeObject type)
             {

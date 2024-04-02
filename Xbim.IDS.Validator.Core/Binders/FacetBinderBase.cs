@@ -13,6 +13,7 @@ using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
+using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Binders
 {
@@ -437,13 +438,9 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <param name="requirement"></param>
         /// <param name="facet"></param>
         /// <returns></returns>
-        public ValidationContext<T> CreateValidationContext(RequirementCardinalityOptions requirement, T facet)
+        public ValidationContext<T> CreateValidationContext(RequirementCardinalityOptions? requirement, T facet)
         {
-            // Set the Requirement expectation - Required, Optional, Prohibit so we negate Success/Failure
-
-            //var required = requirement.IsRequired(facet);
-            //var expectation = required == true ? Expectation.Required : required == false ? Expectation.Prohibited : Expectation.Optional;
-            return new ValidationContext<T>(facet, requirement);
+            return new ValidationContext<T>(facet, requirement?.RelatedFacetCardinality ?? Cardinality.Expected);
         }
 
         Expression IFacetBinder.BindSelectionExpression(Expression baseExpression, IFacet facet)

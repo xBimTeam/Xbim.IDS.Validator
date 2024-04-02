@@ -53,7 +53,7 @@ namespace Xbim.IDS.Validator.Core.Tests
                         logger.LogInformation("       - {facetType}: where {description} ", applicableFacet.GetType().Name, applicableFacet.Short() );
                     }
 
-                    logger.LogInformation("    Requirements {reqCount}: {expectation}", spec.Requirement.Facets.Count, spec.Requirement.RequirementOptions?.FirstOrDefault().ToString() ?? "" );
+                    logger.LogInformation("    Requirements {reqCount}: {expectation}", spec.Requirement.Facets.Count, spec.Requirement.RequirementOptions?.FirstOrDefault()?.ToString() ?? "" );
                     int idx = 1;
                     foreach (var reqFacet in spec.Requirement.Facets)
                     {

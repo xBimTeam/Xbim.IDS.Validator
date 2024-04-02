@@ -92,7 +92,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             propFacet.SetRelation(relation);
             FacetGroup group = BuildGroup(propFacet);
             var result = new IdsValidationResult(entity, group);
-            Binder.ValidateEntity(entity, propFacet, RequirementCardinalityOptions.Expected, result);
+            Binder.ValidateEntity(entity, propFacet, propFacet.BuildCardinality(), result);
 
             // Assert
 
@@ -106,8 +106,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 #pragma warning disable CS0618 // Type or member is obsolete
             var group = new FacetGroup();
 #pragma warning restore CS0618 // Type or member is obsolete
-            group.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>();
-            group.RequirementOptions.Add(RequirementCardinalityOptions.Expected);
+            group.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>
+            {
+                new RequirementCardinalityOptions(facet, RequirementCardinalityOptions.Cardinality.Expected)
+            };
             group.Facets.Add(facet);
             return group;
         }

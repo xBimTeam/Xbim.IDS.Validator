@@ -86,8 +86,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 #pragma warning disable CS0618 // Type or member is obsolete
             var group = new FacetGroup();
 #pragma warning restore CS0618 // Type or member is obsolete
-            group.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>();
-            group.RequirementOptions.Add(RequirementCardinalityOptions.Expected);
+            group.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>()
+            {
+                facet.BuildCardinality(RequirementCardinalityOptions.Cardinality.Expected)
+            };
             group.Facets.Add(facet);
             return group;
         }

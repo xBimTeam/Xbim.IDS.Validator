@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
+using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Extensions
 {
@@ -55,14 +56,14 @@ namespace Xbim.IDS.Validator.Core.Extensions
             return true;
         }
 
-        public static RequirementCardinalityOptions? GetCardinality(this FacetGroup requirement, int idx)
+        public static Cardinality? GetCardinality(this FacetGroup requirement, int idx)
         {
             if(requirement.RequirementOptions == null)
             {
                 // Workaround for Options being null when any facet is invalid. Expected is the default
-                requirement.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>(requirement.Facets.Select(f => RequirementCardinalityOptions.Expected));
+                requirement.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>(requirement.Facets.Select(f => new RequirementCardinalityOptions(f, Cardinality.Expected)));
             }
-            return requirement.RequirementOptions?[idx];
+            return requirement.RequirementOptions?[idx].RelatedFacetCardinality;
         }
 
         public static RequirementCardinalityOptions GetCardinality(this FacetGroup requirement, IFacet facet)
@@ -75,7 +76,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
                 if (requirement.RequirementOptions == null)
                 {
                     // Workaround for Options being null when any facet is invalid. Expected is the default
-                    requirement.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>(requirement.Facets.Select(f => RequirementCardinalityOptions.Expected));
+                    requirement.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>(requirement.Facets.Select(f => new RequirementCardinalityOptions(f, Cardinality.Expected)));
                 }
                 return requirement.RequirementOptions[idx];
             }
@@ -96,8 +97,8 @@ namespace Xbim.IDS.Validator.Core.Extensions
             {
                 switch (requirement.GetCardinality(idx))
                 {
-                    case RequirementCardinalityOptions.Expected: return true;
-                    case RequirementCardinalityOptions.Prohibited: return false;
+                    case Cardinality.Expected: return true;
+                    case Cardinality.Prohibited: return false;
                 }
             }
             return null;

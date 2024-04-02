@@ -76,7 +76,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             SetPropertyValue(expectedtext, ConstraintType.Exact, propFacet);
             FacetGroup group = BuildGroup(propFacet);
             var result = new IdsValidationResult(entity, group);
-            Binder.ValidateEntity(entity, propFacet, RequirementCardinalityOptions.Expected, result);
+            Binder.ValidateEntity(entity, propFacet, propFacet.BuildCardinality(), result);
 
             // Assert
 
@@ -104,7 +104,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             SetPropertyValue(expectedquant, ConstraintType.Exact, propFacet);
             FacetGroup group = BuildGroup(propFacet);
             var result = new IdsValidationResult(entity, group);
-            Binder.ValidateEntity(entity, propFacet, RequirementCardinalityOptions.Expected, result);
+            Binder.ValidateEntity(entity, propFacet, propFacet.BuildCardinality(), result);
 
             // Assert
 

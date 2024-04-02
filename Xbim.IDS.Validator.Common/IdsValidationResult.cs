@@ -7,6 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.InformationSpecifications;
+using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core
 {
@@ -82,17 +83,17 @@ namespace Xbim.IDS.Validator.Core
 
 
         // Gets the status based on current Expectation mode - i.e. Failure to match in Prohibited model = Success
-        private static ValidationStatus GetStatus(RequirementCardinalityOptions expectation, bool? success)
+        private static ValidationStatus GetStatus(Cardinality expectation, bool? success)
         {
             switch (expectation)
             {
-                case RequirementCardinalityOptions.Expected:
+                case Cardinality.Expected:
                     return success == true ? ValidationStatus.Pass : success == false ? ValidationStatus.Fail : ValidationStatus.Inconclusive;
 
-                case RequirementCardinalityOptions.Prohibited:
+                case Cardinality.Prohibited:
                     return success == true ? ValidationStatus.Fail : success == false ? ValidationStatus.Pass : ValidationStatus.Inconclusive;
 
-                case RequirementCardinalityOptions.Optional:
+                case Cardinality.Optional:
                 default:
                     return ValidationStatus.Inconclusive;
 
@@ -203,7 +204,7 @@ namespace Xbim.IDS.Validator.Core
             {
                 Status = ValidationStatus.Error,
                 Reason = reason,
-                Expectation = RequirementCardinalityOptions.Expected
+                Expectation = Cardinality.Expected
             };
         }
 
@@ -223,7 +224,7 @@ namespace Xbim.IDS.Validator.Core
         /// <param name="reason"></param>
         /// <param name="expectedResult"></param>
         /// <param name="actualResult"></param>
-        public ValidationMessage(ValidationStatus status, RequirementCardinalityOptions expectation, IFacet clause, string? reason = null, object? expectedResult = null, object? actualResult = null)
+        public ValidationMessage(ValidationStatus status, Cardinality expectation, IFacet clause, string? reason = null, object? expectedResult = null, object? actualResult = null)
         {
             Status = status;
             Reason = reason;
@@ -258,7 +259,7 @@ namespace Xbim.IDS.Validator.Core
         /// <summary>
         /// Represents the Expectation - Required/Prohibited etc
         /// </summary>
-        public RequirementCardinalityOptions Expectation { get; set; }
+        public Cardinality Expectation { get; set; }
         /// <summary>
         /// A link to the <see cref="IFacet"/> tested
         /// </summary>
@@ -319,7 +320,7 @@ namespace Xbim.IDS.Validator.Core
         /// </summary>
         /// <param name="clause"></param>
         /// <param name="expectationMode"></param>
-        public ValidationContext(T clause, RequirementCardinalityOptions expectationMode)
+        public ValidationContext(T clause, Cardinality expectationMode)
         {
             ExpectationMode = expectationMode;
             Clause = clause;
@@ -362,7 +363,7 @@ namespace Xbim.IDS.Validator.Core
         /// <summary>
         /// Gets and sets the expectation mode
         /// </summary>
-        public RequirementCardinalityOptions ExpectationMode { get; set; } = RequirementCardinalityOptions.Expected;   // Default to Required, not Prohibited
+        public Cardinality ExpectationMode { get; set; } = Cardinality.Expected;   // Default to Required, not Prohibited
         /// <summary>
         /// The Facet clause being validated
         /// </summary>

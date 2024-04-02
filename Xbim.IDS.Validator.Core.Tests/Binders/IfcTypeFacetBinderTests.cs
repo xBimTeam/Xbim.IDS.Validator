@@ -137,7 +137,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             
             FacetGroup group = BuildGroup(propFacet);
             var result = new IdsValidationResult(entity, group);
-            Binder.ValidateEntity(entity, propFacet, RequirementCardinalityOptions.Expected, result);
+            Binder.ValidateEntity(entity, propFacet, propFacet.BuildCardinality(), result);
 
             // Assert
             if(shouldPass)
