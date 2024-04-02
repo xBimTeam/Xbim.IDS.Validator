@@ -38,7 +38,7 @@ namespace Xbim.IDS.Validator.Core
                 //OmitIdsContentAudit = true,
                 XmlWarningAction = AuditProcessOptions.XmlWarningBehaviour.ReportAsWarning,
                 IdsVersion = IdsLib.IdsSchema.IdsNodes.IdsVersion.Invalid,
-                SchemaProvider = new FixedVersionSchemaProvider(IdsLib.IdsSchema.IdsNodes.IdsVersion.Ids0_9_6)
+                SchemaProvider = new FixedVersionSchemaProvider(IdsLib.IdsSchema.IdsNodes.IdsVersion.Ids0_9_7)
 
             };
             return Audit.Run(idsFileStream, options, logger);

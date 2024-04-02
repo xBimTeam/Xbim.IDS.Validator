@@ -9,6 +9,7 @@ using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.IO.CobieExpress;
 using Xunit.Abstractions;
+using AuditStatus = IdsLib.Audit.Status;
 
 namespace Xbim.IDS.Validator.Core.Tests.TestCases
 {
@@ -115,7 +116,8 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         }
 
         protected async Task <ValidationOutcome> VerifyIdsFile(string idsFile, bool spotfix = false, XbimSchemaVersion schemaVersion = XbimSchemaVersion.Ifc4,
-            VerificationOptions options = default
+            VerificationOptions options = default,
+            bool validateIds = false
             )
         {
             IModel model = null;
@@ -183,7 +185,20 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                 }
 
                 var validator = provider.GetRequiredService<IIdsModelValidator>();
+                var fileValidator = provider.GetRequiredService<IIdsValidator>();
+                
+                
                 var outcome = await validator.ValidateAgainstIdsAsync(model, idsFile, logger, null, options);
+
+                if (validateIds)
+                {
+                    var fileValidity = fileValidator.ValidateIDS(idsFile);
+                    if (!AllowedStatuses.Contains(fileValidity))
+                    {
+                        outcome.MarkCompletelyFailed($"IDS Validation failure {fileValidity}");
+                    }
+                }
+                
 
                 return outcome;
             }
@@ -195,6 +210,8 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                 }
             }
         }
+
+        private static AuditStatus[] AllowedStatuses = new AuditStatus[] { AuditStatus.Ok };
 
         private IModel OpenCOBie(string file)
         {
