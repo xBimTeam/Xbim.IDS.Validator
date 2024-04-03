@@ -17,10 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ids-lib" Version="1.0.68" />
+    <PackageReference Include="ids-lib" Version="1.0.69" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
     <PackageReference Include="Xbim.Essentials" Version="6.0.445" />
-    <PackageReference Include="Xbim.InformationSpecifications" Version="0.96.3" />
+    <PackageReference Include="Xbim.InformationSpecifications" Version="0.97.1" />
   </ItemGroup>
 
 

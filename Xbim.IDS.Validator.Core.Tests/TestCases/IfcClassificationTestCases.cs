@@ -45,7 +45,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         }
 
         [MemberData(nameof(GetInvalidTestCases))]
-        [Theory]
+        [Theory(Skip ="None to do")]
         public async Task ExpectedInvalid(string idsFile, params XbimSchemaVersion[] schemas)
         {
             foreach (var schema in GetSchemas(schemas))
