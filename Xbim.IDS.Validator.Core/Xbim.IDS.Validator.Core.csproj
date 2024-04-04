@@ -17,6 +17,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Migration\IDS-Audit_migration.xslt" />
+    <None Remove="Migration\IDS_v0.9.3-v0.9.6_migration.xsl" />
+    <None Remove="Migration\IDS_v0.9.6-v0.9.7_migration.xsl" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Migration\IDS_v0.9.6-v0.9.7_migration.xsl" />
+    <EmbeddedResource Include="Migration\IDS_v0.9.3-v0.9.6_migration.xsl" />
+    <EmbeddedResource Include="Migration\IDS-Audit_migration.xslt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
     <None Include="..\Readme.md">
       <Pack>True</Pack>
