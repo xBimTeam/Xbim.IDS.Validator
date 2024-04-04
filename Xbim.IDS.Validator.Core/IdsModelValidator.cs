@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using IdsLib.IdsSchema.IdsNodes;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,14 +20,17 @@ namespace Xbim.IDS.Validator.Core
     /// </summary>
     public class IdsModelValidator : IIdsModelValidator
     {
+        private readonly IIdsSchemaMigrator idsSchemaMigrator;
 
         /// <summary>
         /// Constructs a new <see cref="IdsModelValidator"/>
         /// </summary>
         /// <param name="modelBinder"></param>
-        public IdsModelValidator(IIdsModelBinder modelBinder)
+        /// <param name="idsSchemaMigrator"></param>
+        public IdsModelValidator(IIdsModelBinder modelBinder, IIdsSchemaMigrator idsSchemaMigrator)
         {
             ModelBinder = modelBinder;
+            this.idsSchemaMigrator = idsSchemaMigrator;
         }
 
         private IIdsModelBinder ModelBinder { get; }
@@ -119,19 +124,43 @@ namespace Xbim.IDS.Validator.Core
             try
             {
                 ModelBinder.SetOptions(verificationOptions);
+               
+                Xids? idsSpec = LoadIdsFile(idsFile, logger);
 
-                var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idsFile, logger);
+                return await ValidateAgainstXidsAsync(model, idsSpec, logger, requirementCompleted, verificationOptions, token);
 
-                return await ValidateAgainstXidsAsync( model,  idsSpec,  logger, requirementCompleted, verificationOptions,token);
-                
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to complete validation");
                 var badOutcome = new ValidationOutcome(new Xids());
                 badOutcome.MarkCompletelyFailed(ex.Message);
                 return await Task.FromResult(badOutcome);
             }
+        }
+
+        private Xids? LoadIdsFile(string idsFile, ILogger logger)
+        {
+            if (Xids.CanLoad(new FileInfo(idsFile)) && idsSchemaMigrator.HasMigrationsToApply(idsFile))
+            {
+                // Do an in place upgrade to latest schema
+                // Note: won't support zipped IDS upgrades, JSON etc.
+                var targetVersion = IdsVersion.Ids0_9_7;
+                var currentVersion = idsSchemaMigrator.GetIdsVersion(idsFile);
+                logger.LogWarning("IDS schema {oldVersion} is out of date for {file}. Applying in-place upgrade to latest {version} schema.", 
+                    currentVersion, idsFile, targetVersion);
+                if(idsSchemaMigrator.MigrateToIdsSchemaVersion(idsFile, out var upgraded, targetVersion))
+                {
+                    logger.LogInformation("IDS file {file} upgraded in-place to latest schema", idsFile);
+                    return Xids.LoadBuildingSmartIDS(upgraded.Root, logger);
+                }
+                else
+                {
+                    logger.LogWarning("Failed to update IDS to latest schema. Using original version");
+                }
+
+            }
+            return Xids.LoadBuildingSmartIDS(idsFile, logger);
         }
 
         private ValidationRequirement ValidateRequirement(Specification spec, IModel model, ILogger logger, CancellationToken token)

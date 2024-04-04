@@ -34,13 +34,14 @@ namespace Xbim.IDS.Validator.Core
         /// <param name="sourceFile"></param>
         /// <param name="target"></param>
         /// <param name="targetIdsVersion"></param>
+        /// <param name="applyGlobalScripts"></param>
         /// <returns><c>true</c> if the migration succeeded; else <c>false</c></returns>
-        public bool MigrateToIdsSchemaVersion(string sourceFile, out XDocument target, IdsVersion targetIdsVersion = IdsVersion.Ids0_9_7)
+        public bool MigrateToIdsSchemaVersion(string sourceFile, out XDocument target, IdsVersion targetIdsVersion = IdsVersion.Ids0_9_7, bool applyGlobalScripts = true)
         {
             try
             {
                 XDocument currentIds = XDocument.Load(sourceFile);
-                var applicableScripts = ListAvailableMigrations(sourceFile, targetIdsVersion, true);
+                var applicableScripts = ListAvailableMigrations(sourceFile, targetIdsVersion, applyGlobalScripts);
                 foreach (var script in applicableScripts)
                 {
                     // TODO Does not account for targeting mid-range of a script. E.g. target 0.95 falls between 0.93 and 0.96 script.
