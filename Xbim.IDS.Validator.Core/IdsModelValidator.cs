@@ -58,12 +58,6 @@ namespace Xbim.IDS.Validator.Core
                 ModelBinder.SetOptions(verificationOptions);
 
                 var outcome = new ValidationOutcome(idsSpec);
-                if (idsSpec == null)
-                {
-                    outcome.MarkCompletelyFailed($"Unable to open IDS file '{idsSpec.Name}'");
-                    logger.LogError("Unable to open IDS file '{idsFile}", idsSpec.Name);
-                    return Task.FromResult(outcome);
-                }
 
 
                 foreach (var group in idsSpec.SpecificationsGroups)
@@ -124,7 +118,15 @@ namespace Xbim.IDS.Validator.Core
             try
             {
                 ModelBinder.SetOptions(verificationOptions);
-               
+
+                if(!Xids.CanLoad(new FileInfo(idsFile)))
+                {
+                    var outcome = new ValidationOutcome(new Xids());
+                    outcome.MarkCompletelyFailed($"Unable to open IDS file '{idsFile}'");
+                    logger.LogError("Unable to open IDS file '{idsFile}", idsFile);
+                    return outcome;
+                }
+                
                 Xids? idsSpec = LoadIdsFile(idsFile, logger);
 
                 return await ValidateAgainstXidsAsync(model, idsSpec, logger, requirementCompleted, verificationOptions, token);
@@ -141,7 +143,7 @@ namespace Xbim.IDS.Validator.Core
 
         private Xids? LoadIdsFile(string idsFile, ILogger logger)
         {
-            if (Xids.CanLoad(new FileInfo(idsFile)) && idsSchemaMigrator.HasMigrationsToApply(idsFile))
+            if (idsSchemaMigrator.HasMigrationsToApply(idsFile))
             {
                 // Do an in place upgrade to latest schema
                 // Note: won't support zipped IDS upgrades, JSON etc.

@@ -123,6 +123,10 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             IModel model = null;
             try
             {
+                if(false)
+                {
+                    DoInPlaceUpgrade(idsFile);
+                }
                 string modelFile = Path.ChangeExtension(idsFile, "ifc");
                 logger.LogInformation("Verifying {schema} model {model}", schemaVersion, modelFile);
                 switch (schemaVersion)
@@ -207,6 +211,19 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                 if(model != null)
                 {
                     model.Dispose();
+                }
+            }
+        }
+
+        private void DoInPlaceUpgrade(string idsFile)
+        {
+            var migrator = new IdsSchemaMigrator(TestEnvironment.GetXunitLogger<IdsSchemaMigrator>(output));
+            if(migrator.HasMigrationsToApply(idsFile))
+            {
+                if(migrator.MigrateToIdsSchemaVersion(idsFile, out var upgraded))
+                {
+                    var masterFile = Path.Combine("../../..", idsFile);
+                    upgraded.Save(masterFile);
                 }
             }
         }
