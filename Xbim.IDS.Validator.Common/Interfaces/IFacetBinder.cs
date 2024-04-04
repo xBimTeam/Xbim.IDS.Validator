@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.InformationSpecifications;
+using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Interfaces
 {
@@ -35,7 +35,7 @@ namespace Xbim.IDS.Validator.Core.Interfaces
         /// <param name="requirement"></param>
         /// <param name="result"></param>
         /// <param name="facet"></param>
-        void ValidateEntity(IPersistEntity item, IFacet facet, RequirementCardinalityOptions requirement, IdsValidationResult result);
+        void ValidateEntity(IPersistEntity item, IFacet facet, Cardinality requirement, IdsValidationResult result);
 
     }
 }

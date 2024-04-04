@@ -3,6 +3,7 @@ using Xbim.IDS.Validator.Core.Binders;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 using Xunit.Abstractions;
+using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
@@ -39,7 +40,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             FacetGroup group = BuildGroup(propFacet);
             var result = new IdsValidationResult(entity, group);
-            Binder.ValidateEntity(entity, propFacet, propFacet.BuildCardinality(), result);
+            Binder.ValidateEntity(entity, propFacet, Cardinality.Expected, result);
 
             // Assert
             if (shouldPass)
@@ -47,11 +48,13 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
                 result.Successful.Should().NotBeEmpty();
                 result.Failures.Should().BeEmpty();
+                result.ValidationStatus.Should().Be(ValidationStatus.Pass);
             }
             else
             {
                 result.Successful.Should().BeEmpty();
                 result.Failures.Should().NotBeEmpty();
+                result.ValidationStatus.Should().Be(ValidationStatus.Fail);
             }
 
         }

@@ -10,6 +10,7 @@ using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
+using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Binders
 {
@@ -101,20 +102,21 @@ namespace Xbim.IDS.Validator.Core.Binders
             throw new NotImplementedException("Filtering by IfcType after initial selection not implemented");
         }
 
-        public override void ValidateEntity(IPersistEntity item, IfcTypeFacet f, RequirementCardinalityOptions requirement, IdsValidationResult result)
+        public override void ValidateEntity(IPersistEntity item, IfcTypeFacet f, Cardinality cardinality, IdsValidationResult result)
         {
             if (f is null)
             {
                 throw new ArgumentNullException(nameof(f));
             }
 
-            var ctx = CreateValidationContext(requirement, f);
+            var ctx = CreateValidationContext(cardinality, f);
             var entityType = Model.Metadata.ExpressType(item);
             if (entityType == null)
             {
-                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.IfcType!, null, "Invalid IFC Type", item));
+                result.FailWithError(ValidationMessage.Failure(ctx, fn => fn.IfcType!, null, "Invalid IFC Type", item)); 
+                return;
             }
-            var actualEntityType = entityType!.Name.ToUpperInvariant();
+            var actualEntityType = entityType.Name.ToUpperInvariant();
             var currentEntityType = entityType;
 
             
@@ -123,9 +125,9 @@ namespace Xbim.IDS.Validator.Core.Binders
             while(currentEntityType != null)
             {
                 var actualName = currentEntityType?.Name.ToUpperInvariant();
-                if (f?.IfcType?.IsSatisfiedBy(actualName, false, logger) == true)
+                if (f.IfcType.ExpectationIsSatisifedBy(actualName, ctx, logger))
                 {
-                    result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.IfcType!, actualName, "Correct IFC Type", item));
+                    result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.IfcType!, actualName, "Correct IFC Type", item));
                     break;
                 }
                 else
@@ -137,7 +139,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                     } 
                     else
                     {
-                        result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.IfcType!, actualEntityType, "IFC Type incorrect", item));
+                        result.Fail(ValidationMessage.Failure(ctx, fn => fn.IfcType!, actualEntityType, "IFC Type incorrect", item));
                         break;
                     }
                 }
@@ -147,13 +149,13 @@ namespace Xbim.IDS.Validator.Core.Binders
             if (f?.PredefinedType?.HasAnyAcceptedValue() == true)
             {
                 var preDefValue = GetPredefinedType(item);
-                if (f!.PredefinedType.IsSatisfiedBy(preDefValue, logger) == true)
+                if (f!.PredefinedType.ExpectationIsSatisifedBy(preDefValue, ctx, logger))
                 {
-                    result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PredefinedType!, preDefValue, "Correct Predefined Type", item));
+                    result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PredefinedType!, preDefValue, "Correct Predefined Type", item));
                 }
                 else
                 {
-                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PredefinedType!, preDefValue, "Predefined Type incorrect", item));
+                    result.Fail(ValidationMessage.Failure(ctx, fn => fn.PredefinedType!, preDefValue, "Predefined Type incorrect", item));
                 }
             }
         }
@@ -223,8 +225,8 @@ namespace Xbim.IDS.Validator.Core.Binders
         // cloned from Attributes Binder as we need to special case - e.g. for Types
         private Expression BindPredefinedTypeFilter(IfcTypeFacet ifcFacet, Expression expression, EntitySelectionCriteria selection)
         {
-            if (ifcFacet?.PredefinedType?.AcceptedValues?.Any() == false ||
-                ifcFacet?.PredefinedType?.AcceptedValues?.FirstOrDefault()?.IsValid(ifcFacet.PredefinedType) == false) return expression;
+            if (ifcFacet?.PredefinedType?.AcceptedValues?.Any() != true ||
+                ifcFacet?.PredefinedType?.AcceptedValues?.FirstOrDefault()?.IsValid(ifcFacet.PredefinedType) != true) return expression;
 
 
             // Intent: match on PredefinedType or ObjectType on the instance (where present).
@@ -256,7 +258,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         internal static Expression BindPredefinedAttributeSelection(Expression expression,
             ValueConstraint constraint, List<PropertyInfo> ifcAttributePropInfos)
         {
-            if (constraint.AcceptedValues.Any() == false)
+            if (constraint.AcceptedValues?.Any() != true)
             {
                 return expression;
             }

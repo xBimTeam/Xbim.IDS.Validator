@@ -177,9 +177,11 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             {
                 case ConstraintType.Exact:
                     if (propValue is bool)
-                        propFacet.PropertyValue.BaseType = NetTypeName.Boolean;
-                    if (propValue is long)
-                        propFacet.PropertyValue.BaseType = NetTypeName.Integer;
+                    {
+                        // By convention bools are upper case. May need to review XIDS on this.
+                        propFacet.PropertyValue.AddAccepted(new ExactConstraint(propValue.ToString().ToUpperInvariant()));
+                        break;
+                    }
                     propFacet.PropertyValue.AddAccepted(new ExactConstraint(propValue.ToString()));
                     break;
 
@@ -188,7 +190,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                     break;
 
                 case ConstraintType.Range:
-                    propFacet.PropertyValue.BaseType = NetTypeName.Double;
+                    propFacet.PropertyValue.BaseType = NetTypeName.Double;      // TODO: Revisit. Needed until XIDS can support ranges of undefined type
                     propFacet.PropertyValue.AddAccepted(new RangeConstraint("0", false, propValue.ToString(), true));
                     break;
 
@@ -196,15 +198,13 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             }
         }
 
-
-
         private static IfcTypeFacet BuildIfcTypeFacetFromCsv(string ifcTypeCsv, string predefinedTypeCsv = "", bool includeSubTypes = false,
             ConstraintType ifcConstraint = ConstraintType.Exact, ConstraintType preDefConstraint = ConstraintType.Exact)
         {
             IfcTypeFacet facet = new IfcTypeFacet
             {
-                IfcType = new ValueConstraint(NetTypeName.String),
-                PredefinedType = new ValueConstraint(NetTypeName.String),
+                IfcType = new ValueConstraint(),
+                PredefinedType = new ValueConstraint(),
                 IncludeSubtypes = includeSubTypes,
             };
 

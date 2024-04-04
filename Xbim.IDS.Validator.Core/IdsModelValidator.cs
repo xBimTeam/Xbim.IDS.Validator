@@ -240,8 +240,7 @@ namespace Xbim.IDS.Validator.Core
                 logger.LogError(ex, "Failed to run specification: {reason}", ex.Message);
                 requirementResult.Status = ValidationStatus.Error;
                 var errorResult = new IdsValidationResult(null, null);
-                errorResult.Messages.Add(ValidationMessage.Error(ex.Message));
-                errorResult.ValidationStatus = ValidationStatus.Error;
+                errorResult.FailWithError(ValidationMessage.Error(ex.Message));
                 requirementResult.ApplicableResults.Add(errorResult);
             }
             
@@ -272,7 +271,7 @@ namespace Xbim.IDS.Validator.Core
                     {
                         if (simpleCard.IsModelConstraint) // Definitely required
                         {
-                            validation.Status = validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Pass)
+                            validation.Status = validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Pass || r.ValidationStatus == ValidationStatus.Inconclusive)
                                 ? ValidationStatus.Pass
                                 : ValidationStatus.Fail;
                         }

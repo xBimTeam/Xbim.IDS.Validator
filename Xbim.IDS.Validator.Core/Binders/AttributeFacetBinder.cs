@@ -8,10 +8,12 @@ using System.Reflection;
 using Xbim.Common;
 using Xbim.Common.Metadata;
 using Xbim.IDS.Validator.Common.Interfaces;
+using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4x3;  // To provide ToIfc4() extension method
 using Xbim.InformationSpecifications;
+using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 
 namespace Xbim.IDS.Validator.Core.Binders
@@ -181,14 +183,13 @@ namespace Xbim.IDS.Validator.Core.Binders
             return BindSelectionExpression(baseExpression, attrFacet);
         }
 
-        
-        public override void ValidateEntity(IPersistEntity item, AttributeFacet af, RequirementCardinalityOptions requirement, IdsValidationResult result)
+        public override void ValidateEntity(IPersistEntity item, AttributeFacet af, Cardinality cardinality, IdsValidationResult result)
         {
             if (af is null)
             {
                 throw new ArgumentNullException(nameof(af));
             }
-            var ctx = CreateValidationContext(requirement, af);
+            var ctx = CreateValidationContext(cardinality, af);
 
             var candidates = GetAttributes(item, af);
 
@@ -204,29 +205,40 @@ namespace Xbim.IDS.Validator.Core.Binders
                 {
                     attrvalue = ifc4x3Value.ToIfc4();
                 }
-                bool isPopulated = IsValueRelevant(attrvalue);
-                // Name meets requirement if it has a value and is Required. Treat unknown logical as no value
-                if (isPopulated)
+
+                if (af.AttributeValue != null)
                 {
-                    result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.AttributeName!, attrName, "Was populated", item));
+                    attrvalue = HandleBoolConventions(attrvalue);
+                    // Unpack Ifc Values
+                    if (attrvalue is IIfcValue v)
+                    {
+                        attrvalue = v.Value;
+                    }
+                    if (IsTypeAppropriateForConstraint(af.AttributeValue, attrvalue) && af.AttributeValue.ExpectationIsSatisifedBy(attrvalue, ctx, logger))
+                        result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.AttributeValue!, attrvalue, "Attribute value OK", item));
+                    else
+                        result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No attribute value matched", item));
                 }
                 else
                 {
-                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.AttributeName!, attrName, "No attribute matched", item));
-                }
-
-                attrvalue = HandleBoolConventions(attrvalue);
-                // Unpack Ifc Values
-                if (attrvalue is IIfcValue v)
-                {
-                    attrvalue = v.Value;
-                }
-                if (af.AttributeValue != null)
-                {
-                    if (IsTypeAppropriateForConstraint(af.AttributeValue, attrvalue) && af.AttributeValue.IsSatisfiedBy(attrvalue, logger))
-                        result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.AttributeValue!, attrvalue, "Was populated", item));
+                    // Value not specified - just check presence or otherwise of a Value
+                    bool isPopulated = IsValueRelevant(attrvalue);
+                    var valueExpected = cardinality == Cardinality.Expected;
+                    // Name meets requirement if it has a value and is Required. Treat unknown logical as no value
+                    if (isPopulated)
+                    {
+                        if (valueExpected)
+                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.AttributeName!, attrName, "Attribute value populated", item));
+                        else
+                            result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeName!, attrName, "Attribute value prohibited", item));
+                    }
                     else
-                        result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No attribute value matched", item));
+                    {
+                        if (valueExpected)
+                            result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeName!, attrName, "Attribute value blank", item));
+                        else
+                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.AttributeName!, attrName, "Attribute value not set", item));
+                    }
                 }
 
             }

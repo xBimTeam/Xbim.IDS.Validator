@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Linq.Expressions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
@@ -11,6 +12,21 @@ namespace Xbim.IDS.Validator.Core.Extensions
 {
     public static class ValueConstraintExtensions
     {
+
+        [return: NotNull]
+        public static bool ExpectationIsSatisifedBy<T>([NotNullWhen(true)]this ValueConstraint? constraint, object value, ValidationContext<T> ctx, ILogger? logger = null, bool caseSensitive = false) where T: IFacet
+        {
+            var expectation = ctx.ExpectationMode switch
+            {
+                Cardinality.Expected => true,
+                Cardinality.Prohibited => false,
+                Cardinality.Optional => true,  // Check
+                
+                _ => throw new NotImplementedException()
+            };
+            return constraint?.IsSatisfiedBy(value, caseSensitive, logger) == expectation;
+        }
+
         /// <summary>
         /// Determines if the Constraint is null, empty or otherwise contains a null or empty string
         /// </summary>
@@ -63,22 +79,22 @@ namespace Xbim.IDS.Validator.Core.Extensions
                 // Workaround for Options being null when any facet is invalid. Expected is the default
                 requirement.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>(requirement.Facets.Select(f => new RequirementCardinalityOptions(f, Cardinality.Expected)));
             }
-            return requirement.RequirementOptions?[idx].RelatedFacetCardinality;
+            if(requirement.RequirementOptions.Count > idx)
+            {
+                return requirement.RequirementOptions?[idx]?.RelatedFacetCardinality;
+            }
+            else
+            {
+                return Cardinality.Expected;
+            }
         }
 
-        public static RequirementCardinalityOptions GetCardinality(this FacetGroup requirement, IFacet facet)
+        public static Cardinality? GetCardinality(this FacetGroup requirement, IFacet facet)
         {
             var idx = requirement.Facets.IndexOf(facet);
             if (idx != -1)
             {
-
-
-                if (requirement.RequirementOptions == null)
-                {
-                    // Workaround for Options being null when any facet is invalid. Expected is the default
-                    requirement.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>(requirement.Facets.Select(f => new RequirementCardinalityOptions(f, Cardinality.Expected)));
-                }
-                return requirement.RequirementOptions[idx];
+                return GetCardinality(requirement, idx);
             }
             throw new ArgumentOutOfRangeException(nameof(facet));
         }
@@ -109,7 +125,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
             var idx = requirement.Facets.IndexOf(currentFacet);
             if (idx != -1)
             {
-                return requirement.GetCardinality(idx) == null;
+                return requirement.GetCardinality(idx) == Cardinality.Optional;
             }
             return true;
         }

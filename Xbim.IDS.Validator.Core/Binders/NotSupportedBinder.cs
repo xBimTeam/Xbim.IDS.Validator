@@ -3,6 +3,7 @@ using System;
 using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.InformationSpecifications;
+using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Binders
 {
@@ -31,7 +32,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             return BindNotFound(baseExpression);
         }
 
-        public override void ValidateEntity(IPersistEntity item, TFacet facet, RequirementCardinalityOptions requirement, IdsValidationResult result)
+        public override void ValidateEntity(IPersistEntity item, TFacet facet, Cardinality cardinality, IdsValidationResult result)
         {
             throw new NotSupportedException($"Validation not supported for facet type {facet.GetType().Name} for this model schema");
         }
