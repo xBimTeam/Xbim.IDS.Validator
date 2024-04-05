@@ -141,7 +141,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                         success = true; // Found a material. Any will do
                     }
                 }
-                // If no matching value found after all the psets checked, mark as failed
+                // If no matching value found after all the materials checked, mark as failed
                 if (success == default)
                 {
                     var materials = string.Join(",", candidates);
@@ -150,7 +150,22 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             else
             {
-                result.Fail(ValidationMessage.Failure(ctx, fn => fn.Value!, null, "No materials found", item));
+                switch (cardinality)
+                {
+                    case Cardinality.Expected:
+                        {
+                            result.Fail(ValidationMessage.Failure(ctx, fn => fn.Value!, null, "No materials found", item));
+                            break;
+                        }
+
+                    case Cardinality.Optional:
+                    case Cardinality.Prohibited:
+                        {
+                            result.MarkSatisified(ValidationMessage.Failure(ctx, fn => fn.Value!, null, "No Material found", item));
+                            break;
+                        }
+                }
+                
             }
         }
 

@@ -217,7 +217,29 @@ namespace Xbim.IDS.Validator.Core.Binders
                     if (IsTypeAppropriateForConstraint(af.AttributeValue, attrvalue) && af.AttributeValue.ExpectationIsSatisifedBy(attrvalue, ctx, logger))
                         result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.AttributeValue!, attrvalue, "Attribute value OK", item));
                     else
-                        result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No attribute value matched", item));
+                    {
+                        switch(cardinality)
+                        {
+                            case Cardinality.Expected:
+                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No attribute value matched", item));
+                                break;
+
+                            case Cardinality.Prohibited:
+                                result.MarkSatisified(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No matching attribute value", item));
+                                break;
+
+                            case Cardinality.Optional:
+                                if(attrvalue is string s && s == string.Empty)
+                                {
+                                    result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "Empty attribute found", item));
+                                }
+                                else
+                                {
+                                    result.MarkSatisified(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No matching attribute value", item));
+                                }
+                                break;
+                        }
+                    }
                 }
                 else
                 {

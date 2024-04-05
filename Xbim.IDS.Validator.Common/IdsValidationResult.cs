@@ -104,8 +104,7 @@ namespace Xbim.IDS.Validator.Core
         {
             failureReason.Status = ValidationStatus.Fail;
             Messages.Add(failureReason);
-            if(failureReason.Expectation != Cardinality.Optional)
-                MarkStatus(EntityValidationResult.RequirementNotSatisfied);
+            MarkStatus(EntityValidationResult.RequirementNotSatisfied);
         }
 
         /// <summary>
@@ -138,7 +137,6 @@ namespace Xbim.IDS.Validator.Core
         
 
 
-        // Gets the status based on current Expectation mode - i.e. Failure to match in Prohibited model = Success
         private static ValidationStatus GetStatus(bool? success)
         {
             return success == true ? ValidationStatus.Pass : success == false ? ValidationStatus.Fail : ValidationStatus.Inconclusive;
@@ -177,7 +175,7 @@ namespace Xbim.IDS.Validator.Core
                 ActualResult = actualResult,
                 Reason = reason,
                 ExpectedResult = context.GetExpected(memberField),
-                Expectation = context.ExpectationMode,
+                Expectation = context.FacetCardinality,
                 ValidatedField = context.GetMember(memberField),
                 EntityAffected = entity
             };
@@ -203,7 +201,7 @@ namespace Xbim.IDS.Validator.Core
                 ActualResult = actualResult,
                 Reason = reason,
                 ExpectedResult = context.GetExpected(memberField),
-                Expectation = context.ExpectationMode,
+                Expectation = context.FacetCardinality,
                 ValidatedField = context.GetMember(memberField),
                 EntityAffected = entity
             };
@@ -229,7 +227,7 @@ namespace Xbim.IDS.Validator.Core
                 ActualResult = actualResult,
                 Reason = reason,
                 ExpectedResult = context.GetExpected(memberField),
-                Expectation = context.ExpectationMode,
+                Expectation = context.FacetCardinality,
                 ValidatedField = context.GetMember(memberField),
                 EntityAffected = entity
             };
@@ -361,10 +359,10 @@ namespace Xbim.IDS.Validator.Core
         /// Constructs a new <see cref="ValidationContext{T}"/>
         /// </summary>
         /// <param name="clause"></param>
-        /// <param name="expectationMode"></param>
-        public ValidationContext(T clause, Cardinality expectationMode)
+        /// <param name="cardinality"></param>
+        public ValidationContext(T clause, Cardinality cardinality)
         {
-            ExpectationMode = expectationMode;
+            FacetCardinality = cardinality;
             Clause = clause;
         }
 
@@ -403,9 +401,9 @@ namespace Xbim.IDS.Validator.Core
             
         }
         /// <summary>
-        /// Gets and sets the expectation mode
+        /// Gets the Facet cardinality
         /// </summary>
-        public Cardinality ExpectationMode { get; private set; } = Cardinality.Expected;   // Default to Required, not Prohibited
+        public Cardinality FacetCardinality { get; private set; } = Cardinality.Expected;   // Default to Required, not Prohibited
         /// <summary>
         /// The Facet clause being validated
         /// </summary>

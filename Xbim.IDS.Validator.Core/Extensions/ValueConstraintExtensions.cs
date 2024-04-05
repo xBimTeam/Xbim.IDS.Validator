@@ -13,10 +13,22 @@ namespace Xbim.IDS.Validator.Core.Extensions
     public static class ValueConstraintExtensions
     {
 
+
+        /// <summary>
+        /// Evaluates a candidate value against a constraint, accounting for the facet cardinality
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="constraint"></param>
+        /// <param name="candidateValue"></param>
+        /// <param name="ctx"></param>
+        /// <param name="logger"></param>
+        /// <param name="caseSensitive"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
         [return: NotNull]
-        public static bool ExpectationIsSatisifedBy<T>([NotNullWhen(true)]this ValueConstraint? constraint, object value, ValidationContext<T> ctx, ILogger? logger = null, bool caseSensitive = false) where T: IFacet
+        public static bool ExpectationIsSatisifedBy<T>([NotNullWhen(true)]this ValueConstraint? constraint, object candidateValue, ValidationContext<T> ctx, ILogger? logger = null, bool caseSensitive = false) where T: IFacet
         {
-            var expectation = ctx.ExpectationMode switch
+            var expectation = ctx.FacetCardinality switch
             {
                 Cardinality.Expected => true,
                 Cardinality.Prohibited => false,
@@ -24,7 +36,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
                 
                 _ => throw new NotImplementedException()
             };
-            return constraint?.IsSatisfiedBy(value, caseSensitive, logger) == expectation;
+            return constraint?.IsSatisfiedBy(candidateValue, caseSensitive, logger) == expectation;
         }
 
         /// <summary>

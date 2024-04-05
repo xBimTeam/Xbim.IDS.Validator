@@ -20,13 +20,11 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
         [MemberData(nameof(GetPassTestCases))]
         [Theory]
-        public async Task ExpectedPasses(string idsFile, params XbimSchemaVersion[] schemas)
+        public async Task ExpectedPasses(string idsFile, params XbimSchemaVersion[] _)
         {
             // Can't test IFC2x3 Classifications in our harness due to schema changes in IFC4
-            var _ = schemas;
 
-            var specialCase = Path.GetFileName(idsFile).StartsWith("pass-occurrences_override_the_type_classification_per_system");
-            var outcome = await VerifyIdsFile(idsFile, specialCase, XbimSchemaVersion.Ifc4);
+            var outcome = await VerifyIdsFile(idsFile);
 
             outcome.Status.Should().Be(ValidationStatus.Pass);
             
@@ -34,27 +32,28 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
         [MemberData(nameof(GetFailureTestCases))]
         [Theory]
-        public async Task ExpectedFailures(string idsFile, params XbimSchemaVersion[] schemas)
+        public async Task ExpectedFailures(string idsFile, params XbimSchemaVersion[] _)
         {
-            var _ = schemas;
 
-            var outcome = await VerifyIdsFile(idsFile);
+            var specialCase = Path.GetFileName(idsFile).StartsWith("fail-occurrences_override_the_type_classification_per_system");
+
+            var outcome = await VerifyIdsFile(idsFile, specialCase);
 
             outcome.Status.Should().Be(ValidationStatus.Fail);
             
         }
 
-        [MemberData(nameof(GetInvalidTestCases))]
-        [Theory(Skip ="None to do")]
-        public async Task ExpectedInvalid(string idsFile, params XbimSchemaVersion[] schemas)
-        {
-            foreach (var schema in GetSchemas(schemas))
-            {
-                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema, validateIds: true);
+        //[MemberData(nameof(GetInvalidTestCases))]
+        //[Theory]
+        //public async Task ExpectedInvalid(string idsFile, params XbimSchemaVersion[] schemas)
+        //{
+        //    foreach (var schema in GetSchemas(schemas))
+        //    {
+        //        var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema, validateIds: true);
 
-                outcome.Status.Should().Be(ValidationStatus.Error, schema.ToString());
-            }
-        }
+        //        outcome.Status.Should().Be(ValidationStatus.Error, schema.ToString());
+        //    }
+        //}
 
         public static IEnumerable<object[]> GetInvalidTestCases()
         {

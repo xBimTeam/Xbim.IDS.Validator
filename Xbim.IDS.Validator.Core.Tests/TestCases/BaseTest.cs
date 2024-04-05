@@ -179,6 +179,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                         {
                             model.Delete(rogue);
                             tran.Commit();
+                            logger.LogWarning("Spotfixing extraneous IfcWall 3Agm079vPIYBL4JExVrhD5");
                         }
                     }
                     else

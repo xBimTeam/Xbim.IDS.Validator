@@ -137,13 +137,13 @@ namespace Xbim.IDS.Validator.Core.Binders
             return expression;
         }
 
-        public override void ValidateEntity(IPersistEntity item, IfcClassificationFacet facet, Cardinality requirement, IdsValidationResult result)
+        public override void ValidateEntity(IPersistEntity item, IfcClassificationFacet facet, Cardinality cardinality, IdsValidationResult result)
         {
             if (facet is null)
             {
                 throw new ArgumentNullException(nameof(facet));
             }
-            var ctx = CreateValidationContext(requirement, facet);
+            var ctx = CreateValidationContext(cardinality, facet);
 
             var candidates = GetClassifications(item).ToList();
 
@@ -171,20 +171,38 @@ namespace Xbim.IDS.Validator.Core.Binders
                             result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.ClassificationSystem!, system, "Classification System found", match));
                         }
                     }
+                    // Success
                     return;
                 }
-                // Classified but not satifying requirement
-            }
-            
-            // No classifications, or none matching
-            if (!facet.Identification.IsNullOrEmpty())
-            {
-                result.Fail(ValidationMessage.Failure(ctx, fn => fn.Identification!, null, "No classifications matching", item));
+                else
+                {
+                    // Classified but not satifying requirement
+                    // - Fail is applicable to all cardinalities since IsMatchingClassification accounts for Prohibited
+                    result.Fail(ValidationMessage.Failure(ctx, fn => fn.Identification ?? fn.ClassificationSystem!, null, "No classifications matching", item));
+                }
             }
             else
             {
-                result.Fail(ValidationMessage.Failure(ctx, fn => fn.ClassificationSystem!, null, "No classifications system matching", item));
+                // Not classified
+                switch (cardinality)
+                {
+                    case Cardinality.Expected:
+                        {
+                            // No classifications, or none matching
+                            result.Fail(ValidationMessage.Failure(ctx, fn => fn.Identification ?? fn.ClassificationSystem!, null, "No classifications found", item));
+                            break;
+                        }
+
+                    case Cardinality.Optional:
+                    case Cardinality.Prohibited:
+                        {
+                            result.MarkSatisified(ValidationMessage.Failure(ctx, fn => fn.Identification ?? fn.ClassificationSystem!, null, "No classification found", item));
+                            break;
+                        }
+                }
             }
+            
+            
         }
 
 
@@ -213,7 +231,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 return facet.ClassificationSystem.ExpectationIsSatisifedBy(systemName, ctx, logger, true);
                
             }
-            return ctx.ExpectationMode != Cardinality.Prohibited;    // We just want it to be classified. NotNull is enough...
+            return ctx.FacetCardinality != Cardinality.Prohibited;    // We just want it to be classified. NotNull is enough...
         }
 
         /// <summary>

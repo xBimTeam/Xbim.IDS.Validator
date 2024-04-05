@@ -126,7 +126,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 foreach (var part in candidates)
                 {
                     var partType = part.GetType().Name;
-                    if(ctx.ExpectationMode != Cardinality.Prohibited)
+                    if(ctx.FacetCardinality != Cardinality.Prohibited)
                     {
                         result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.EntityType!, partType, "Part found", part));
                     }
@@ -139,7 +139,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             else
             {
-                if (ctx.ExpectationMode != Cardinality.Prohibited)
+                if (ctx.FacetCardinality != Cardinality.Prohibited)
                 {
                     result.Fail(ValidationMessage.Failure(ctx, fn => fn.EntityType!, null, "No parts matching", item));
                 }
