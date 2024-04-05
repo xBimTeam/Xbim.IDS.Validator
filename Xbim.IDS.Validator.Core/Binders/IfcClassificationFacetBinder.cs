@@ -145,41 +145,26 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             var ctx = CreateValidationContext(cardinality, facet);
 
-            var candidates = GetClassifications(item).ToList();
+            // Logic is we locate all unique systems and check the classificationreference value (and ancestors) belonging to the system on the instance first, and in the abscence of any
+            // then fall back to the type's classificationreference values on the system (and ancestors).
 
-            if (candidates.Any())
+            var systems = GetClassificationSystems(item).Distinct().ToList();
+            var isClassified = systems.Any();
+            foreach(var system in systems)
             {
-                var matching = candidates.Where(c => IsMatchingClassification(c, facet, ctx));
-                if(matching.Any()) 
-                { 
-                    // Potentially we could have multiple matches
-                    foreach (var match in matching)
-                    {
-                        if(facet.Identification.IsNullOrEmpty() && facet.ClassificationSystem.IsNullOrEmpty())
-                        {
-                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.ClassificationSystem!, null, "Item classified", match));
-                        }
-                        if (!facet.Identification.IsNullOrEmpty())
-                        {
-                            var id = match.GetClassificationIdentifiers(logger)
-                                .First(id => facet.Identification.ExpectationIsSatisifedBy(id, ctx, null, true));
-                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.Identification!, id, "Classification Identifier found", match));
-                        }
-                        if (!facet.ClassificationSystem.IsNullOrEmpty())
-                        {
-                            var system = match.GetSystemName(logger);
-                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.ClassificationSystem!, system, "Classification System found", match));
-                        }
-                    }
-                    // Success
+                var classResult = SystemClassificationsSatisfies(item, system, facet, result, ctx);
+                if (classResult.HasFlag(ClassificationSatisfiedBy.Identifier))
+                {
+                    // Successfully matched on Instance or Type
                     return;
                 }
-                else
-                {
-                    // Classified but not satifying requirement
-                    // - Fail is applicable to all cardinalities since IsMatchingClassification accounts for Prohibited
-                    result.Fail(ValidationMessage.Failure(ctx, fn => fn.Identification ?? fn.ClassificationSystem!, null, "No classifications matching", item));
-                }
+            }
+
+            if(isClassified)
+            {
+                // Classified but not satifying requirement
+                // - Fail is applicable to all cardinalities since ClassificationsSatisfy accounts for Prohibited
+                result.Fail(ValidationMessage.Failure(ctx, fn => fn.Identification ?? fn.ClassificationSystem!, null, "No classifications matching", item));
             }
             else
             {
@@ -205,34 +190,66 @@ namespace Xbim.IDS.Validator.Core.Binders
             
         }
 
-
-        private bool IsMatchingClassification(IIfcClassificationSelect classification, IfcClassificationFacet facet, 
-            ValidationContext<IfcClassificationFacet> ctx)
+        private ClassificationSatisfiedBy SystemClassificationsSatisfies(IPersistEntity entity, IIfcClassification system, IfcClassificationFacet facet, IdsValidationResult result, ValidationContext<IfcClassificationFacet> ctx)
         {
-            if (classification is null)
+            // Look for a Positive match of the classification in this system. We can't indicate failure until higher level, since other systems may satisfy the requirement
+            var matched = ClassificationSatisfiedBy.Nothing;
+            if (!facet.ClassificationSystem.IsNullOrEmpty())
             {
-                return false;
-            }
-
-            if (facet.Identification != null)
-            {
-                var identifiers = classification.GetClassificationIdentifiers(logger);
-
-                if(!identifiers.Any(i => facet.Identification.ExpectationIsSatisifedBy(i, ctx, logger, true)))
+                var systemName = system.Name.Value?.ToString();
+                if(facet.ClassificationSystem.ExpectationIsSatisifedBy(systemName, ctx, logger, true) == true)
                 {
-                    return false;
+                    result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.ClassificationSystem!, systemName, "Classification System matched", system));
+                    matched |= ClassificationSatisfiedBy.System;
+                    if (facet.Identification.IsNullOrEmpty())
+                    {
+                        matched |= ClassificationSatisfiedBy.Identifier;
+                    }
+                }
+                else
+                {
+                    return matched; // Early exit - System is not relevant
                 }
                
             }
-
-            if (facet.ClassificationSystem != null)
+            if (!facet.Identification.IsNullOrEmpty())
             {
-                var systemName = classification.GetSystemName(logger);
-                return facet.ClassificationSystem.ExpectationIsSatisifedBy(systemName, ctx, logger, true);
-               
+                // Check instance first
+                IEnumerable<IIfcClassificationSelect> matches = GetClassifications(entity, DataSource.Instance, system).ToList();
+                matched = CheckIdentifiers(facet, result, ctx, matched, matches);
+                if (matches.Any())
+                    return matched;
+                // Else nothing on the instance - try again with the type
+                matches = GetClassifications(entity, DataSource.Type, system);
+                matched = CheckIdentifiers(facet, result, ctx, matched, matches);
             }
-            return ctx.FacetCardinality != Cardinality.Prohibited;    // We just want it to be classified. NotNull is enough...
+
+            if(facet.ClassificationSystem.IsNullOrEmpty() && facet.Identification.IsNullOrEmpty())
+            {
+                // No constraints - technically invalid IDS.
+                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.ClassificationSystem!, null, "Item classified", system));
+                matched |= ClassificationSatisfiedBy.All;
+            }
+
+            return matched;
         }
+
+        private ClassificationSatisfiedBy CheckIdentifiers(IfcClassificationFacet facet, IdsValidationResult result, ValidationContext<IfcClassificationFacet> ctx, ClassificationSatisfiedBy matched, IEnumerable<IIfcClassificationSelect> matches)
+        {
+            foreach (var match in matches)
+            {
+                var id = match.GetClassificationIdentifiers(logger)
+                    .FirstOrDefault(id => facet.Identification.ExpectationIsSatisifedBy(id, ctx, logger, true));
+                if (id != null)
+                {
+                    result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.Identification!, id, "Classification Identifier matched", match));
+                    matched |= ClassificationSatisfiedBy.Identifier;
+                }
+            }
+
+            return matched;
+        }
+
 
         /// <summary>
         /// Selects the entities matching the classification filter from a set of IfcRelAssociatesClassifications
@@ -268,30 +285,83 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         }
 
-
-        private IEnumerable<IIfcClassificationSelect> GetClassifications([NotNull] IPersistEntity item,  bool isFirstPass = true)
+        /// <summary>
+        /// Gets all classification systems associated with this entity
+        /// </summary>
+        /// <remarks>May return duplicates due to type overrides or multiple associated classifications</remarks>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        private IEnumerable<IIfcClassification> GetClassificationSystems([NotNull] IPersistEntity item)
         {
             if (item is IIfcObjectDefinition obj)
             {
                 foreach (var cl in obj.HasAssociations.OfType<IIfcRelAssociatesClassification>().Select(r => r.RelatingClassification))
                 {
-                    yield return cl;
+                    if(cl != null)
+                        yield return cl.GetSystem();
                 }
-                if(item is IIfcObject o)
+                if (item is IIfcObject o)
                 {
-                    foreach(var type in o.IsTypedBy)
+                    foreach (var type in o.IsTypedBy)
                     {
                         foreach (var cl in type.RelatingType.HasAssociations.OfType<IIfcRelAssociatesClassification>().Select(r => r.RelatingClassification))
                         {
-                            yield return cl;
+                            if (cl != null)
+                                yield return cl.GetSystem();
                         }
                     }
                 }
             }
             else if (item is IIfcMaterialDefinition m)
             {
+
                 // Edge-case where spec supports classification of materials
                 foreach (var cl in m.HasExternalReferences.OfType<IIfcExternalReferenceRelationship>().Select(r => r.RelatingReference).OfType<IIfcClassificationReference>())
+                {
+                    if (cl != null)
+                        yield return cl.GetSystem();
+                }
+
+            }
+            else
+            {
+                yield break;
+            }
+        }
+
+
+        private IEnumerable<IIfcClassificationSelect> GetClassifications([NotNull] IPersistEntity item, DataSource dataSource, IIfcClassification system)
+        {
+            if (item is IIfcObjectDefinition obj)
+            {
+                if (dataSource.HasFlag(DataSource.Instance))
+                {
+                    var classifications = obj.HasAssociations.OfType<IIfcRelAssociatesClassification>().Select(r => r.RelatingClassification)
+                        .Where(c => c.GetSystem() == system);
+                    foreach (var cl in classifications)
+                    {
+                        yield return cl;
+                    }
+                }
+                if (dataSource.HasFlag(DataSource.Type) && item is IIfcObject o)
+                {
+                    foreach (var type in o.IsTypedBy)
+                    {
+                        var classifications = type.RelatingType.HasAssociations.OfType<IIfcRelAssociatesClassification>().Select(r => r.RelatingClassification)
+                            .Where(c => c.GetSystem() == system);
+                        foreach (var cl in classifications)
+                        {
+                            yield return cl;
+                        }
+                    }
+                }
+            }
+            else if (dataSource.HasFlag(DataSource.Instance) && item is IIfcMaterialDefinition material)
+            {
+                // Edge-case where spec supports classification of materials
+                var classifications = material.HasExternalReferences.OfType<IIfcExternalReferenceRelationship>().Select(r => r.RelatingReference).OfType<IIfcClassificationReference>()
+                    .Where(c => c.GetSystem() == system);
+                foreach (var cl in classifications)
                 {
                     yield return cl;
                 }
@@ -335,6 +405,46 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             return Expression.Call(null, propsMethod, new[] { expression, classificationFacetExpr });
 
+        }
+
+        [Flags]
+        private enum DataSource 
+        {
+
+            /// <summary>
+            /// Located on Instance
+            /// </summary>
+            Instance = 1,
+            /// <summary>
+            /// Located on Type
+            /// </summary>
+            Type = 2,
+            /// <summary>
+            /// Located on instance or Type
+            /// </summary>
+            All = Instance | Type
+        }
+
+        [Flags]
+        private enum ClassificationSatisfiedBy
+        {
+            /// <summary>
+            /// No match
+            /// </summary>
+            Nothing = 0,
+
+            /// <summary>
+            ///  Matched system only
+            /// </summary>
+            System = 1,
+            /// <summary>
+            /// Matched identifier only
+            /// </summary>
+            Identifier = 2,
+            /// <summary>
+            /// Matched both
+            /// </summary>
+            All = System | Identifier
         }
     }
 }
