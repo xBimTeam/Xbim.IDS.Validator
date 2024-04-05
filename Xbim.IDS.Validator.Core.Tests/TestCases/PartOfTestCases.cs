@@ -23,6 +23,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
 
             // Unsupported tests: None
+            { "pass-an_optional_facet_always_passes_regardless_of_outcome_1_2.ids" , new [] { XbimSchemaVersion.Unsupported} },
 
         };
 
@@ -71,6 +72,18 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                 outcome.Status.Should().Be(ValidationStatus.Error, schema.ToString());
             }
         }
+
+        [MemberData(nameof(GetUnsupportedPassTestCases))]
+        [SkippableTheory]
+        public async Task PassesToImplement(string idsFile)
+        {
+            var outcome = await VerifyIdsFile(idsFile);
+
+            Skip.If(outcome.Status != ValidationStatus.Pass, "Needs clarification. See https://github.com/buildingSMART/IDS/issues/266");
+
+            outcome.Status.Should().Be(ValidationStatus.Pass);
+        }
+
 
         public static IEnumerable<object[]> GetInvalidTestCases()
         {

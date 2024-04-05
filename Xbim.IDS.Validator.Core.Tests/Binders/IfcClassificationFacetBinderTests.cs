@@ -68,8 +68,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData("Uniclass", "Pr_40_50_12")]
         [InlineData("UNICLASS", "PR_40_50_12")]
         [InlineData("uniclass", "pr_40_50_12")]
-        [InlineData(null, "Pr_40_50_12")]
         [InlineData("Uniclass", null)]
+        [InlineData(null, "Pr_40_50_12")]   // Technically invalid since 0.97
         [InlineData(null, null)]
         [Theory]
         public void CanValidateClassificationsReferencesForEntity(string system, string identifier)
