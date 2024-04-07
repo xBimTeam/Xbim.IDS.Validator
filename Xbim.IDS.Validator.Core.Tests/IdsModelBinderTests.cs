@@ -2,7 +2,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xbim.Common;
-using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.IDS.Validator.Core.Tests.TestModels;
 using Xbim.Ifc;
@@ -33,13 +32,16 @@ namespace Xbim.IDS.Validator.Core.Tests
         [InlineData(@"TestModels\BasicRequirements.ids", @"TestModels\SampleHouse4.ifc")]
         [Theory]
 
-        public void Can_Bind_Specification_to_model(string idcFile, string ifcFile)
+        public void Can_Bind_Specification_to_model(string idsFile, string ifcFile)
         {
             var model = BuildModel(ifcFile);
             var modelBinder = provider.GetRequiredService<IIdsModelBinder>();
             var logger = TestEnvironment.GetXunitLogger<IdsModelBinderTests>(output);
+            var schemaLogger = TestEnvironment.GetXunitLogger<IdsSchemaMigrator>(output);
+            var schemaUpgrader = new IdsSchemaMigrator(schemaLogger);
+            schemaUpgrader.MigrateToIdsSchemaVersion(idsFile, out var upgraded, IdsLib.IdsSchema.IdsNodes.IdsVersion.Ids0_9_7);
 
-            var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idcFile, logger);
+            var idsSpec = Xids.LoadBuildingSmartIDS(upgraded.Root, logger);
             
 
             foreach(var group in idsSpec.SpecificationsGroups)
@@ -54,12 +56,14 @@ namespace Xbim.IDS.Validator.Core.Tests
                     {
                         logger.LogInformation("       - {facetType}: where {description} ", applicableFacet.GetType().Name, applicableFacet.Short() );
                     }
-
-                    logger.LogInformation("    Requirements {reqCount}: {expectation}", spec.Requirement.Facets.Count, spec.Requirement.RequirementOptions?.FirstOrDefault().ToString() ?? "" );
-                    int idx = 1;
-                    foreach (var reqFacet in spec.Requirement.Facets)
+                    if(spec.Requirement != null)
                     {
-                        logger.LogInformation("       [{i}] {facetType}: check {description} ", idx++, reqFacet.GetType().Name, reqFacet.Short());
+                        logger.LogInformation("    Requirements {reqCount}: {expectation}", spec.Requirement?.Facets?.Count ?? 0, spec.Requirement?.RequirementOptions?.FirstOrDefault()?.ToString() ?? "" );
+                        int idx = 1;
+                        foreach (var reqFacet in spec.Requirement.Facets)
+                        {
+                            logger.LogInformation("       [{i}] {facetType}: check {description} ", idx++, reqFacet.GetType().Name, reqFacet.Short());
+                        }
                     }
                     IEnumerable <IPersistEntity> items = modelBinder.SelectApplicableEntities(model, spec);
                     logger.LogInformation("          Checking {count} applicable items", items.Count());

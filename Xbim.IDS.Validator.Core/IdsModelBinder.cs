@@ -147,18 +147,10 @@ namespace Xbim.IDS.Validator.Core
                 {
                     opts.SetOptions(options);
                 }
-                var card = requirement.GetCardinality(facet);
+                var card = requirement.GetCardinality(facet) ?? RequirementCardinalityOptions.Cardinality.Expected;
                 binder.ValidateEntity(item, facet, card, result);
             }
-            if (result.Failures.Any())
-            {
-                result.ValidationStatus = ValidationStatus.Fail;
-            }
-            else if (result.Messages.Any(m => m.Status != ValidationStatus.Fail))
-            {
-                // Success and Inconclusive all count as success
-                result.ValidationStatus = ValidationStatus.Pass;
-            }
+            
             return result;
         }
 

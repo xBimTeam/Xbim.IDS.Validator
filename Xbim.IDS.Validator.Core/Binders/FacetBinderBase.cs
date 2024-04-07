@@ -13,6 +13,7 @@ using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
+using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Binders
 {
@@ -62,7 +63,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <param name="requirement"></param>
         /// <param name="result"></param>
         /// <param name="facet"></param>
-        public abstract void ValidateEntity(IPersistEntity item, T facet, RequirementCardinalityOptions requirement, IdsValidationResult result);
+        public abstract void ValidateEntity(IPersistEntity item, T facet, Cardinality requirement, IdsValidationResult result);
 
 
         protected static bool ExpressTypesAreValid(IEnumerable<ExpressType> expressTypes)
@@ -427,7 +428,8 @@ namespace Xbim.IDS.Validator.Core.Binders
         // We should not attempt pattern matches on anything but strings
         protected static bool IsTypeAppropriateForConstraint(ValueConstraint attributeValue, object? attrvalue)
         {
-            if (attributeValue.AcceptedValues.Any(v => v is PatternConstraint))
+            
+            if (!attributeValue.IsNullOrEmpty() && attributeValue.AcceptedValues.Any(v => v is PatternConstraint))
             {
                 return (attrvalue is string || attrvalue is IExpressStringType);
             }
@@ -437,16 +439,12 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <summary>
         /// Creates a context we use to track shared validation info for results
         /// </summary>
-        /// <param name="requirement"></param>
+        /// <param name="cardinality"></param>
         /// <param name="facet"></param>
         /// <returns></returns>
-        public ValidationContext<T> CreateValidationContext(RequirementCardinalityOptions requirement, T facet)
+        public ValidationContext<T> CreateValidationContext(Cardinality? cardinality, T facet)
         {
-            // Set the Requirement expectation - Required, Optional, Prohibit so we negate Success/Failure
-
-            //var required = requirement.IsRequired(facet);
-            //var expectation = required == true ? Expectation.Required : required == false ? Expectation.Prohibited : Expectation.Optional;
-            return new ValidationContext<T>(facet, requirement);
+            return new ValidationContext<T>(facet, cardinality ?? Cardinality.Expected);
         }
 
         Expression IFacetBinder.BindSelectionExpression(Expression baseExpression, IFacet facet)
@@ -459,9 +457,9 @@ namespace Xbim.IDS.Validator.Core.Binders
             return BindWhereExpression(baseExpression, (T)facet);
         }
 
-        void IFacetBinder.ValidateEntity(IPersistEntity item, IFacet facet, RequirementCardinalityOptions requirement, IdsValidationResult result)
+        void IFacetBinder.ValidateEntity(IPersistEntity item, IFacet facet, Cardinality cardinality, IdsValidationResult result)
         {
-            ValidateEntity(item, (T)facet, requirement, result);
+            ValidateEntity(item, (T)facet, cardinality, result);
         }
 
     }

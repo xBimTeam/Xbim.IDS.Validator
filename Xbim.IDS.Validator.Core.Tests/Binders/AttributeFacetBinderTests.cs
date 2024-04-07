@@ -6,6 +6,7 @@ using Xbim.InformationSpecifications;
 using Xunit.Abstractions;
 using Xbim.Common.Metadata;
 using Xbim.IDS.Validator.Core.Extensions;
+using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
@@ -127,7 +128,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             attrFacet.AttributeValue.AddAccepted(new RangeConstraint(minValue.ToString(), true, maxValue.ToString(), true));
             FacetGroup group = BuildGroup(attrFacet);
             var result = new IdsValidationResult(entity, group);
-            Binder.ValidateEntity(entity, attrFacet, RequirementCardinalityOptions.Expected, result);
+            Binder.ValidateEntity(entity, attrFacet, Cardinality.Expected, result);
 
             // Assert
 
@@ -135,6 +136,87 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             result.Failures.Should().BeEmpty();
 
         }
+
+        [InlineData(33350, "Name", "Windows_Sgl_Plain:1810x1210mm:286105")]
+        [InlineData(33350, "PredefinedType", "WINDOW")]
+        [InlineData(33350, "OverallHeight", 1210)]
+        [InlineData(33350, "Tag", 286105)]
+        [Theory]
+        public void CanValidateAttributesForEntity(int entityLabel, string name, object value)
+        {
+            var instance = Model.Instances[entityLabel];
+            AttributeFacet facet = new AttributeFacet()
+            {
+                AttributeName = new ValueConstraint(name)
+            };
+
+            if(value != null)
+            {
+                facet.AttributeValue = new ValueConstraint(value.ToString());
+            }
+
+#pragma warning disable CS0618 // Type or member is obsolete
+            var group = new FacetGroup();
+#pragma warning restore CS0618 // Type or member is obsolete
+            group.Facets.Add(facet);
+
+            var validationResult = new IdsValidationResult(instance, group);
+
+            Binder.ValidateEntity(instance, facet, Cardinality.Expected, validationResult);
+
+            foreach (var message in validationResult.Messages)
+            {
+                var level = message.Status == ValidationStatus.Fail ? LogLevel.Warning  : LogLevel.Information;
+                logger.Log(level, "Message: {message}", message);
+            }
+
+            validationResult.Successful.Should().NotBeEmpty();
+            validationResult.Failures.Should().BeEmpty();
+            validationResult.ValidationStatus.Should().Be(ValidationStatus.Pass);
+        }
+
+        [InlineData(33350, "OverallHeight", 100)]
+        //[InlineData(33350, "OverallHeight", 1210)]
+
+        [Theory]
+        public void CanValidateProhibitedAttributesValuesForEntity(int entityLabel, string name, object value)
+        {
+            var instance = Model.Instances[entityLabel];
+            AttributeFacet facet = new AttributeFacet()
+            {
+                AttributeName = new ValueConstraint(name)
+            };
+
+            if (value != null)
+            {
+                facet.AttributeValue = new ValueConstraint(value.ToString());
+            }
+
+#pragma warning disable CS0618 // Type or member is obsolete
+            var group = new FacetGroup();
+#pragma warning restore CS0618 // Type or member is obsolete
+            group.Facets.Add(facet);
+            group.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>
+            {
+                new RequirementCardinalityOptions(facet, Cardinality.Prohibited)
+            };
+
+            var validationResult = new IdsValidationResult(instance, group);
+
+            Binder.ValidateEntity(instance, facet, Cardinality.Prohibited, validationResult);
+
+            foreach (var message in validationResult.Messages)
+            {
+                var level = message.Status == ValidationStatus.Fail ? LogLevel.Warning : LogLevel.Information;
+                logger.Log(level, "Message: {message}", message);
+            }
+
+            validationResult.Successful.Should().NotBeEmpty();
+            validationResult.Failures.Should().BeEmpty();
+            validationResult.ValidationStatus.Should().Be(ValidationStatus.Pass);
+
+        }
+
 
         [Fact]
         public void SchemaInfoProvidesJustTopLevelClasses()
@@ -164,9 +246,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         }
 
-
-
-            ILogger<AttributeFacetBinder> Logger { get => GetLogger<AttributeFacetBinder>(); }
+        ILogger<AttributeFacetBinder> Logger { get => GetLogger<AttributeFacetBinder>(); }
 
     }
 }

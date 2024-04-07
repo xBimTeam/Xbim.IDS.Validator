@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using IdsLib.IdsSchema.IdsNodes;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,14 +20,17 @@ namespace Xbim.IDS.Validator.Core
     /// </summary>
     public class IdsModelValidator : IIdsModelValidator
     {
+        private readonly IIdsSchemaMigrator idsSchemaMigrator;
 
         /// <summary>
         /// Constructs a new <see cref="IdsModelValidator"/>
         /// </summary>
         /// <param name="modelBinder"></param>
-        public IdsModelValidator(IIdsModelBinder modelBinder)
+        /// <param name="idsSchemaMigrator"></param>
+        public IdsModelValidator(IIdsModelBinder modelBinder, IIdsSchemaMigrator idsSchemaMigrator)
         {
             ModelBinder = modelBinder;
+            this.idsSchemaMigrator = idsSchemaMigrator;
         }
 
         private IIdsModelBinder ModelBinder { get; }
@@ -53,12 +58,6 @@ namespace Xbim.IDS.Validator.Core
                 ModelBinder.SetOptions(verificationOptions);
 
                 var outcome = new ValidationOutcome(idsSpec);
-                if (idsSpec == null)
-                {
-                    outcome.MarkCompletelyFailed($"Unable to open IDS file '{idsSpec.Name}'");
-                    logger.LogError("Unable to open IDS file '{idsFile}", idsSpec.Name);
-                    return outcome;
-                }
 
 
                 foreach (var group in idsSpec.SpecificationsGroups)
@@ -120,18 +119,50 @@ namespace Xbim.IDS.Validator.Core
             {
                 ModelBinder.SetOptions(verificationOptions);
 
-                var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idsFile, logger);
-
-                return await ValidateAgainstXidsAsync( model,  idsSpec,  logger, requirementCompleted, verificationOptions,token);
+                if(!Xids.CanLoad(new FileInfo(idsFile)))
+                {
+                    var outcome = new ValidationOutcome(new Xids());
+                    outcome.MarkCompletelyFailed($"Unable to open IDS file '{idsFile}'");
+                    logger.LogError("Unable to open IDS file '{idsFile}", idsFile);
+                    return outcome;
+                }
                 
+                Xids? idsSpec = LoadIdsFile(idsFile, logger);
+
+                return await ValidateAgainstXidsAsync(model, idsSpec, logger, requirementCompleted, verificationOptions, token);
+
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to complete validation");
                 var badOutcome = new ValidationOutcome(new Xids());
                 badOutcome.MarkCompletelyFailed(ex.Message);
                 return await Task.FromResult(badOutcome);
             }
+        }
+
+        private Xids? LoadIdsFile(string idsFile, ILogger logger)
+        {
+            if (idsSchemaMigrator.HasMigrationsToApply(idsFile))
+            {
+                // Do an in place upgrade to latest schema
+                // Note: won't support zipped IDS upgrades, JSON etc.
+                var targetVersion = IdsVersion.Ids0_9_7;
+                var currentVersion = idsSchemaMigrator.GetIdsVersion(idsFile);
+                logger.LogWarning("IDS schema {oldVersion} is out of date for {file}. Applying in-place upgrade to latest {version} schema.", 
+                    currentVersion, idsFile, targetVersion);
+                if(idsSchemaMigrator.MigrateToIdsSchemaVersion(idsFile, out var upgraded, targetVersion))
+                {
+                    logger.LogInformation("IDS file {file} upgraded in-place to latest schema", idsFile);
+                    return Xids.LoadBuildingSmartIDS(upgraded.Root, logger);
+                }
+                else
+                {
+                    logger.LogWarning("Failed to update IDS to latest schema. Using original version");
+                }
+
+            }
+            return Xids.LoadBuildingSmartIDS(idsFile, logger);
         }
 
         private ValidationRequirement ValidateRequirement(Specification spec, IModel model, ILogger logger, CancellationToken token)
@@ -209,8 +240,7 @@ namespace Xbim.IDS.Validator.Core
                 logger.LogError(ex, "Failed to run specification: {reason}", ex.Message);
                 requirementResult.Status = ValidationStatus.Error;
                 var errorResult = new IdsValidationResult(null, null);
-                errorResult.Messages.Add(ValidationMessage.Error(ex.Message));
-                errorResult.ValidationStatus = ValidationStatus.Error;
+                errorResult.FailWithError(ValidationMessage.Error(ex.Message));
                 requirementResult.ApplicableResults.Add(errorResult);
             }
             
@@ -241,7 +271,7 @@ namespace Xbim.IDS.Validator.Core
                     {
                         if (simpleCard.IsModelConstraint) // Definitely required
                         {
-                            validation.Status = validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Pass)
+                            validation.Status = validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Pass || r.ValidationStatus == ValidationStatus.Inconclusive)
                                 ? ValidationStatus.Pass
                                 : ValidationStatus.Fail;
                         }
