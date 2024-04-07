@@ -23,7 +23,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
         /// </summary>
         /// <remarks>The filtering also accounts for hierarchical classification schemes</remarks>
         /// <param name="relAssociates"></param>
-        /// <param name="materialName"></param>
+        /// <param name="facet"></param>
         /// <returns></returns>
         public static IEnumerable<IIfcObjectDefinition> GetIfcObjectsUsingClassification(this IEnumerable<IIfcRelAssociatesClassification> relAssociates, IfcClassificationFacet facet)
         {
@@ -89,7 +89,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
 
         private static IEnumerable<IIfcRelAssociatesClassification> FilterByClassificationFacet(this IEnumerable<IIfcRelAssociatesClassification> relAssociates, IfcClassificationFacet facet)
         {
-            return relAssociates.Where(r =>
+            return relAssociates.Where(r => 
                 (facet.Identification == null || r.RelatingClassification.GetClassificationIdentifiers().Any(id => facet.Identification.IsSatisfiedBy(id, true))) &&
                 (facet.ClassificationSystem == null || facet.ClassificationSystem.IsSatisfiedBy(r.RelatingClassification.GetSystemName(), true)));
 
@@ -109,18 +109,18 @@ namespace Xbim.IDS.Validator.Core.Extensions
             switch (classSelect)
             {
                 case IIfcClassificationReference classRef:
-                    foreach (var item in GetClassificationIdentifiers((IIfcClassificationReferenceSelect)classRef, logger))
+                    foreach(var item in GetClassificationIdentifiers((IIfcClassificationReferenceSelect)classRef, logger))
                     {
                         yield return item;
                     }
                     break;
 
                 case IIfcClassification classification:
-                    if (classification.HasReferences != null)
+                    if(classification.HasReferences != null)
                     {
-                        foreach (var reference in classification.HasReferences)
+                        foreach(var reference in classification.HasReferences)
                         {
-                            foreach (var item in GetClassificationIdentifiers((IIfcClassificationReferenceSelect)reference, logger))
+                            foreach(var item in GetClassificationIdentifiers((IIfcClassificationReferenceSelect)reference, logger))
                             {
                                 yield return item;
                             }
@@ -136,18 +136,18 @@ namespace Xbim.IDS.Validator.Core.Extensions
 
         private static IEnumerable<string> GetClassificationIdentifiers(this IIfcClassificationReferenceSelect select, ILogger? logger = null)
         {
-            if (select == null) yield break;
+            if(select == null) yield break;
 
-            switch (select)
+            switch (select) 
             {
                 case IIfcClassificationReference classRef:
-                    if (IsFilled(classRef.Identification))
+                    if(IsFilled(classRef.Identification))
                     {
                         yield return classRef.Identification.Value.ToString();
                     }
                     // TODO: Should we look at Name as well as Identifier
                     // Recurse up hierarchy to find parent identifiers
-                    foreach (var item in GetClassificationIdentifiers(classRef.ReferencedSource, logger))
+                    foreach(var item in GetClassificationIdentifiers(classRef.ReferencedSource, logger))
                     {
                         yield return item;
                     }
@@ -185,7 +185,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
 
         private static string? GetSystemName(this IIfcClassificationReferenceSelect select, ILogger? logger = null)
         {
-            switch (select)
+            switch(select)
             {
                 case IIfcClassificationReference reference:
                     return GetSystemName(reference.ReferencedSource, logger);

@@ -1,9 +1,9 @@
-﻿using System;
+﻿using IdsLib.IfcSchema;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xbim.Common;
 using Xbim.Common.Metadata;
-using Xbim.InformationSpecifications.Helpers;
 
 namespace Xbim.IDS.Validator.Core.Helpers
 {
@@ -12,7 +12,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
 
         public static SchemaInference? InferSchemaForEntity(IModel model, string entityType)
         {
-            if (!_ifc2x3Inferences.ContainsKey(entityType))
+            if(!_ifc2x3Inferences.ContainsKey(entityType))
             {
                 return null;
             }
@@ -20,7 +20,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
             {
                 return _ifc2x3Inferences[entityType];
             }
-
+            
         }
 
         public static ClassInfo? GetSchemaEquivalent(IModel model, string entityType)
@@ -36,7 +36,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
 
         private static ClassInfo? GetEquivalent(IDictionary<string, ClassInfo> schema, string entityType)
         {
-            if (schema.ContainsKey(entityType))
+            if(schema.ContainsKey(entityType))
             {
                 return schema[entityType];
             }
@@ -58,7 +58,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
 
             var dict = new Dictionary<string, SchemaInference>();
 
-            foreach (var mapping in implicitlyMapped)
+            foreach( var mapping in implicitlyMapped )
             {
                 var inference = new SchemaInference(SchemaInfo.SchemaIfc2x3[mapping.NewType.SuperType.ExpressName], SchemaInfo.SchemaIfc2x3[mapping.DefinedBy.ExpressName]);
                 dict.Add(mapping.NewType.ExpressNameUpper, inference);

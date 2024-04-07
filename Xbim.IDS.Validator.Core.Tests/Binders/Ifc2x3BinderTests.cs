@@ -91,7 +91,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         }
 
 
-        [InlineData("Pset_WallCommon", "IsExternal", "True",
+        [InlineData("Pset_WallCommon", "IsExternal", "True", 
             "Pset_WallCommon", "LoadBearing", "False", 129)]
         [InlineData("Pset_WallCommon", "IsExternal", "True",
             "Pset_WallCommon", "LoadBearing", "True", 7)]

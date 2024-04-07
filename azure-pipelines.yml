@@ -4,10 +4,8 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
 
 trigger:
-  branches:
-    include:
-    - master
-    - develop
+- master
+
 pool:
   vmImage: 'windows-latest'
 

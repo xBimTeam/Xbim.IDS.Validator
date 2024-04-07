@@ -1,85 +1,84 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFramework>net7.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>disable</Nullable>
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
 
-		<IsPackable>false</IsPackable>
-	</PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Divergic.Logging.Xunit" Version="4.3.0" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.6.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="6.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
+  </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Divergic.Logging.Xunit" Version="4.2.0" />
-		<PackageReference Include="FluentAssertions" Version="6.10.0" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
-		<PackageReference Include="xunit" Version="2.4.2" />
-		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-			<PrivateAssets>all</PrivateAssets>
-		</PackageReference>
-		<PackageReference Include="coverlet.collector" Version="3.2.0">
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-			<PrivateAssets>all</PrivateAssets>
-		</PackageReference>
-		<PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Xbim.IDS.Validator.Core\Xbim.IDS.Validator.Core.csproj" />
+  </ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\Xbim.IDS.Validator.Core\Xbim.IDS.Validator.Core.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <None Update="TestCases\**\*.ids">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+     <None Update="TestCases\**\*.ifc">
+       <DependentUpon>%(Filename).ids</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+     <None Update="TestCases\xbim\fail-ifc2x3-air_terminal_edge_case_with_predefined.ids">
+       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+     </None>
+     <None Update="TestCases\xbim\fail-ifc2x3-air_terminal_edge_case_with_predefined.ifc">
+       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+       <DependentUpon>%(Filename).ids</DependentUpon>
+     </None>
+     <None Update="TestModels\BasicRequirements.ids">
+       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+     </None>
+     <None Update="TestModels\Cobie.ids">
+       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+     </None>
+     <None Update="TestModels\Dormitory-ARC.ifczip">
+       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+     </None>
+     <None Update="TestModels\DuplicatedElements.ids">
+       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+     </None>
+    <None Update="TestModels\Example.ids">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestModels\ids-0.9.6.xsd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestModels\IDS_wooden-windows.ids">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestModels\sample.ids">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestModels\SampleHouse4.ifc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestModels\SampleHouse4.xlsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestModels\TestModel.ids">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
-	<ItemGroup>
-		<None Update="TestCases\**\*.ids">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="TestCases\**\*.ifc">
-			<DependentUpon>%(Filename).ids</DependentUpon>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="TestCases\xbim\fail-ifc2x3-air_terminal_edge_case_with_predefined.ids">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="TestCases\xbim\fail-ifc2x3-air_terminal_edge_case_with_predefined.ifc">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<DependentUpon>%(Filename).ids</DependentUpon>
-		</None>
-		<None Update="TestModels\BasicRequirements.ids">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="TestModels\Dormitory-ARC.ifczip">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="TestModels\DuplicatedElements.ids">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="TestModels\Example.ids">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="TestModels\Cobie.ids">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="TestModels\sample.ids">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="TestModels\SampleHouse4.ifc">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="TestModels\SampleHouse4.xlsx">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="TestModels\TestModel.ids">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="TestModels\TH-JEG-X-M3-ZZ-ZZ-6001_JEG Electrical model - COBie.xlsx">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="TestModels\TH-MER-X-M3-XX-ZX-0001_Mechanical Model - Proposed Building_CR - As Construction Record documentation_C05_COBie Export.xlsx">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
-
-	<ItemGroup>
-		<Folder Include="TestCases\entity\" />
-	</ItemGroup>
+  <ItemGroup>
+    <Folder Include="TestCases\entity\" />
+  </ItemGroup>
 
 </Project>

@@ -21,20 +21,20 @@ namespace Xbim.IDS.Validator.Core.Tests
 
         public TestEnvironment()
         {
-
+            
             Console.WriteLine("Initialised Test Environment");
-
-            XbimServices.Current.ConfigureServices(services =>
-            {
-                services.AddXbimToolkit(/*c => c.AddMemoryModel()*/)
-                    .AddIdsValidation()
-                    .AddLogging(s => s.SetMinimumLevel(LogLevel.Debug));
-            });
-
+            
+                XbimServices.Current.ConfigureServices(services => 
+                {
+                    services.AddXbimToolkit(/*c => c.AddMemoryModel()*/)
+                        .AddIdsValidation()
+                        .AddLogging(s=> s.SetMinimumLevel(LogLevel.Debug));
+                });
+            
 
         }
 
-        public static IServiceProvider ServiceProvider { get => XbimServices.Current.ServiceProvider; }
+        public static IServiceProvider ServiceProvider { get => XbimServices.Current.ServiceProvider;  }
 
         /// <summary>
         ///  Registers the current tests xUnit OutputHelper with the Divergent xUnit Logger.

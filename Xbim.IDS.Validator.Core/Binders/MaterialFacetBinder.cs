@@ -15,7 +15,7 @@ namespace Xbim.IDS.Validator.Core.Binders
     {
         private readonly ILogger<MaterialFacetBinder> logger;
 
-        public MaterialFacetBinder(BinderContext context, ILogger<MaterialFacetBinder> logger) : base(context)
+        public MaterialFacetBinder(BinderContext context, ILogger<MaterialFacetBinder> logger) : base(context, logger)
         {
             this.logger = logger;
         }
@@ -40,7 +40,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             var expression = baseExpression;
             // When an Ifc Type has not yet been specified, we start with the IIfcRelAssociatesMaterial
-
+            
             if (expression.Type.IsInterface && typeof(IEntityCollection).IsAssignableFrom(expression.Type))
             {
                 expression = BindIfcExpressType(expression, Model.Metadata.GetExpressType(typeof(IIfcRelAssociatesMaterial)), false);
@@ -115,11 +115,11 @@ namespace Xbim.IDS.Validator.Core.Binders
             {
                 bool? success = null;
 
-
+                
                 foreach (var material in candidates)
                 {
                     var materialName = material;
-
+                    
                     if (facet.Value == null || facet.Value?.IsSatisfiedBy(materialName, true, logger) == true)
                     {
                         result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.Value!, materialName, "Material satisfied", item));
@@ -141,7 +141,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         private IEnumerable<string> GetMaterialsValues(IPersistEntity item)
         {
-            if (item is IIfcObjectDefinition obj)
+            if(item is IIfcObjectDefinition obj)
             {
                 var materials = IfcMaterialsExtensions.GetMaterialNames(obj.Material, logger);
 
@@ -158,7 +158,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
         }
 
-
+       
         private Expression BindMaterialSelection(Expression expression, MaterialFacet materialFacet)
         {
             if (materialFacet is null)

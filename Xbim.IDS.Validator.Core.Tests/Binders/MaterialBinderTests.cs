@@ -23,14 +23,14 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData("Concrete.*", 6, ConstraintType.Pattern)]
         [InlineData(".*Sand.*", 3, ConstraintType.Pattern)]
         [Theory]
-        public void Can_Query_By_Materials(string materialName, int expectedCount, ConstraintType conType = ConstraintType.Exact)
+        public void Can_Query_By_Materials(string materialName, int expectedCount, ConstraintType conType =  ConstraintType.Exact)
         {
 
             MaterialFacet facet = new MaterialFacet
             {
                 Value = new ValueConstraint(NetTypeName.String)
             };
-            switch (conType)
+            switch(conType)
             {
                 case ConstraintType.Exact:
                     facet.Value.AddAccepted(new ExactConstraint(materialName)); break;
@@ -49,7 +49,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         }
 
-
+       
 
     }
 }

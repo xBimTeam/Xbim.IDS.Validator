@@ -36,7 +36,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [Theory]
         public void Can_Query_By_Properties(string psetName, string propName, object propValue, int expectedCount,
             ConstraintType psetConstraint = ConstraintType.Exact,
-            ConstraintType propConstraint = ConstraintType.Exact,
+            ConstraintType propConstraint = ConstraintType.Exact, 
             ConstraintType valueConstraint = ConstraintType.Exact
             )
         {
@@ -54,8 +54,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData(323, null, "Area", 15.41678125d)]   // Technically not valid-Pset is required
         [InlineData(323, "", "Area", 15.41678125d)]     // ""
         [InlineData(323, " ", "Area", 15.41678125d)]    // ""
+        [InlineData(1229, "Pset_WallCommon", "ThermalTransmittance", 0.235926059936681d)]   // Derived Unit - THERMALTRANSMITTANCEUNIT
+        [InlineData(2826, "Constraints", "Angle", 1.570796326794897d)]   // Conversion-based Unit. PLANEANGLEUNIT - 90 degrees in Radians = pi/2
         [InlineData(10942, "Other", "Category", "Doors")] // Type
-        [InlineData(3951, "Dimensions", "Thickness", 25d / 1000)] // Type Inheritance
+        [InlineData(3951, "Dimensions", "Thickness", 25d/1000)] // Type Inheritance
         [Theory]
         public void Can_Validate_Properties(int entityLabel, string psetName, string propName, object expectedtext)
         {
@@ -63,11 +65,11 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             var entity = Model.Instances[entityLabel];
             var propFacet = new IfcPropertyFacet
             {
-
+                
                 PropertyName = propName,
                 PropertyValue = new ValueConstraint()
             };
-            if (psetName != null)
+            if(psetName != null)
             {
                 propFacet.PropertySetName = psetName;
             }
@@ -83,10 +85,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         }
 
-
+        
 
         [InlineData(177, "BaseQuantities", "GrossFloorArea", 51.9948250000001d)]
-        [InlineData(177, "BaseQuantities", "Height", 2500d / 1000)]
+        [InlineData(177, "BaseQuantities", "Height", 2500d/1000)]
         [InlineData(177, "BaseQuantities", "GrossVolume", 129987.0625d)]
         [Theory]
         public void Can_Validate_Quantites(int entityLabel, string psetName, string propName, double expectedquant)

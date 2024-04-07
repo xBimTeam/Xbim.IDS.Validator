@@ -17,7 +17,7 @@ namespace Xbim.IDS.Validator.Core.Binders
     {
         private readonly ILogger<IfcClassificationFacetBinder> logger;
 
-        public IfcClassificationFacetBinder(BinderContext context, ILogger<IfcClassificationFacetBinder> logger) : base(context)
+        public IfcClassificationFacetBinder(BinderContext context, ILogger<IfcClassificationFacetBinder> logger) : base(context, logger)
         {
             this.logger = logger;
         }
@@ -52,7 +52,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
 
             throw new NotSupportedException("Selection of Classifications must be the first expression in the graph");
-
+            
         }
 
         public override Expression BindWhereExpression(Expression baseExpression, IfcClassificationFacet facet)
@@ -87,7 +87,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 if (typeof(IIfcObjectDefinition).IsAssignableFrom(elementType))
                 {
                     // Objects and Types classified by HasAssociations
-
+                    
                     expression = BindClassificationFilter(expression, facet);
                     return expression;
                 }
@@ -110,7 +110,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         private static Expression BindSelectManyClassifications(ref Expression expression, Type elementType, Type selectReturnType, string propertyName)
         {
-
+            
             // var x = Model.Instances.OfType("IFCFURNITURE", true).Cast<IIfcFurniture>().SelectMany(o => o.HasAssociations).OfType<IIfcRelAssociatesClassification>();
             // We're building this expression
             //  IEnumerable<IIfcObjectDefinition>   .SelectMany(o => o.HasAssociations).OfType<IfcRelAssociatesClassification>()
@@ -144,23 +144,23 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             var ctx = CreateValidationContext(requirement, facet);
 
-            var candidates = GetClassifications2(item);
+            var candidates = GetClassifications(item).ToList();
 
             if (candidates.Any())
             {
                 bool? success = false;
                 foreach (var classification in candidates)
                 {
-                    if (IsMatchingClassification(classification, facet, ctx, result))
+                    if(IsMatchingClassification(classification, facet, ctx, result))
                     {
                         success = true;
                         break;
                     }
                 }
-                if (success == true)
+                if(success == true)
                 {
                     // Downgrade the Failures status as they were a false -ve if we later found a match
-                    foreach (var message in result.Messages.Where(m => m.Status == ValidationStatus.Fail))
+                    foreach(var message in result.Messages.Where(m => m.Status == ValidationStatus.Fail))
                     {
                         message.Status = ValidationStatus.Inconclusive;
                     }
@@ -168,7 +168,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             else
             {
-
+                
                 if (facet.ClassificationSystem != null)
                 {
                     result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.ClassificationSystem!, null, "No classifications system matching", item));
@@ -203,7 +203,8 @@ namespace Xbim.IDS.Validator.Core.Binders
                 }
                 if (!isSatisfied)
                 {
-                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Identification!, null, "No classifications matching", classification));
+                    var identifiers = string.Join(",", identifications.Distinct());
+                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Identification!, identifiers, "No classifications matching", classification));
                     return false;
                 }
             }
@@ -263,7 +264,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
 
-        private IEnumerable<IIfcClassificationSelect> GetClassifications2([NotNull] IPersistEntity item, bool isFirstPass = true)
+        private IEnumerable<IIfcClassificationSelect> GetClassifications([NotNull] IPersistEntity item,  bool isFirstPass = true)
         {
             if (item is IIfcObjectDefinition obj)
             {
@@ -271,9 +272,9 @@ namespace Xbim.IDS.Validator.Core.Binders
                 {
                     yield return cl;
                 }
-                if (item is IIfcObject o)
+                if(item is IIfcObject o)
                 {
-                    foreach (var type in o.IsTypedBy)
+                    foreach(var type in o.IsTypedBy)
                     {
                         foreach (var cl in type.RelatingType.HasAssociations.OfType<IIfcRelAssociatesClassification>().Select(r => r.RelatingClassification))
                         {

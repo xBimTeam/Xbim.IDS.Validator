@@ -10,7 +10,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
     public class PartOfBinderTests : BaseModelTester
     {
-        public PartOfBinderTests(ITestOutputHelper output, XbimSchemaVersion schema = XbimSchemaVersion.Ifc4) : base(output, schema)
+        public PartOfBinderTests(ITestOutputHelper output) : base(output)
         {
             Binder = new PartOfFacetBinder(BinderContext, Logger);
         }
@@ -36,7 +36,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData(PartOfRelation.IfcRelContainedInSpatialStructure, "IfcBuildingStorey", 20)]
         // TODO: Nests and Groups examples - none in the Sample model currently
         [Theory]
-        public void Can_Query_By_PartOf(PartOfRelation relation, string entityType, int expectedCount,
+        public void Can_Query_By_PartOf(PartOfRelation relation, string entityType, int expectedCount, 
             ConstraintType sysConType = ConstraintType.Exact)
         {
             var typeFacet = new IfcTypeFacet
@@ -45,7 +45,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             };
             PartOfFacet facet = new PartOfFacet
             {
-                EntityType = typeFacet
+               EntityType = typeFacet
             };
             facet.SetRelation(relation);
             switch (sysConType)
@@ -56,7 +56,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 case ConstraintType.Pattern:
                     typeFacet.IfcType.AddAccepted(new PatternConstraint(entityType)); break;
             }
-
+           
 
             // Act
             var expression = Binder.BindSelectionExpression(query.InstancesExpression, facet);
@@ -76,7 +76,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         //[InlineData(38397, PartOfRelation.IfcRelContainedInSpatialStructure, "IfcSite")]
         // TODO: Nests, Groups
         [Theory]
-        public void Can_Validate_Parts(int entityLabel, PartOfRelation relation, string entityType)
+        public void Can_Validate_Parts(int entityLabel, PartOfRelation relation,  string entityType)
         {
 
             var entity = Model.Instances[entityLabel];

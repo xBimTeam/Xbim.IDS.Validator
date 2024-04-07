@@ -8,7 +8,7 @@ using static Xbim.InformationSpecifications.PartOfFacet;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
-    public class CombinedFacetBinderTests : BaseModelTester
+    public class CombinedFacetBinderTests: BaseModelTester
     {
 
         public CombinedFacetBinderTests(ITestOutputHelper output) : base(output)
@@ -33,7 +33,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 AttributeName = attributeFieldName,
                 AttributeValue = new ValueConstraint(attributeValue)
             };
-
+  
             var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
 
             var attrbinder = new AttributeFacetBinder(BinderContext, GetLogger<AttributeFacetBinder>());
@@ -59,7 +59,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             {
                 IfcType = new ValueConstraint(NetTypeName.String),
             };
-
+            
             ifcFacet.IfcType.AddAccepted(new ExactConstraint("IFCDOOR"));
             ifcFacet.IfcType.AddAccepted(new ExactConstraint("IFCWINDOW"));
             AttributeFacet attrFacet = new AttributeFacet
@@ -69,7 +69,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             };
             attrFacet.AttributeValue.AddAccepted(new StructureConstraint() { MinLength = 1, MaxLength = 10 });
 
-
+   
             var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
 
             var attrbinder = new AttributeFacetBinder(BinderContext, GetLogger<AttributeFacetBinder>());
@@ -98,7 +98,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         public void Can_Query_By_Ifc_And_Classifications(string ifcType, string system, string ident, int expectedCount)
         {
 
-
+            
             IfcTypeFacet ifcFacet = new IfcTypeFacet
             {
                 IfcType = new ValueConstraint(ifcType),
@@ -108,7 +108,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             {
                 ClassificationSystem = system,
             };
-            if (!string.IsNullOrEmpty(ident))
+            if(!string.IsNullOrEmpty(ident))
             {
                 classFacet.Identification = new ValueConstraint(ident);
             }
@@ -128,9 +128,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         }
 
 
+       
 
-
-
+        
         //TODO: Tests for Docs etc
 
 
@@ -175,7 +175,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData("IfcWall", "Construction", "Function", "Exterior", 3)]  // Via Type
         [InlineData("IfcWallType", "Construction", "Function", "Exterior", 1)]
         [Theory]
-        public void Can_Query_By_Ifc_And_Properties(string ifcType, string psetName, string propName, object value, int expectedCount)
+        public void Can_Query_By_Ifc_And_Properties(string ifcType, string psetName, string propName, object value,  int expectedCount)
         {
             IfcTypeFacet ifcFacet = new IfcTypeFacet
             {
@@ -188,9 +188,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 PropertyName = new ValueConstraint(NetTypeName.String),
                 PropertyValue = new ValueConstraint(),
             };
-            propertyFacet.PropertySetName.AddAccepted(new ExactConstraint(psetName));
+            propertyFacet.PropertySetName.AddAccepted( new ExactConstraint(psetName));
             propertyFacet.PropertyName.AddAccepted(new ExactConstraint(propName));
-            if (value != null)
+            if(value != null)
                 propertyFacet.PropertyValue.AddAccepted(new ExactConstraint(value?.ToString()));
             var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
 
@@ -204,7 +204,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             var result = query.Execute(expression, Model);
             result.Should().HaveCount(expectedCount);
-
+            
         }
 
 
@@ -221,7 +221,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             {
                 PropertySetName = new ValueConstraint("Pset_MaterialCombustion"),
                 PropertyName = new ValueConstraint("SpecificHeatCapacity"),
-                Measure = "IFCLABEL"
+                DataType = "IFCLABEL"
             };
 
             var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
@@ -253,8 +253,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 EntityType = new IfcTypeFacet() { IfcType = entityType }
             };
             partOfFacet.SetRelation(partOfRelation);
-
-
+            
+            
             var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
 
             var partOfbinder = new PartOfFacetBinder(BinderContext, GetLogger<PartOfFacetBinder>());

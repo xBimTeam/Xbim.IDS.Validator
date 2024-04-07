@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -11,7 +12,6 @@ using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc4.Interfaces;
-using Xbim.Ifc4.MeasureResource;
 using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Binders
@@ -22,16 +22,19 @@ namespace Xbim.IDS.Validator.Core.Binders
     /// enabling late-bound querying and filtering of Entities
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public abstract class FacetBinderBase<T> : IFacetBinder<T> where T : IFacet
+    public abstract class FacetBinderBase<T> : IFacetBinder<T> where T: IFacet
     {
+        private readonly ILogger<FacetBinderBase<T>> logger;
+
         /// <summary>
         /// Constructs a new <see cref="FacetBinderBase{T}"/>
         /// </summary>
-        /// <param name="model"></param>
-        public FacetBinderBase(BinderContext binderContext)
+        /// <param name="binderContext"></param>
+        /// <param name="logger"></param>
+        public FacetBinderBase(BinderContext binderContext, ILogger<FacetBinderBase<T>> logger)
         {
             BinderContext = binderContext ?? throw new ArgumentNullException(nameof(binderContext));
-
+            this.logger = logger;
         }
 
         public BinderContext BinderContext { get; }
@@ -57,7 +60,6 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// </summary>
         /// <param name="item"></param>
         /// <param name="requirement"></param>
-        /// <param name="logger"></param>
         /// <param name="result"></param>
         /// <param name="facet"></param>
         public abstract void ValidateEntity(IPersistEntity item, T facet, RequirementCardinalityOptions requirement, IdsValidationResult result);
@@ -65,7 +67,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         protected static bool ExpressTypesAreValid(IEnumerable<ExpressType> expressTypes)
         {
-            if (!expressTypes.Any())
+            if(!expressTypes.Any())
             {
                 return false;
             }
@@ -97,7 +99,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <returns></returns>
         protected static IEnumerable<ExpressMetaProperty> GetAllProperties(ExpressType expressType, VerificationOptions options)
         {
-            if (options?.AllowDerivedAttributes == true)
+            if(options?.AllowDerivedAttributes == true)
             {
                 return expressType.Inverses.Union(
                     expressType.Derives.Union(
@@ -112,6 +114,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// </summary>
         /// <param name="expression"></param>
         /// <param name="expressType"></param>
+        /// <param name="includeSubTypes"></param>
         /// <returns></returns>
         protected Expression BindIfcExpressType(Expression expression, ExpressType expressType, bool includeSubTypes = false)
         {
@@ -124,10 +127,10 @@ namespace Xbim.IDS.Validator.Core.Binders
             var ofTypeMethod = ExpressionHelperMethods.EntityCollectionOfGenericType.MakeGenericMethod(expressType.Type);
 
             // call .OfType<IfcWall>(activated: true)
-            expression = Expression.Call(expression, ofTypeMethod, Expression.Constant(true));
+            expression = Expression.Call(expression, ofTypeMethod, Expression.Constant(true)); 
             // Now we've found all Ifc Types implementing the Type, cast to the type
             // This will include subclasses. 
-            if (!includeSubTypes)
+            if(!includeSubTypes)
             {
                 // Build expression `.Where(e => e.GetType() == expression.Type)`
 
@@ -154,10 +157,10 @@ namespace Xbim.IDS.Validator.Core.Binders
                 var filterExpression = Expression.Lambda(queryBody, ifcTypeParam);
 
                 // Bind Lambda to Where method
-                expression = Expression.Call(null, whereMethod, new[] { expression, filterExpression });
+                expression =  Expression.Call(null, whereMethod, new[] { expression, filterExpression });
 
             }
-
+            
 
 
             return expression;
@@ -196,8 +199,8 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             var getTypeMethod = ExpressionHelperMethods.GetTypeMethod;
             var isTypedByExpr = Expression.Property(ifcTypeParam, "IsTypedBy");
-
-            Expression entityTypeProperty = Expression.Call(isTypedByExpr, getTypeMethod);
+           
+            Expression entityTypeProperty =  Expression.Call(isTypedByExpr, getTypeMethod);
 
             // => ent.IsDefinedBy.FirstOrDefault().GetType() == expression.Type
             Expression queryBody = Expression.Equal(entityTypeProperty, Expression.Constant(selection.DefiningExpressType.Type));
@@ -212,17 +215,17 @@ namespace Xbim.IDS.Validator.Core.Binders
             // Bind Lambda to Where method
             expression = Expression.Call(null, whereMethod, new[] { expression, filterExpression });
 
-
+            
 
 
 
             return expression;
         }
 
-        internal Expression BindIfcExpressTypes(Expression expression, string[] rootTypes)
+        internal Expression BindIfcExpressTypes(Expression expression, IEnumerable<string> rootTypes)
         {
             IEnumerable<ExpressType> expressTypes = GetExpressTypes(rootTypes);
-            if (!ExpressTypesAreValid(expressTypes))
+            if(!ExpressTypesAreValid(expressTypes))
             {
                 var types = string.Join(',', rootTypes);
                 throw new InvalidOperationException($"Invalid IFC Types '{types}'");
@@ -232,9 +235,9 @@ namespace Xbim.IDS.Validator.Core.Binders
             bool doConcat = false;
             foreach (var expressType in expressTypes)
             {
-
+                
                 var rightExpr = BindIfcExpressType(baseExpression, expressType, true);
-
+               
 
                 // Union to main expression.
                 if (doConcat)
@@ -284,16 +287,16 @@ namespace Xbim.IDS.Validator.Core.Binders
             return Expression.Call(null, whereMethod, new[] { expression, filterExpression });
         }
 
-        private IEnumerable<ExpressType> GetExpressTypes(string[] ifcTypes)
+        protected IEnumerable<ExpressType> GetExpressTypes(IEnumerable<string> ifcTypes)
         {
-            foreach (var type in ifcTypes)
+            foreach(var type in ifcTypes)
             {
                 yield return Model.Metadata.ExpressType(type.ToUpperInvariant());
             }
         }
 
         /// <summary>
-        /// Concatenate two Enumerable expressions together
+        /// Concatenate two Enumerable expressions together casting to the highest common type
         /// </summary>
         /// <param name="expression"></param>
         /// <param name="right"></param>
@@ -303,10 +306,21 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             // e.g. Concat an IfcObjectDefinition + IfcTypeObject => IfcObject
             Type highestCommonType = GetCommonAncestor(expression, right);
-            expression = Expression.Call(null, ExpressionHelperMethods.EnumerableCastGeneric.MakeGenericMethod(highestCommonType), expression);
+            expression = BindCast(expression, highestCommonType);
 
             expression = Expression.Call(null, ExpressionHelperMethods.EnumerableConcatGeneric.MakeGenericMethod(highestCommonType), expression, right);
             return expression;
+        }
+
+        /// <summary>
+        /// Casts a enumerable collection to a type
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        protected Expression BindCast(Expression expression, Type type)
+        {
+            return Expression.Call(null, ExpressionHelperMethods.EnumerableCastGeneric.MakeGenericMethod(type), expression);
         }
 
         private Type GetCommonAncestor(Expression left, Expression right)
@@ -316,7 +330,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             var ancestors = new HashSet<ExpressType>();
             var express = Model.Metadata.ExpressType(leftType);
-            while (express != null)
+            while(express != null)
             {
                 ancestors.Add(express);
                 express = express.SuperType;
@@ -324,47 +338,13 @@ namespace Xbim.IDS.Validator.Core.Binders
             express = Model.Metadata.ExpressType(rightType);
             while (express != null)
             {
-                if (ancestors.Contains(express))
+                if(ancestors.Contains(express))
                 {
                     return express.Type;
                 }
                 express = express.SuperType;
             }
-            return typeof(IIfcRoot);
-        }
-
-        protected object? ApplyWorkarounds([MaybeNull] object? value, ValueConstraint constraint)
-        {
-            // Workaround for a bug in XIDS Satisfied test where we don't coerce numeric types correctly
-            switch (constraint.BaseType)
-            {
-                case NetTypeName.Integer:
-                    {
-                        if (value is double || value is float)
-                        {
-                            return Convert.ToInt32(value);
-                        }
-                        break;
-                    }
-
-                case NetTypeName.Double:
-                case NetTypeName.Undefined:
-                case NetTypeName.Floating:
-                    {
-                        // TODO: Review. We treat all integers as Doubles when not explicitly stated.
-                        // Impacts casting tests
-                        if (value is long l)
-                            return Convert.ToDouble(l);
-
-
-                        if (value is int i)
-                            return Convert.ToDouble(i);
-                        break;
-                    }
-            }
-
-
-            return value;
+            return typeof(IPersistEntity);
         }
 
         protected IIfcValue? UnwrapQuantity(IIfcPhysicalQuantity quantity)
@@ -372,27 +352,29 @@ namespace Xbim.IDS.Validator.Core.Binders
             return quantity.UnwrapQuantity();
         }
 
-        protected object UnwrapValue(IIfcValue? value)
+        /// <summary>
+        /// Gets the primitive value in the standard IDS ISO units.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        protected object GetNormalisedValue(IIfcValue? value)
         {
             object result = HandleBoolConventions(value);
-            if (result is IIfcMeasureValue)
+            if (result is IIfcMeasureValue measure)
             {
-                if (IsIfc2x3Model())
-                {
-                    result = HandleUnitConversionIfc2x3(value);
-                }
-                else if (IsIfc4x3Model())
-                {
-                    result = HandleUnitConversionIfc4x3(value);
-                }
-                else
-                {
-                    result = HandleUnitConversionIfc4(value);
-                }
+                var units = GetUnits();
+                result = measure.NormaliseUnits(units);
             }
+
+            // TODO: Review if we have to do anything with derived
+            //else if(result is IIfcDerivedMeasureValue derived)
+            //{
+            //    var units = GetUnits();
+            //    result = derived.NormaliseUnits(units);
+            //}
             if (result is IIfcValue v)
             {
-                result = v.Value;
+                result = v.Value;   // Unpack the primitive object
             }
 
             return result;
@@ -401,176 +383,9 @@ namespace Xbim.IDS.Validator.Core.Binders
         protected IIfcUnitAssignment? GetUnits()
         {
             var project = Model.Instances.OfType<IIfcProject>().First();
-
+            
 
             return project?.UnitsInContext ?? default;
-        }
-
-
-        protected IIfcValue HandleUnitConversionIfc4(IIfcValue value)
-        {
-            var units = GetUnits() as IfcUnitAssignment;
-
-            if (units == null) return value;
-
-
-            if (value is IfcCountMeasure c)
-                return c;
-            if (value is IfcAreaMeasure area)
-            {
-                var unit = units.AreaUnit;
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcAreaMeasure(area * si.Power);
-                }
-                return area;
-            }
-            else if (value is IfcLengthMeasure l)
-            {
-                var unit = units.LengthUnit;
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcLengthMeasure(l * si.Power);
-                }
-                return l;
-            }
-            else if (value is IfcVolumeMeasure v)
-            {
-                var unit = units.VolumeUnit;
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcMassMeasure(v * si.Power);
-                }
-                return v;
-            }
-
-            // TODO Add remaining measures
-            //if (value is IfcMassMeasure w)
-            //{
-            //    var unit = units.GetUnitFor(w);
-            //    if (unit is IIfcSIUnit si)
-            //    {
-            //        return new IfcMassMeasure(v * si.Power);
-            //    }
-            //    return w;
-            //}
-
-            if (value is IfcTimeMeasure t)
-                return t;
-            else
-                return value;
-            //throw new NotImplementedException(value.GetType().Name);
-        }
-
-        protected IIfcValue HandleUnitConversionIfc4x3(IIfcValue value)
-        {
-            var units = GetUnits() as Ifc4x3.MeasureResource.IfcUnitAssignment;
-
-            if (units == null) return value;
-
-
-            if (value is IfcCountMeasure c)
-                return c;
-            if (value is IfcAreaMeasure area)
-            {
-                var unit = units.AreaUnit();
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcAreaMeasure(area * si.Power);
-                }
-                return area;
-            }
-            else if (value is IfcLengthMeasure l)
-            {
-                var unit = units.LengthUnit();
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcLengthMeasure(l * si.Power);
-                }
-                return l;
-            }
-            else if (value is IfcVolumeMeasure v)
-            {
-                var unit = units.VolumeUnit();
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcMassMeasure(v * si.Power);
-                }
-                return v;
-            }
-
-            // TODO Add remaining measures
-            //if (value is IfcMassMeasure w)
-            //{
-            //    var unit = units.GetUnitFor(w);
-            //    if (unit is IIfcSIUnit si)
-            //    {
-            //        return new IfcMassMeasure(v * si.Power);
-            //    }
-            //    return w;
-            //}
-
-            if (value is IfcTimeMeasure t)
-                return t;
-            else
-                return value;
-            //throw new NotImplementedException(value.GetType().Name);
-        }
-
-
-        protected IIfcValue HandleUnitConversionIfc2x3(IIfcValue value)
-        {
-            var units = GetUnits() as Ifc2x3.MeasureResource.IfcUnitAssignment;
-
-            if (units == null) return value;
-
-
-            if (value is IfcCountMeasure c)
-                return c;
-            if (value is IfcAreaMeasure area)
-            {
-                var unit = units.AreaUnit;
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcAreaMeasure(area * si.Power);
-                }
-                return area;
-            }
-            else if (value is IfcLengthMeasure l)
-            {
-                var unit = units.LengthUnit;
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcLengthMeasure(l * si.Power);
-                }
-                return l;
-            }
-            else if (value is IfcVolumeMeasure v)
-            {
-                var unit = units.VolumeUnit;
-                if (unit is IIfcSIUnit si)
-                {
-                    return new IfcMassMeasure(v * si.Power);
-                }
-                return v;
-            }
-
-            // TODO Add remaining measures
-            //if (value is IfcMassMeasure w)
-            //{
-            //    var unit = units.GetUnitFor(w);
-            //    if (unit is IIfcSIUnit si)
-            //    {
-            //        return new IfcMassMeasure(v * si.Power);
-            //    }
-            //    return w;
-            //}
-
-            if (value is IfcTimeMeasure t)
-                return t;
-            else
-                return value;
-            //throw new NotImplementedException(value.GetType().Name);
         }
 
         protected bool IsIfc2x3Model()

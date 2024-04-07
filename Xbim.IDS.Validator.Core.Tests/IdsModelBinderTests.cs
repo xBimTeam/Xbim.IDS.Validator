@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xbim.Common;
+using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.IDS.Validator.Core.Tests.TestModels;
 using Xbim.Ifc;
@@ -14,7 +15,7 @@ namespace Xbim.IDS.Validator.Core.Tests
     [Collection(nameof(TestEnvironment))]
     public class IdsModelBinderTests
     {
-
+        
         private readonly ITestOutputHelper output;
         private readonly IServiceProvider provider;
 
@@ -39,28 +40,28 @@ namespace Xbim.IDS.Validator.Core.Tests
             var logger = TestEnvironment.GetXunitLogger<IdsModelBinderTests>(output);
 
             var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idcFile, logger);
+            
 
-
-            foreach (var group in idsSpec.SpecificationsGroups)
+            foreach(var group in idsSpec.SpecificationsGroups)
             {
                 logger.LogInformation("opening '{group}'", group.Name);
-                foreach (var spec in group.Specifications)
+                foreach(var spec in group.Specifications)
                 {
                     logger.LogInformation(" -- Spec '{spec}' : versions {ifcVersions}", spec.Name, spec.IfcVersion);
                     var applicableIfc = spec.Applicability.Facets.OfType<IfcTypeFacet>().FirstOrDefault();
                     logger.LogInformation("    Applicable to : {entity} with PredefinedType {predefined}", applicableIfc.IfcType.Short(), applicableIfc.PredefinedType?.Short());
-                    foreach (var applicableFacet in spec.Applicability.Facets)
+                    foreach(var applicableFacet in spec.Applicability.Facets)
                     {
-                        logger.LogInformation("       - {facetType}: where {description} ", applicableFacet.GetType().Name, applicableFacet.Short());
+                        logger.LogInformation("       - {facetType}: where {description} ", applicableFacet.GetType().Name, applicableFacet.Short() );
                     }
 
-                    logger.LogInformation("    Requirements {reqCount}: {expectation}", spec.Requirement.Facets.Count, spec.Requirement.RequirementOptions?.FirstOrDefault().ToString() ?? "");
+                    logger.LogInformation("    Requirements {reqCount}: {expectation}", spec.Requirement.Facets.Count, spec.Requirement.RequirementOptions?.FirstOrDefault().ToString() ?? "" );
                     int idx = 1;
                     foreach (var reqFacet in spec.Requirement.Facets)
                     {
                         logger.LogInformation("       [{i}] {facetType}: check {description} ", idx++, reqFacet.GetType().Name, reqFacet.Short());
                     }
-                    IEnumerable<IPersistEntity> items = modelBinder.SelectApplicableEntities(model, spec);
+                    IEnumerable <IPersistEntity> items = modelBinder.SelectApplicableEntities(model, spec);
                     logger.LogInformation("          Checking {count} applicable items", items.Count());
                     foreach (var item in items)
                     {

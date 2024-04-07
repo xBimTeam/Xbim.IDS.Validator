@@ -48,12 +48,12 @@ namespace Xbim.IDS.Validator.Core
         /// <param name="overrideForSchema">The schema to override the binding</param>
         /// <returns></returns>
         public static IServiceCollection RegisterIdsBinder<TFacet, TBinder>(this IServiceCollection services, XbimSchemaVersion? overrideForSchema = null)
-            where TFacet : IFacet
+            where TFacet: IFacet
             where TBinder : class, IFacetBinder<TFacet>
         {
-
+            
             services.TryAddTransient<TBinder>();
-            services.Configure<IdsBinderFactoryOptions>(options => options.Register<TFacet, TBinder>(overrideForSchema));
+            services.Configure<IdsBinderFactoryOptions>(options => options.Register<TFacet,TBinder>(overrideForSchema));
             return services;
         }
 

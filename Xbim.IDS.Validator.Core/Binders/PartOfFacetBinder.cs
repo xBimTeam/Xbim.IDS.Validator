@@ -15,7 +15,7 @@ namespace Xbim.IDS.Validator.Core.Binders
     {
         private readonly ILogger<PartOfFacetBinder> logger;
 
-        public PartOfFacetBinder(BinderContext binderContext, ILogger<PartOfFacetBinder> logger) : base(binderContext)
+        public PartOfFacetBinder(BinderContext binderContext, ILogger<PartOfFacetBinder> logger) : base(binderContext, logger)
         {
             this.logger = logger;
         }
@@ -40,9 +40,9 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             var expression = baseExpression;
             // When an Ifc Type has not yet been specified, we start with the EntityRelation Type defined by the facet
-
+            
             var expressType = Model.Metadata.ExpressType(facet.EntityRelation.ToUpperInvariant());
-            if (expressType == null)
+            if(expressType == null)
             {
                 logger.LogWarning("Unexpected EntityRelation: {ifcTypes} for schema {ifcSchema}", expressType, Model.SchemaVersion);
                 throw new InvalidOperationException($"Invalid EntityRelation '{expressType}' for {Model.SchemaVersion}");
@@ -110,14 +110,14 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         public override void ValidateEntity(IPersistEntity item, PartOfFacet facet, RequirementCardinalityOptions requirement, IdsValidationResult result)
         {
-
+            
             if (facet is null)
             {
                 throw new ArgumentNullException(nameof(facet));
             }
             if (facet.EntityType != null)
             {
-                if (facet.EntityType.IfcType != null)
+                if(facet.EntityType.IfcType != null)
                 {
                     facet.EntityType.IfcType.BaseType = NetTypeName.String;
                 }
@@ -136,7 +136,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 foreach (var part in candidates)
                 {
                     var partType = part.GetType().Name;
-
+           
                     result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.EntityType!, partType, "Part found", part));
                 }
             }
