@@ -201,6 +201,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                     if (!AllowedStatuses.Contains(fileValidity))
                     {
                         outcome.MarkCompletelyFailed($"IDS Validation failure {fileValidity}");
+                        logger.LogWarning("IDS File invalid: {errorCode}", fileValidity);
                     }
                 }
                 

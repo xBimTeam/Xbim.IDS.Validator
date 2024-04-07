@@ -17,14 +17,6 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
             // Schema dependent tests
 
-            // Broken tests - Need IDS review as they are invalid. E.g. requirements stated where applicability is Prohibited
-            { "fail-prohibited_specifications_fail_if_at_least_one_entity_passes_all_requirements_3_3.ids", new [] { XbimSchemaVersion.Unsupported } },
-
-            { "pass-a_prohibited_specification_and_a_prohibited_facet_results_in_a_double_negative.ids", new [] { XbimSchemaVersion.Unsupported } },
-            { "pass-multiple_specifications_are_independent_of_one_another.ids", new [] { XbimSchemaVersion.Unsupported } },
-            { "pass-prohibited_specifications_fail_if_at_least_one_entity_passes_all_requirements_2_3.ids", new [] { XbimSchemaVersion.Unsupported } },
-            { "pass-prohibited_specifications_fail_if_at_least_one_entity_passes_all_requirements_1_3.ids", new [] { XbimSchemaVersion.Unsupported } },
-
 
         };
 
@@ -54,16 +46,23 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             }
         }
 
-        // TODO: These Prohibited test cases are no longer valid. 
-        [MemberData(nameof(GetUnsupportedTestCases))]
-        [SkippableTheory]
-        public async Task ToImplement(string idsFile)
+        
+
+        [MemberData(nameof(GetInvalidTestCases))]
+        [Theory]
+        public async Task ExpectedInvalid(string idsFile, params XbimSchemaVersion[] schemas)
         {
-            var outcome = await VerifyIdsFile(idsFile, validateIds: true);
+            foreach (var schema in GetSchemas(schemas))
+            {
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema, validateIds: true);
 
-            Skip.If(outcome.Status == ValidationStatus.Error, "TestCases need review. isd-lib reports error 204: requirements are not allowed when applicability is prohibited");
+                outcome.Status.Should().Be(ValidationStatus.Error, schema.ToString());
+            }
+        }
 
-            outcome.Status.Should().Be(ValidationStatus.Pass);
+        public static IEnumerable<object[]> GetInvalidTestCases()
+        {
+            return GetApplicableTestCases(TestCaseFolder, "invalid", testExceptions);
         }
 
 

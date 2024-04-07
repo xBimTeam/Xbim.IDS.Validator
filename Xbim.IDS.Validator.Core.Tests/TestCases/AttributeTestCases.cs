@@ -28,6 +28,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             { "pass-integers_follow_the_same_rules_as_numbers.ids", new [] { XbimSchemaVersion.Ifc4 } },        // StairFlight.NumberOfRiser[s] got renamed in IFC4
             { "pass-integers_follow_the_same_rules_as_numbers_2_2.ids", new [] { XbimSchemaVersion.Ifc4 } },
 
+            { "pass-dates_are_treated_as_strings_2_2.ids" , new [] { XbimSchemaVersion.Ifc4} },
 
             // Unsupported tests
             // None
