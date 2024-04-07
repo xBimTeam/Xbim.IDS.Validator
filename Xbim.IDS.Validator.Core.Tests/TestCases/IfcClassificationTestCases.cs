@@ -6,7 +6,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 {
     public class IfcClassificationTestCases : BaseTest
     {
-        private const string TestCaseFolder = "class";
+        private const string TestCaseFolder = "classification";
 
         public IfcClassificationTestCases(ITestOutputHelper output) : base(output)
         {
