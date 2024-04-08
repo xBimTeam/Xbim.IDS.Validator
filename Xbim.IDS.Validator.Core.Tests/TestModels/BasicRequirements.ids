@@ -1,24 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ids:ids xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://standards.buildingsmart.org/IDS http://standards.buildingsmart.org/IDS/ids.xsd" xmlns:ids="http://standards.buildingsmart.org/IDS">
+<ids:ids xmlns:ids="http://standards.buildingsmart.org/IDS" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://standards.buildingsmart.org/IDS http://standards.buildingsmart.org/IDS/0.9.7/ids.xsd">
   <ids:info>
     <ids:title />
   </ids:info>
   <ids:specifications>
-    <ids:specification ifcVersion="IFC4" name="There should be a Project Name" minOccurs="1">
-      <ids:applicability>
+    <ids:specification ifcVersion="IFC4" name="There should be a Project Name">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
         <ids:entity>
           <ids:name>
             <xs:restriction base="xs:string">
-              <xs:enumeration value="IfcProject" />
+              <xs:enumeration value="IFCPROJECT" />
             </xs:restriction>
           </ids:name>
-          <ids:predefinedType>
-            <ids:simpleValue></ids:simpleValue>
-          </ids:predefinedType>
         </ids:entity>
       </ids:applicability>
       <ids:requirements>
-        <ids:attribute minOccurs="1" maxOccurs="unbounded">
+        <ids:attribute>
           <ids:name>
             <xs:restriction base="xs:string">
               <xs:enumeration value="Name" />
@@ -33,19 +30,16 @@
         </ids:attribute>
       </ids:requirements>
     </ids:specification>
-    <ids:specification ifcVersion="IFC4" name="There should be a Site Name" minOccurs="1">
-      <ids:applicability>
+    <ids:specification ifcVersion="IFC4" name="There should be a Site Name">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
         <ids:entity>
           <ids:name>
-            <ids:simpleValue>IfcSite</ids:simpleValue>
+            <ids:simpleValue>IFCSITE</ids:simpleValue>
           </ids:name>
-          <ids:predefinedType>
-            <ids:simpleValue></ids:simpleValue>
-          </ids:predefinedType>
         </ids:entity>
       </ids:applicability>
       <ids:requirements>
-        <ids:attribute minOccurs="1" maxOccurs="unbounded">
+        <ids:attribute>
           <ids:name>
             <xs:restriction base="xs:string">
               <xs:enumeration value="Name" />
@@ -60,11 +54,11 @@
         </ids:attribute>
       </ids:requirements>
     </ids:specification>
-    <ids:specification ifcVersion="IFC4" name="Are Levels Defined" minOccurs="1">
-      <ids:applicability>
+    <ids:specification ifcVersion="IFC4" name="Are Levels Defined">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
         <ids:entity>
           <ids:name>
-            <ids:simpleValue>IfcBuildingStorey</ids:simpleValue>
+            <ids:simpleValue>IFCBUILDINGSTOREY</ids:simpleValue>
           </ids:name>
         </ids:entity>
       </ids:applicability>
@@ -75,11 +69,8 @@
               <xs:enumeration value="IFCBUILDINGSTOREY" />
             </xs:restriction>
           </ids:name>
-          <ids:predefinedType>
-            <ids:simpleValue></ids:simpleValue>
-          </ids:predefinedType>
         </ids:entity>
-        <ids:attribute minOccurs="1" maxOccurs="unbounded">
+        <ids:attribute>
           <ids:name>
             <xs:restriction base="xs:string">
               <xs:enumeration value="Name" />
@@ -93,18 +84,18 @@
         </ids:attribute>
       </ids:requirements>
     </ids:specification>
-    <ids:specification ifcVersion="IFC4" name="A Uniclass Classification System Exists" minOccurs="1">
-      <ids:applicability>
+    <ids:specification ifcVersion="IFC4" name="A Uniclass Classification System Exists">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
         <ids:entity>
           <ids:name>
             <xs:restriction base="xs:string">
-              <xs:enumeration value="IfcClassification" />
+              <xs:enumeration value="IFCCLASSIFICATION" />
             </xs:restriction>
           </ids:name>
         </ids:entity>
       </ids:applicability>
       <ids:requirements>
-        <ids:attribute minOccurs="1" maxOccurs="unbounded">
+        <ids:attribute>
           <ids:name>
             <xs:restriction base="xs:string">
               <xs:enumeration value="Name" />
@@ -118,15 +109,12 @@
         </ids:attribute>
       </ids:requirements>
     </ids:specification>
-    <ids:specification ifcVersion="IFC4" name="Spaces are Defined" minOccurs="1">
-      <ids:applicability>
+    <ids:specification ifcVersion="IFC4" name="Spaces are Defined">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
         <ids:entity>
           <ids:name>
-            <ids:simpleValue>IfcSpace</ids:simpleValue>
+            <ids:simpleValue>IFCSPACE</ids:simpleValue>
           </ids:name>
-          <ids:predefinedType>
-            <ids:simpleValue></ids:simpleValue>
-          </ids:predefinedType>
         </ids:entity>
       </ids:applicability>
       <ids:requirements>
@@ -137,7 +125,7 @@
             </xs:restriction>
           </ids:name>
         </ids:entity>
-        <ids:attribute minOccurs="1" maxOccurs="unbounded">
+        <ids:attribute>
           <ids:name>
             <xs:restriction base="xs:string">
               <xs:enumeration value="Name" />

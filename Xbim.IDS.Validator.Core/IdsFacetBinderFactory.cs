@@ -23,11 +23,11 @@ namespace Xbim.IDS.Validator.Core
         /// <typeparam name="TFacet"></typeparam>
         /// <typeparam name="TBinder"></typeparam>
         /// <param name="schemaVersion"></param>
-        public void Register<TFacet, TBinder>(XbimSchemaVersion? schemaVersion)
-            where TFacet : IFacet
-            where TBinder : IFacetBinder<TFacet>
+        public void Register<TFacet, TBinder>(XbimSchemaVersion? schemaVersion) 
+            where TFacet : IFacet 
+            where TBinder: IFacetBinder<TFacet>
         {
-            if (schemaVersion.HasValue)
+            if(schemaVersion.HasValue)
             {
                 var schemaMappings = SchemaOverrideMappings.GetOrAdd(schemaVersion.Value, _ => new Dictionary<Type, Type>());
                 schemaMappings.Add(typeof(TFacet), typeof(TBinder));
@@ -87,9 +87,9 @@ namespace Xbim.IDS.Validator.Core
         private bool TryGetBinderType(XbimSchemaVersion schema, IFacet facet, out Type value)
         {
             // First we look to see if there's a schema-based overide of the mapping. E.g. COBie replaces some of the Binders
-            if (SchemaOverrideMappings.TryGetValue(schema, out var schemaOverrides))
+            if(SchemaOverrideMappings.TryGetValue(schema, out var schemaOverrides))
             {
-                if (schemaOverrides.TryGetValue(facet.GetType(), out value))
+                if(schemaOverrides.TryGetValue(facet.GetType(), out value))
                 {
                     // We have an override for this schema
                     return true;

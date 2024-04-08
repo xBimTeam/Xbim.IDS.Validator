@@ -19,6 +19,8 @@ namespace Xbim.IDS.Validator.Core
 
             services.AddTransient<IIdsModelBinder, IdsModelBinder>();
             services.AddTransient<IIdsModelValidator, IdsModelValidator>();
+            services.AddTransient<IIdsValidator, IdsValidator>();
+            services.AddTransient<IIdsSchemaMigrator, IdsSchemaMigrator>();
             services.AddScoped<BinderContext>();
             services.AddSingleton<IIdsFacetBinderFactory, IdsFacetBinderFactory>();
 
@@ -48,12 +50,12 @@ namespace Xbim.IDS.Validator.Core
         /// <param name="overrideForSchema">The schema to override the binding</param>
         /// <returns></returns>
         public static IServiceCollection RegisterIdsBinder<TFacet, TBinder>(this IServiceCollection services, XbimSchemaVersion? overrideForSchema = null)
-            where TFacet : IFacet
+            where TFacet: IFacet
             where TBinder : class, IFacetBinder<TFacet>
         {
-
+            
             services.TryAddTransient<TBinder>();
-            services.Configure<IdsBinderFactoryOptions>(options => options.Register<TFacet, TBinder>(overrideForSchema));
+            services.Configure<IdsBinderFactoryOptions>(options => options.Register<TFacet,TBinder>(overrideForSchema));
             return services;
         }
 

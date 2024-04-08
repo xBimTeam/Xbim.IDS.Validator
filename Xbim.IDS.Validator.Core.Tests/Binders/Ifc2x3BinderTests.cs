@@ -67,8 +67,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             IfcPropertyFacet propertyFacet = new IfcPropertyFacet
             {
-                PropertySetName = new ValueConstraint(NetTypeName.String),
-                PropertyName = new ValueConstraint(NetTypeName.String),
+                PropertySetName = new ValueConstraint(),
+                PropertyName = new ValueConstraint(),
                 PropertyValue = new ValueConstraint(),
             };
             propertyFacet.PropertySetName.AddAccepted(new ExactConstraint(psetName));
@@ -91,7 +91,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         }
 
 
-        [InlineData("Pset_WallCommon", "IsExternal", "True",
+        [InlineData("Pset_WallCommon", "IsExternal", "True", 
             "Pset_WallCommon", "LoadBearing", "False", 129)]
         [InlineData("Pset_WallCommon", "IsExternal", "True",
             "Pset_WallCommon", "LoadBearing", "True", 7)]
@@ -103,14 +103,14 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         {
             IfcPropertyFacet propertyFacet = new IfcPropertyFacet
             {
-                PropertySetName = new ValueConstraint(NetTypeName.String),
-                PropertyName = new ValueConstraint(NetTypeName.String),
+                PropertySetName = new ValueConstraint(),
+                PropertyName = new ValueConstraint(),
                 PropertyValue = new ValueConstraint(),
             };
             IfcPropertyFacet propertyFacet2 = new IfcPropertyFacet
             {
-                PropertySetName = new ValueConstraint(NetTypeName.String),
-                PropertyName = new ValueConstraint(NetTypeName.String),
+                PropertySetName = new ValueConstraint(),
+                PropertyName = new ValueConstraint(),
                 PropertyValue = new ValueConstraint(),
             };
             propertyFacet.PropertySetName.AddAccepted(new ExactConstraint(psetName));
@@ -151,7 +151,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             MaterialFacet materialFacet = new MaterialFacet
             {
-                Value = new ValueConstraint(NetTypeName.String),
+                Value = new ValueConstraint(),
             };
             materialFacet.Value = material;
             var ifcbinder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>());

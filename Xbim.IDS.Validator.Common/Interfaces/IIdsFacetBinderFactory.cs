@@ -3,6 +3,9 @@ using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Interfaces
 {
+    /// <summary>
+    /// Interface for a Factory creating <see cref="IFacetBinder"/>s for a given <see cref="IFacet"/>
+    /// </summary>
     public interface IIdsFacetBinderFactory
     {
         /// <summary>

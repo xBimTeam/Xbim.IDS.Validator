@@ -1,24 +1,25 @@
-<ids xmlns="http://standards.buildingsmart.org/IDS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://standards.buildingsmart.org/IDS/ids_05.xsd">
-    <info>
-        <title>Using xbim extension Subclasses can be identified</title>
-    </info>
-    <specifications>
-        <specification name="XIDS " ifcVersion="IFC4" minOccurs="1" maxOccurs="unbounded">
-            <applicability>
-                <entity>
-                    <name>
-                        <simpleValue>IFCWALL</simpleValue>
-                    </name>
-                    <x-includeSubTypes>true</x-includeSubTypes>
-                </entity>
-            </applicability>
-            <requirements>
-              <entity>
-                    <name minOccurs="1" maxOccurs="1">
-                        <simpleValue>IFCWALLSTANDARDCASE</simpleValue>
-                    </name>
-                </entity>
-            </requirements>
-        </specification>
-    </specifications>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ids xsi:schemaLocation="http://standards.buildingsmart.org/IDS http://standards.buildingsmart.org/IDS/0.9.7/ids.xsd" xmlns="http://standards.buildingsmart.org/IDS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <info>
+    <title>Using xbim extension Subclasses can be identified</title>
+  </info>
+  <specifications>
+    <specification name="XIDS " ifcVersion="IFC4">
+      <applicability minOccurs="1" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCWALL</simpleValue>
+          </name>
+          <x-includeSubTypes>true</x-includeSubTypes>
+        </entity>
+      </applicability>
+      <requirements>
+        <entity>
+          <name>
+            <simpleValue>IFCWALLSTANDARDCASE</simpleValue>
+          </name>
+        </entity>
+      </requirements>
+    </specification>
+  </specifications>
 </ids>

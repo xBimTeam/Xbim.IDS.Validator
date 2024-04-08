@@ -13,12 +13,12 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
     public abstract class BaseModelTester
     {
 
-        private static Lazy<IModel> lazyIfc4Model = new Lazy<IModel>(() => BuildIfc4Model());
+        private static Lazy<IModel> lazyIfc4Model = new Lazy<IModel>(()=> BuildIfc4Model());
         private static Lazy<IModel> lazyIfc2x3Model = new Lazy<IModel>(() => BuildIfc2x3Model());
 
         private BinderContext _context = new BinderContext();
-
-
+        
+      
 
         public virtual IModel Model
         {
@@ -57,11 +57,11 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             this.output = output;
             _schema = schema;
             query = new IfcQuery();
-
+            
             logger = TestEnvironment.GetXunitLogger<BaseModelTester>(output);
         }
 
-
+       
 
         private static IModel BuildIfc4Model()
         {
@@ -86,8 +86,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 #pragma warning disable CS0618 // Type or member is obsolete
             var group = new FacetGroup();
 #pragma warning restore CS0618 // Type or member is obsolete
-            group.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>();
-            group.RequirementOptions.Add(RequirementCardinalityOptions.Expected);
+            group.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>()
+            {
+                facet.BuildCardinality(RequirementCardinalityOptions.Cardinality.Expected)
+            };
             group.Facets.Add(facet);
             return group;
         }
@@ -175,9 +177,11 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             {
                 case ConstraintType.Exact:
                     if (propValue is bool)
-                        propFacet.PropertyValue.BaseType = NetTypeName.Boolean;
-                    if (propValue is long)
-                        propFacet.PropertyValue.BaseType = NetTypeName.Integer;
+                    {
+                        // By convention bools are upper case. May need to review XIDS on this.
+                        propFacet.PropertyValue.AddAccepted(new ExactConstraint(propValue.ToString().ToUpperInvariant()));
+                        break;
+                    }
                     propFacet.PropertyValue.AddAccepted(new ExactConstraint(propValue.ToString()));
                     break;
 
@@ -186,7 +190,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                     break;
 
                 case ConstraintType.Range:
-                    propFacet.PropertyValue.BaseType = NetTypeName.Double;
+                    propFacet.PropertyValue.BaseType = NetTypeName.Double;      // TODO: Revisit. Needed until XIDS can support ranges of undefined type
                     propFacet.PropertyValue.AddAccepted(new RangeConstraint("0", false, propValue.ToString(), true));
                     break;
 
@@ -194,15 +198,13 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             }
         }
 
-
-
         private static IfcTypeFacet BuildIfcTypeFacetFromCsv(string ifcTypeCsv, string predefinedTypeCsv = "", bool includeSubTypes = false,
             ConstraintType ifcConstraint = ConstraintType.Exact, ConstraintType preDefConstraint = ConstraintType.Exact)
         {
             IfcTypeFacet facet = new IfcTypeFacet
             {
-                IfcType = new ValueConstraint(NetTypeName.String),
-                PredefinedType = new ValueConstraint(NetTypeName.String),
+                IfcType = new ValueConstraint(),
+                PredefinedType = new ValueConstraint(),
                 IncludeSubtypes = includeSubTypes,
             };
 

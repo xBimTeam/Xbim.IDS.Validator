@@ -28,11 +28,10 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             { "pass-integers_follow_the_same_rules_as_numbers.ids", new [] { XbimSchemaVersion.Ifc4 } },        // StairFlight.NumberOfRiser[s] got renamed in IFC4
             { "pass-integers_follow_the_same_rules_as_numbers_2_2.ids", new [] { XbimSchemaVersion.Ifc4 } },
 
+            { "pass-dates_are_treated_as_strings_2_2.ids" , new [] { XbimSchemaVersion.Ifc4} },
 
             // Unsupported tests
-            { "pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_1_4.ids", new [] { XbimSchemaVersion.Unsupported } }, // Awaiting Tolerance support
-            { "pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_2_4.ids", new [] { XbimSchemaVersion.Unsupported } }, // Awaiting Tolerance support
-
+            // None
         };
 
        
@@ -63,20 +62,22 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             }
         }
 
-
-
-        [MemberData(nameof(GetUnsupportedTestCases))]
-        [SkippableTheory]
-        public async Task ToImplement(string idsFile)
+        [MemberData(nameof(GetInvalidTestCases))]
+        [Theory]
+        public async Task ExpectedInvalid(string idsFile, params XbimSchemaVersion[] schemas)
         {
-            var outcome = await VerifyIdsFile(idsFile);
+            foreach (var schema in GetSchemas(schemas))
+            {
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema, validateIds: true);
 
-            Skip.If(outcome.Status != ValidationStatus.Pass, "Not yet supported");
-            
-            outcome.Status.Should().Be(ValidationStatus.Pass);
-            
+                outcome.Status.Should().Be(ValidationStatus.Error, schema.ToString());
+            }
         }
 
+        public static IEnumerable<object[]> GetInvalidTestCases()
+        {
+            return GetApplicableTestCases(TestCaseFolder, "invalid", testExceptions);
+        }
 
         public static IEnumerable<object[]> GetFailureTestCases()
         {
@@ -87,6 +88,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
             return GetApplicableTestCases(TestCaseFolder, "pass", testExceptions);
         }
+
 
         public static IEnumerable<object[]> GetUnsupportedTestCases()
         {

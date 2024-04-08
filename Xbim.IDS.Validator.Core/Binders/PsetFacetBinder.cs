@@ -11,6 +11,7 @@ using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
+using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Binders
 {
@@ -19,7 +20,7 @@ namespace Xbim.IDS.Validator.Core.Binders
     {
         private readonly ILogger<PsetFacetBinder> logger;
 
-        public PsetFacetBinder(BinderContext context, ILogger<PsetFacetBinder> logger) : base(context)
+        public PsetFacetBinder(BinderContext context, ILogger<PsetFacetBinder> logger) : base(context, logger)
         {
             this.logger = logger;
         }
@@ -103,9 +104,9 @@ namespace Xbim.IDS.Validator.Core.Binders
             return expression;
         }
 
-        public override void ValidateEntity(IPersistEntity item, IfcPropertyFacet facet, RequirementCardinalityOptions requirement, IdsValidationResult result)
+        public override void ValidateEntity(IPersistEntity item, IfcPropertyFacet facet, Cardinality cardinality, IdsValidationResult result)
         {
-            var ctx = CreateValidationContext(requirement, facet);
+            var ctx = CreateValidationContext(cardinality, facet);
             var psets = GetPropertySetsMatching(item.EntityLabel, facet.PropertySetName, logger);
             if (psets.Any())
             {
@@ -113,11 +114,9 @@ namespace Xbim.IDS.Validator.Core.Binders
                 bool? failure = null;
                 foreach (var pset in psets)
                 {
-                    if (facet.PropertySetName?.IsEmpty() ?? true == false)
-                    {
-                        // If a constraint was defined acknowledge it, but otherwise this is not yet 'success'
-                        result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PropertySetName!, pset.Name, "Pset Matched", pset));
-                    }
+
+                    result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertySetName!, pset.Name, "Pset Matched", pset));
+                    
                     var props = GetPropertiesMatching<IIfcSimpleProperty>(item.EntityLabel, pset.Name, facet.PropertyName);
                     var quants = GetQuantitiesMatching(item.EntityLabel, pset.Name, facet.PropertyName);
                     if (props.Any() || quants.Any())
@@ -132,43 +131,45 @@ namespace Xbim.IDS.Validator.Core.Binders
 
                             foreach (var propValue in values)
                             {
-                                object? value = UnwrapValue(propValue);
+                                object? value = GetNormalisedValue(propValue);
                                 bool isPopulated = IsValueRelevant(value);
-                                if (isPopulated)
+                                var valueExpected = cardinality != Cardinality.Prohibited || !facet.PropertyValue.IsNullOrEmpty();
+                                if (isPopulated = valueExpected)
                                 {
                                     satisfiedProp = true;
                                 }
 
-                                if (ValueSatifiesConstraint(facet, value))
+                                if (ValueSatifiesConstraint(facet, value, ctx))
                                 {
                                     satisfiedValue = true;
-                                    if (ValidateMeasure(ctx, result, propValue, facet.Measure))
+                                    if (ValidateDataType(ctx, result, propValue, facet.DataType))
                                     {
                                         // We found a match
                                         break;
                                     }
                                 }
                             }
+                            // TODO: Refactor
                             if (satisfiedProp)
                             {
-                                result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PropertyName!, prop.Name, $"Property provided in {pset.Name}", prop));
+                                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertyName!, prop.Name, $"Property provided in {pset.Name}", prop));
                                 success = true;
                             }
                             else
                             {
-                                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, prop.Name, $"No property matching in {pset.Name}", prop));
+                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, prop.Name, $"No property matching in {pset.Name}", prop));
                                 failure = true;
                             }
 
-                            var vals = string.Join(',', values);
+                            var vals = string.Join(',', values.Select(v=> GetNormalisedValue(v)));
                             if (satisfiedValue)
                             {
-                                result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, vals, $"Value matched in {pset.Name}_{prop.Name}", prop));
+                                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, vals, $"Value matched in {pset.Name}_{prop.Name}", prop));
                                 success = true;
                             }
                             else
                             {
-                                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertyValue!, vals, $"Invalid Value in {pset.Name}_{prop.Name}", prop));
+                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyValue!, vals, $"Invalid Value in {pset.Name}_{prop.Name}", prop));
                                 failure = true;
                             }
 
@@ -176,30 +177,30 @@ namespace Xbim.IDS.Validator.Core.Binders
                         foreach (var quant in quants)
                         {
                             var propValue = UnwrapQuantity(quant);
-                            object? value = UnwrapValue(propValue);
+                            object? value = GetNormalisedValue(propValue);
                             bool isPopulated = IsValueRelevant(value);
 
                             if (isPopulated)
                             {
-                                result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PropertyName!, quant.Name, $"Quantity provided in {pset.Name}", quant));
+                                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertyName!, quant.Name, $"Quantity provided in {pset.Name}", quant));
                                 success = true;
                             }
                             else
                             {
-                                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, quant.Name, $"No quantity matching in {pset.Name}", quant));
+                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, quant.Name, $"No quantity matching in {pset.Name}", quant));
                                 failure = true;
                             }
-                            ValidateMeasure(ctx, result, propValue, facet.Measure);
+                            ValidateDataType(ctx, result, propValue, facet.DataType);
 
 
-                            if (ValueSatifiesConstraint(facet, value))
+                            if (ValueSatifiesConstraint(facet, value, ctx))
                             {
-                                result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, value, $"Value matched in {pset.Name}_{quant.Name}", propValue));
+                                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, value, $"Value matched in {pset.Name}_{quant.Name}", propValue));
                                 success = true;
                             }
                             else
                             {
-                                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertyValue!, value, $"Invalid Value in {pset.Name}_{quant.Name}", propValue));
+                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyValue!, value, $"Invalid Value in {pset.Name}_{quant.Name}", propValue));
                                 failure = true;
                             }
                         }
@@ -219,29 +220,55 @@ namespace Xbim.IDS.Validator.Core.Binders
                             continue;
                             // we found a propertyset but it has no matching property. Another pset may though
                         }
-                        else
-                        {
-                            result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, "No properties matching in psets", pset));
-                            failure = true;
+                        else 
+                        { 
+                            if(cardinality == Cardinality.Expected)
+                            {
+                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, "No properties matching in psets", pset));
+                                failure = true;
+                            }
+                            
                         }
                     }
                 }
-                // If no matching value found after all the psets checked, mark as failed
-                if (success == default && failure == default)
+                // If no matching prop found after all the psets checked, mark as failed
+                if(success == default && failure == default)
                 {
-                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, "No properties matching", item));
+                    switch (cardinality)
+                    {
+                        case Cardinality.Expected:
+                            {
+                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, "No properties matching", item));
+                                break;
+                            }
+
+                        case Cardinality.Optional:
+                        case Cardinality.Prohibited:
+                            {
+                                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertyName!, null, $"Property not found", item));
+                                break;
+                            }
+                    }
                 }
             }
 
             else
             {
-                if (facet.PropertyName?.IsEmpty() == false)
+                // Not matching Pset
+                switch (cardinality)
                 {
-                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, "No Property matching", item));
-                }
-                else
-                {
-                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.PropertySetName!, null, "No Psets matching", item));
+                    case Cardinality.Expected:
+                        {
+                            result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertySetName!, null, "No Psets matching", item));
+                            break;
+                        }
+
+                    case Cardinality.Optional:
+                    case Cardinality.Prohibited:
+                        {
+                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertySetName!, null, $"Pset not found", item));
+                            break;
+                        }
                 }
             }
 
@@ -308,7 +335,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             return Expression.Call(null, propsMethod, new[] { expression, facetExpr });
 
-
+          
         }
 
 
@@ -358,11 +385,11 @@ namespace Xbim.IDS.Validator.Core.Binders
                 // TODO: implement IfcMaterial.HasProperties.
                 logger.LogWarning("Cannot apply property filter on this type: {collectionType} ", collectionType.Name);
                 throw new NotImplementedException($"Cannot apply property filter on this type: {collectionType}");
-
+                
                 // return BindNotFound(expression, collectionType);
             }
 
-
+            
 
 
         }
@@ -378,6 +405,8 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <returns></returns>
         private IEnumerable<T> GetPropertiesMatching<T>(int entityLabel, string psetName, ValueConstraint constraint, ILogger? logger = null) where T : IIfcProperty
         {
+            if(constraint == null)
+                return Enumerable.Empty<T>();
             var entity = Model.Instances[entityLabel];
             if (entity is IIfcTypeObject type)
             {
@@ -417,7 +446,6 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <summary>
         /// Finds all Quantities in a pset meeting a constraint
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="entityLabel"></param>
         /// <param name="psetName"></param>
         /// <param name="nameConstraint"></param>
@@ -466,9 +494,9 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             // handle edgecase where Pset is not specified. Pset is required but this
             // allows us to just in time wild-card the psetname, enabling properties to be matched
-            if (psetConstraint.IsNullOrEmpty())
+            if(psetConstraint.IsNullOrEmpty())
             {
-                psetConstraint = new ValueConstraint(NetTypeName.String);
+                psetConstraint = new ValueConstraint();
                 psetConstraint.AddAccepted(new PatternConstraint(".*"));
             }
             if (entity is IIfcTypeObject type)
@@ -502,12 +530,11 @@ namespace Xbim.IDS.Validator.Core.Binders
 
 
 
-        private bool ValueSatifiesConstraint(IfcPropertyFacet pf, object? value)
+        private bool ValueSatifiesConstraint(IfcPropertyFacet pf, object? value, ValidationContext<IfcPropertyFacet> ctx)
         {
             if (pf.PropertyValue != null)
             {
-                value = ApplyWorkarounds(value, pf.PropertyValue);
-                if (IsTypeAppropriateForConstraint(pf.PropertyValue, value) && pf.PropertyValue.IsSatisfiedBy(value, logger))
+                if (IsTypeAppropriateForConstraint(pf.PropertyValue, value) && pf.PropertyValue.ExpectationIsSatisifedBy(value, ctx, logger))
                 {
                     return true;
                 }
@@ -520,25 +547,25 @@ namespace Xbim.IDS.Validator.Core.Binders
         }
 
 
-        protected bool ValidateMeasure(ValidationContext<IfcPropertyFacet> ctx, IdsValidationResult result, IIfcValue propValue, string expectedMeasure)
+        protected bool ValidateDataType(ValidationContext<IfcPropertyFacet> ctx, IdsValidationResult result, IIfcValue propValue, string expectedDataType)
         {
             if (propValue is null)
             {
                 return false;
             }
 
-            if (string.IsNullOrEmpty(expectedMeasure)) return true;
+            if (string.IsNullOrEmpty(expectedDataType)) return true;
 
             string measure = propValue.GetType().Name;
 
-            if (measure.Equals(expectedMeasure, StringComparison.InvariantCultureIgnoreCase))
+            if (measure.Equals(expectedDataType, StringComparison.InvariantCultureIgnoreCase))
             {
-                result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.Measure!, measure, "Measure matches", propValue));
+                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.DataType!, measure, "DataType matches", propValue));
                 return true;
             }
             else
             {
-                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Measure!, measure, "Invalid Measure", propValue));
+                result.Fail(ValidationMessage.Failure(ctx, fn => fn.DataType!, measure, "Invalid DataType", propValue));
                 return false;
             }
 

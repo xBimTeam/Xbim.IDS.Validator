@@ -3,6 +3,7 @@ using Xbim.IDS.Validator.Core.Binders;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 using Xunit.Abstractions;
+using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
@@ -38,7 +39,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         }
 
 
-
+        
         [InlineData("IfcWall", 3, typeof(IIfcWall))]
         [InlineData("IfcBuildingElement", 0, typeof(IIfcBuildingElement))] //
         [InlineData("IfcFurnishingElement", 0, typeof(IIfcFurnishingElement))]
@@ -130,26 +131,28 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 IfcType = expectedType,
                 IncludeSubtypes = allowSubType
             };
-            if (expectedPredefined != null)
+            if(expectedPredefined != null)
             {
                 propFacet.PredefinedType = expectedPredefined;
             }
-
+            
             FacetGroup group = BuildGroup(propFacet);
             var result = new IdsValidationResult(entity, group);
-            Binder.ValidateEntity(entity, propFacet, RequirementCardinalityOptions.Expected, result);
+            Binder.ValidateEntity(entity, propFacet, Cardinality.Expected, result);
 
             // Assert
-            if (shouldPass)
+            if(shouldPass)
             {
 
                 result.Successful.Should().NotBeEmpty();
                 result.Failures.Should().BeEmpty();
+                result.ValidationStatus.Should().Be(ValidationStatus.Pass);
             }
             else
             {
                 result.Successful.Should().BeEmpty();
                 result.Failures.Should().NotBeEmpty();
+                result.ValidationStatus.Should().Be(ValidationStatus.Fail);
             }
 
         }

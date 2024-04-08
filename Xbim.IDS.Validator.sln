@@ -1,4 +1,4 @@
-﻿	
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32929.385
@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
 		azure-pipelines.yml = azure-pipelines.yml
+		Directory.Build.props = Directory.Build.props
 		nuget.config = nuget.config
 		Readme.md = Readme.md
 	EndProjectSection
@@ -19,6 +20,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xbim.IDS.Validator.Console", "Xbim.IDS.Validator.Console\Xbim.IDS.Validator.Console.csproj", "{6688206C-28DF-4B32-94B8-F2FD36B56655}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xbim.IDS.Validator.Common", "Xbim.IDS.Validator.Common\Xbim.IDS.Validator.Common.csproj", "{54773B8D-E7B0-4BC1-BB42-13E26C5AB009}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeGenerator", "CodeGenerator\CodeGenerator.csproj", "{8447C2E7-40CF-4AE6-8701-F28AECB16D59}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,6 +45,10 @@ Global
 		{54773B8D-E7B0-4BC1-BB42-13E26C5AB009}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{54773B8D-E7B0-4BC1-BB42-13E26C5AB009}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{54773B8D-E7B0-4BC1-BB42-13E26C5AB009}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8447C2E7-40CF-4AE6-8701-F28AECB16D59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8447C2E7-40CF-4AE6-8701-F28AECB16D59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8447C2E7-40CF-4AE6-8701-F28AECB16D59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8447C2E7-40CF-4AE6-8701-F28AECB16D59}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

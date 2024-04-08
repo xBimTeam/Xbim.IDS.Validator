@@ -20,7 +20,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
         /// Selects all objects using a matching material
         /// </summary>
         /// <param name="relAssociates"></param>
-        /// <param name="materialName"></param>
+        /// <param name="materialFacet"></param>
         /// <returns></returns>
         public static IEnumerable<IIfcObjectDefinition> GetIfcObjectsUsingMaterials(this IEnumerable<IIfcRelAssociatesMaterial> relAssociates, MaterialFacet materialFacet)
         {
@@ -38,7 +38,6 @@ namespace Xbim.IDS.Validator.Core.Extensions
         /// </summary>
         /// <param name="ent"></param>
         /// <param name="facet"></param>
-        /// <param name="facet"></param>
         /// <returns></returns>
         public static IEnumerable<IIfcObjectDefinition> WhereAssociatedWithMaterial(this IEnumerable<IIfcObjectDefinition> ent, MaterialFacet facet)
         {
@@ -53,7 +52,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
         /// <returns></returns>
         public static IEnumerable<string> GetMaterialNames(IIfcMaterialSelect material, ILogger? logger = null)
         {
-            if (material == null)
+            if(material == null)
                 return Enumerable.Empty<string>();
             switch (material)
             {
@@ -199,7 +198,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
             return (!string.IsNullOrEmpty(value?.Value?.ToString()));
         }
 
-
+        
 
 
         private static IEnumerable<IIfcRelAssociatesMaterial> FilterByMaterialFacet(this IEnumerable<IIfcRelAssociatesMaterial> relAssociates, MaterialFacet facet)
@@ -210,12 +209,12 @@ namespace Xbim.IDS.Validator.Core.Extensions
 
         private static bool MaterialIsSatisfiedBy(this IIfcMaterialSelect material, MaterialFacet facet)
         {
-            if (facet.Value != null)
+            if(facet.Value != null)
             {
                 var candidates = GetMaterialNames(material);
                 foreach (var candidate in candidates)
                 {
-                    if (facet.Value.IsSatisfiedBy(candidate, true))
+                    if(facet.Value.IsSatisfiedBy(candidate, true))
                     {
                         return true;
                     }

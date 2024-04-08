@@ -1,10 +1,14 @@
-﻿using Microsoft.Extensions.Logging;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.InformationSpecifications;
+using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Interfaces
 {
+    /// <summary>
+    /// Generic interface defining how IDS <see cref="IFacet"/>s build queries against a xbim model.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public interface IFacetBinder<T> : IFacetBinder where T : IFacet
     {
 
@@ -32,8 +36,8 @@ namespace Xbim.IDS.Validator.Core.Interfaces
         /// <param name="requirement"></param>
         /// <param name="result"></param>
         /// <param name="facet"></param>
-        void ValidateEntity(IPersistEntity item, T facet, RequirementCardinalityOptions requirement, IdsValidationResult result);
+        void ValidateEntity(IPersistEntity item, T facet, Cardinality requirement, IdsValidationResult result);
 
-
+        
     }
 }

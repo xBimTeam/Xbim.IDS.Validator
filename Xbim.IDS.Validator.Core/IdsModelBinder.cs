@@ -18,7 +18,7 @@ namespace Xbim.IDS.Validator.Core
     /// </summary>
     public class IdsModelBinder : IIdsModelBinder
     {
-
+        
         private readonly BinderContext binderContext;
         private IfcQuery? ifcQuery;
         private VerificationOptions? options;
@@ -44,7 +44,8 @@ namespace Xbim.IDS.Validator.Core
         /// <summary>
         /// Returns all entities in the model that apply to a specification
         /// </summary>
-        /// <param name="facets"></param>
+        /// <param name="model"></param>
+        /// <param name="spec"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         public IEnumerable<IPersistEntity> SelectApplicableEntities(IModel model, Specification spec)
@@ -59,10 +60,10 @@ namespace Xbim.IDS.Validator.Core
                 throw new ArgumentNullException(nameof(spec));
             }
             Initialise(model);
-
+           
             ApplyOptions(spec);
-
-
+            
+    
 
             var facets = spec.Applicability.Facets;
 
@@ -96,16 +97,16 @@ namespace Xbim.IDS.Validator.Core
             {
                 return;
             }
-            if (options.IncludeSubtypes)
+            if(options.IncludeSubtypes)
             {
-                foreach (var facet in spec.Applicability.Facets)
+                foreach(var facet in spec.Applicability.Facets)
                 {
-                    if (facet is IfcTypeFacet ifc)
+                    if(facet is IfcTypeFacet ifc)
                     {
                         ifc.IncludeSubtypes = true;
                     }
                 }
-                if (spec.Requirement != null)
+                if(spec.Requirement != null)
                 {
                     foreach (var facet in spec.Requirement!.Facets)
                     {
@@ -125,7 +126,7 @@ namespace Xbim.IDS.Validator.Core
         /// Validate an IFC entity meets its requirements against the defined Constraints
         /// </summary>
         /// <param name="item"></param>
-        /// <param name="requirement"
+        /// <param name="requirement"></param>
         /// <param name="logger"></param>
         /// <returns></returns>
         public IdsValidationResult ValidateRequirement(IPersistEntity item, FacetGroup requirement, ILogger? logger)
@@ -133,26 +134,23 @@ namespace Xbim.IDS.Validator.Core
 
             var result = new IdsValidationResult(item, requirement, options?.OutputFullEntity ?? false);
 
+            if(requirement == null)
+            {
+                return result;
+            }
+
             foreach (var facet in requirement.Facets)
             {
                 var binder = FacetBinderFactory.Create(facet, Schema);
 
-                if (binder is ISupportOptions opts)
+                if(binder is ISupportOptions opts)
                 {
                     opts.SetOptions(options);
                 }
-                var card = requirement.GetCardinality(facet);
+                var card = requirement.GetCardinality(facet) ?? RequirementCardinalityOptions.Cardinality.Expected;
                 binder.ValidateEntity(item, facet, card, result);
             }
-            if (result.Failures.Any())
-            {
-                result.ValidationStatus = ValidationStatus.Fail;
-            }
-            else if (result.Messages.Any(m => m.Status != ValidationStatus.Fail))
-            {
-                // Success and Inconclusive all count as success
-                result.ValidationStatus = ValidationStatus.Pass;
-            }
+            
             return result;
         }
 
@@ -167,8 +165,8 @@ namespace Xbim.IDS.Validator.Core
         private Expression BindSelection(Expression baseExpression, IFacet facet)
         {
             var binder = FacetBinderFactory.Create(facet, Schema);
-            return binder.BindSelectionExpression(baseExpression, facet);
-
+            return binder.BindSelectionExpression(baseExpression, facet); 
+           
         }
 
         private Expression BindFilters(Expression baseExpression, IFacet facet)

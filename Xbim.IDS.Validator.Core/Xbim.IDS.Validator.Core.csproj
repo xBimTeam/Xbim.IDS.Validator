@@ -4,15 +4,29 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <ImplicitUsings>false</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>1.0.1</Version>
-    <VersionSuffix>Beta</VersionSuffix>
-    <Description>Enables validation of IFC models using BuildingSmart IDS</Description>
-    <Copyright>xbim Ltd</Copyright>
-    <PackageReadmeFile>Readme.md</PackageReadmeFile>
-    <PackageTags>xbim ifc ids bim validation</PackageTags>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <PackageLicenseExpression>CDDL-1.0</PackageLicenseExpression>
+    <Description>Enables validation of IFC models with BuildingSmart IDS using xbim Toolkit</Description>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1701;1702;CS1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>1701;1702;CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Migration\IDS-Audit_migration.xslt" />
+    <None Remove="Migration\IDS_v0.9.3-v0.9.6_migration.xsl" />
+    <None Remove="Migration\IDS_v0.9.6-v0.9.7_migration.xsl" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Migration\IDS_v0.9.6-v0.9.7_migration.xsl" />
+    <EmbeddedResource Include="Migration\IDS_v0.9.3-v0.9.6_migration.xsl" />
+    <EmbeddedResource Include="Migration\IDS-Audit_migration.xslt" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
@@ -21,15 +35,15 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
-  
-  <ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Xbim.IDS.Validator.Common\Xbim.IDS.Validator.Common.csproj" />
+	</ItemGroup>
+
+
+	<ItemGroup>
     <ProjectReference Include="..\Xbim.IDS.Validator.Common\Xbim.IDS.Validator.Common.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="Example.ids">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 
 </Project>

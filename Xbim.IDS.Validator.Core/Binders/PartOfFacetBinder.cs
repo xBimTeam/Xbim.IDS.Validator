@@ -8,6 +8,7 @@ using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
+using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Binders
 {
@@ -15,7 +16,7 @@ namespace Xbim.IDS.Validator.Core.Binders
     {
         private readonly ILogger<PartOfFacetBinder> logger;
 
-        public PartOfFacetBinder(BinderContext binderContext, ILogger<PartOfFacetBinder> logger) : base(binderContext)
+        public PartOfFacetBinder(BinderContext binderContext, ILogger<PartOfFacetBinder> logger) : base(binderContext, logger)
         {
             this.logger = logger;
         }
@@ -40,9 +41,9 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             var expression = baseExpression;
             // When an Ifc Type has not yet been specified, we start with the EntityRelation Type defined by the facet
-
+            
             var expressType = Model.Metadata.ExpressType(facet.EntityRelation.ToUpperInvariant());
-            if (expressType == null)
+            if(expressType == null)
             {
                 logger.LogWarning("Unexpected EntityRelation: {ifcTypes} for schema {ifcSchema}", expressType, Model.SchemaVersion);
                 throw new InvalidOperationException($"Invalid EntityRelation '{expressType}' for {Model.SchemaVersion}");
@@ -108,25 +109,14 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         }
 
-        public override void ValidateEntity(IPersistEntity item, PartOfFacet facet, RequirementCardinalityOptions requirement, IdsValidationResult result)
+        public override void ValidateEntity(IPersistEntity item, PartOfFacet facet, Cardinality cardinality, IdsValidationResult result)
         {
-
+            
             if (facet is null)
             {
                 throw new ArgumentNullException(nameof(facet));
             }
-            if (facet.EntityType != null)
-            {
-                if (facet.EntityType.IfcType != null)
-                {
-                    facet.EntityType.IfcType.BaseType = NetTypeName.String;
-                }
-                if (facet.EntityType.PredefinedType != null)
-                {
-                    facet.EntityType.PredefinedType.BaseType = NetTypeName.String;
-                }
-            }
-            var ctx = CreateValidationContext(requirement, facet);
+            var ctx = CreateValidationContext(cardinality, facet);
 
             var candidates = GetParts(item, facet);
 
@@ -136,13 +126,23 @@ namespace Xbim.IDS.Validator.Core.Binders
                 foreach (var part in candidates)
                 {
                     var partType = part.GetType().Name;
-
-                    result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.EntityType!, partType, "Part found", part));
+                    if(ctx.FacetCardinality != Cardinality.Prohibited)
+                    {
+                        result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.EntityType!, partType, "Part found", part));
+                    }
+                    else
+                    {
+                        result.Fail(ValidationMessage.Failure(ctx, fn => fn.EntityType!, partType, "Expected no match", item));
+                    }
+           
                 }
             }
             else
             {
-                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.EntityType!, null, "No parts matching", item));
+                if (ctx.FacetCardinality != Cardinality.Prohibited)
+                {
+                    result.Fail(ValidationMessage.Failure(ctx, fn => fn.EntityType!, null, "No parts matching", item));
+                }
             }
         }
 
@@ -151,6 +151,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         {
             if (item is IIfcObjectDefinition obj)
             {
+                // TODO: handle prohibited. 
                 var parts = IfcRelationsExtensions.GetPartsForEntity(obj, facet);
 
                 //if (obj is IIfcObject o && o.IsTypedBy!.Any())
