@@ -4,25 +4,34 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
 
 trigger:
-- master
-
+  branches:
+    include:
+    - master
+    - develop
 pool:
   vmImage: 'windows-latest'
 
-name: 0.$(date:yy).$(DayOfYear).$(rev:rr)
 
 variables:
   solution: '**/*.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
+  major: 0
+  minor: 97
+  patchNo: $[counter(variables['minor'], 1)]
+  buildNo: $[counter('versioncounter', 100)]
+  suffix: $[replace(variables['Build.SourceBranchName'], '_', '-')]
+
+name: $(BuildDefinitionName)_$(major).$(minor).$(buildNo).$(patchNo)-$(suffix)
+
 jobs:
 - job: Build
   steps:
-# Temp Workaround to Fix https://github.com/dotnet/sdk/issues/30625
+
   - task: UseDotNet@2
     inputs:
       packageType: 'sdk'
-      version: '7.0.201'
+      version: '8.0.100'
   - task: VersionDotNetCoreAssemblies@3
     displayName: 'Version files'
     inputs:
@@ -30,7 +39,7 @@ jobs:
       VersionNumber: '$(Build.BuildNumber)'
       Injectversion: False
       VersionRegex: '\d+\.\d+\.\d+\.\d+'
-      FilenamePattern: '.csproj'
+      FilenamePattern: 'directory.build.props'
       AddDefault: true
       OutputVersion: 'OutputedVersion'
   - task: DotNetCoreCLI@2

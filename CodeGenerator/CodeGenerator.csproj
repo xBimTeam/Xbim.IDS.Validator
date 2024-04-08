@@ -5,10 +5,11 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ids-lib" Version="1.0.69" />
+    <PackageReference Include="ids-lib" Version="1.0.70" />
     <PackageReference Include="Xbim.InformationSpecifications" Version="0.97.2" />
   </ItemGroup>
 

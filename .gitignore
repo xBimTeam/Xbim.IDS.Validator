@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Temp Workaround for bug in COBieExpress where Tests update xlsx
+# /Xbim.IDS.Validator.Core.Tests/TestModels/SampleHouse4.xlsx

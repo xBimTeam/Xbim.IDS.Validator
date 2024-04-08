@@ -234,6 +234,8 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
         private IModel OpenCOBie(string file)
         {
+            if(!File.Exists(file))
+                throw new FileNotFoundException(file);
             var mapping = CobieModel.GetMapping();
             //mapping.ClassMappings.RemoveAll(m => m.Class == "System");
             var model = CobieModel.ImportFromTable(file, out string report, mapping);

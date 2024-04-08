@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <ImplicitUsings>false</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PackageReadmeFile>Readme.md</PackageReadmeFile>
     <Description>Common interfaces for IDS validation of IFC models using xbim Toolkit</Description>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
@@ -17,11 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ids-lib" Version="1.0.69" />
+    <PackageReference Include="ids-lib" Version="1.0.70" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
-    <PackageReference Include="Xbim.CobieExpress.Exchanger" Version="6.0.167-develop" />
+    <PackageReference Include="Xbim.CobieExpress.Exchanger" Version="6.0.168-develop" />
     <PackageReference Include="Xbim.Essentials" Version="6.0.445" />
-    <PackageReference Include="Xbim.IO.CobieExpress" Version="6.0.167-develop" />
+    <PackageReference Include="Xbim.IO.CobieExpress" Version="6.0.168-develop" />
     <PackageReference Include="Xbim.InformationSpecifications" Version="0.97.2" />
   </ItemGroup>
 
