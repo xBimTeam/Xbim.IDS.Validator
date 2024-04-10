@@ -66,10 +66,11 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
             foreach (var schema in GetSchemas(schemas))
             {
-                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema, validateIds: true);
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
-                outcome.Status.Should().Be(ValidationStatus.Error, schema.ToString());
+                outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());
             }
+            ValidateIds(idsFile).Should().NotBe(IdsLib.Audit.Status.Ok);
         }
 
 

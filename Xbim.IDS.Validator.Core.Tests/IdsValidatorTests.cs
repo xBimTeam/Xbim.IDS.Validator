@@ -30,7 +30,7 @@ namespace Xbim.IDS.Validator.Core.Tests
         public void CanTestFolderInBatch()
         {
             var validator = new IdsValidator(Logger);
-            var result = validator.ValidateIdsFolder(@"TestCases", @"TestModels\ids-0.9.6.xsd");
+            var result = validator.ValidateIdsFolder(@"TestCases");
             result.Should().Be(Status.IdsStructureError | Status.IdsContentError);
         }
 

@@ -57,9 +57,6 @@
     <None Update="TestModels\Example.ids">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TestModels\ids-0.9.6.xsd">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="TestModels\IDS_wooden-windows.ids">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

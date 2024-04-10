@@ -39,7 +39,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [Theory]
         public async Task Xbim_Proprietary_Extensions(string idsFile)
         {
-            var outcome = await VerifyIdsFile(idsFile, false, XbimSchemaVersion.Ifc4, new VerificationOptions { IncludeSubtypes = true });
+            var outcome = await VerifyIdsFile(idsFile, false, XbimSchemaVersion.Ifc4, new VerificationOptions { IncludeSubtypes = true, PermittedIdsAuditStatuses = VerificationOptions.AnyState });
 
             outcome.Status.Should().Be(ValidationStatus.Pass);
         }
@@ -50,7 +50,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [Theory]
         public async Task CrossSchemaHandlingSupported(string idsFile, ValidationStatus expected)
         {
-            var outcome = await VerifyIdsFile(idsFile);
+            var outcome = await VerifyIdsFile(idsFile, options: new VerificationOptions { PermittedIdsAuditStatuses = VerificationOptions.Relaxed });
 
             outcome.Status.Should().Be(expected);
         }
@@ -62,7 +62,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         public async Task COBieSupported(string idsFile, ValidationStatus expected)
         {
             var outcome = await VerifyIdsFile(idsFile, schemaVersion: XbimSchemaVersion.Cobie2X4, options: 
-                new VerificationOptions { IncludeSubtypes = true, AllowDerivedAttributes = true });
+                new VerificationOptions { IncludeSubtypes = true, AllowDerivedAttributes = true, PermittedIdsAuditStatuses = VerificationOptions.Relaxed });
 
             outcome.Status.Should().Be(expected);
         }

@@ -194,77 +194,86 @@ namespace Xbim.IDS.Validator.Core.Binders
             var candidates = GetAttributes(item, af);
 
             FixDataType(af, candidates.FirstOrDefault().Value);
-
-            foreach (var pair in candidates)
+            if (candidates.Any())
             {
-                var attrName = pair.Key;
-                var attrvalue = pair.Value;
-                if (IsIfc2x3Model() && attrvalue is Xbim.Ifc2x3.MeasureResource.IfcValue ifc2x3Value)
-                {
-                    attrvalue = ifc2x3Value.ToIfc4();
-                }
-                else if (IsIfc4x3Model() && attrvalue is Xbim.Ifc4x3.MeasureResource.IfcValue ifc4x3Value)
-                {
-                    attrvalue = ifc4x3Value.ToIfc4();
-                }
 
-                if (af.AttributeValue != null)
+
+                foreach (var pair in candidates)
                 {
-                    attrvalue = HandleBoolConventions(attrvalue);
-                    // Unpack Ifc Values
-                    if (attrvalue is IIfcValue v)
+                    var attrName = pair.Key;
+                    var attrvalue = pair.Value;
+                    if (IsIfc2x3Model() && attrvalue is Xbim.Ifc2x3.MeasureResource.IfcValue ifc2x3Value)
                     {
-                        attrvalue = v.Value;
+                        attrvalue = ifc2x3Value.ToIfc4();
                     }
-                    if (IsTypeAppropriateForConstraint(af.AttributeValue, attrvalue) && af.AttributeValue.ExpectationIsSatisifedBy(attrvalue, ctx, logger))
-                        result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.AttributeValue!, attrvalue, "Attribute value OK", item));
-                    else
+                    else if (IsIfc4x3Model() && attrvalue is Xbim.Ifc4x3.MeasureResource.IfcValue ifc4x3Value)
                     {
-                        switch(cardinality)
+                        attrvalue = ifc4x3Value.ToIfc4();
+                    }
+
+                    if (af.AttributeValue != null)
+                    {
+                        attrvalue = HandleBoolConventions(attrvalue);
+                        // Unpack Ifc Values
+                        if (attrvalue is IIfcValue v)
                         {
-                            case Cardinality.Expected:
-                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No attribute value matched", item));
-                                break;
+                            attrvalue = v.Value;
+                        }
+                        if (IsTypeAppropriateForConstraint(af.AttributeValue, attrvalue) && af.AttributeValue.ExpectationIsSatisifedBy(attrvalue, ctx, logger))
+                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.AttributeValue!, attrvalue, "Attribute value OK", item));
+                        else
+                        {
+                            switch (cardinality)
+                            {
+                                case Cardinality.Expected:
+                                    result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No attribute value matched", item));
+                                    break;
 
-                            case Cardinality.Prohibited:
-                                result.MarkSatisified(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No matching attribute value", item));
-                                break;
-
-                            case Cardinality.Optional:
-                                if(attrvalue is string s && s == string.Empty)
-                                {
-                                    result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "Empty attribute found", item));
-                                }
-                                else
-                                {
+                                case Cardinality.Prohibited:
                                     result.MarkSatisified(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No matching attribute value", item));
-                                }
-                                break;
+                                    break;
+
+                                case Cardinality.Optional:
+                                    if (attrvalue is string s && s == string.Empty)
+                                    {
+                                        result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "Empty attribute found", item));
+                                    }
+                                    else
+                                    {
+                                        result.MarkSatisified(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No matching attribute value", item));
+                                    }
+                                    break;
+                            }
                         }
                     }
-                }
-                else
-                {
-                    // Value not specified - just check presence or otherwise of a Value
-                    bool isPopulated = IsValueRelevant(attrvalue);
-                    var valueExpected = cardinality == Cardinality.Expected;
-                    // Name meets requirement if it has a value and is Required. Treat unknown logical as no value
-                    if (isPopulated)
-                    {
-                        if (valueExpected)
-                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.AttributeName!, attrName, "Attribute value populated", item));
-                        else
-                            result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeName!, attrName, "Attribute value prohibited", item));
-                    }
                     else
                     {
-                        if (valueExpected)
-                            result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeName!, attrName, "Attribute value blank", item));
+                        // Value not specified - just check presence or otherwise of a Value
+                        bool isPopulated = IsValueRelevant(attrvalue);
+                        var valueExpected = cardinality == Cardinality.Expected;
+                        // Name meets requirement if it has a value and is Required. Treat unknown logical as no value
+                        if (isPopulated)
+                        {
+                            if (valueExpected)
+                                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.AttributeName!, attrName, "Attribute value populated", item));
+                            else
+                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeName!, attrName, "Attribute value prohibited", item));
+                        }
                         else
-                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.AttributeName!, attrName, "Attribute value not set", item));
+                        {
+                            if (valueExpected)
+                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeName!, null, "Attribute value blank", item));
+                            else
+                                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.AttributeName!, null, "Attribute value not set", item));
+                        }
                     }
-                }
 
+                }
+            }
+            else
+            {
+                // Not a valid attribute. Always fails. 
+                result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeName!, null, "No valid attribute", item));
             }
         }
 
@@ -310,11 +319,11 @@ namespace Xbim.IDS.Validator.Core.Binders
                 
 
                 var propertyMeta = properties.FirstOrDefault(p => p.Name == attrName);
-                if (propertyMeta == null)
-                {
-                    results.Add(attrName, default);
-                }
-                else
+                if (propertyMeta != null)
+                //{
+                //    results.Add(attrName, default);
+                //}
+                //else
                 {
                     var ifcAttributePropInfo = propertyMeta.PropertyInfo;
                     var value = ifcAttributePropInfo.GetValue(entity);

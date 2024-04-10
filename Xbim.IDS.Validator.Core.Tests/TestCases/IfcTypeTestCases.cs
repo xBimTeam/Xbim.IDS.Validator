@@ -22,8 +22,8 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             { "pass-a_predefined_type_may_specify_a_user_defined_process_type.ids", new [] { XbimSchemaVersion.Ifc4 } },
             { "pass-inherited_predefined_types_should_pass.ids", new [] { XbimSchemaVersion.Ifc4 } },
             { "pass-overridden_predefined_types_should_pass.ids", new [] { XbimSchemaVersion.Ifc4 } },
-            { "pass-restrictions_an_be_specified_for_the_predefined_type_1_3.ids", new [] { XbimSchemaVersion.Ifc4 } },
-            { "pass-restrictions_an_be_specified_for_the_predefined_type_2_3.ids", new [] { XbimSchemaVersion.Ifc4 } },
+            { "pass-restrictions_can_be_specified_for_the_predefined_type_1_3.ids", new [] { XbimSchemaVersion.Ifc4 } },
+            { "pass-restrictions_can_be_specified_for_the_predefined_type_2_3.ids", new [] { XbimSchemaVersion.Ifc4 } },
            
 
             // Unsupported tests
@@ -39,7 +39,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             {
                 var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
-                outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());
+                outcome.Status.Should().Be(ValidationStatus.Fail, $"{idsFile} ({schema})");
             }
         }
 
@@ -51,7 +51,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             {
                 var outcome = await VerifyIdsFile(idsFile, schemaVersion:schema);
 
-                outcome.Status.Should().Be(ValidationStatus.Pass, schema.ToString());
+                outcome.Status.Should().Be(ValidationStatus.Pass, $"{idsFile} ({schema})");
             }
         }
 
@@ -61,10 +61,11 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
             foreach (var schema in GetSchemas(schemas))
             {
-                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema, validateIds: true);
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
-                outcome.Status.Should().Be(ValidationStatus.Error, schema.ToString());
+                outcome.Status.Should().Be(ValidationStatus.Fail,$"{idsFile} ({schema})");
             }
+            ValidateIds(idsFile).Should().NotBe(IdsLib.Audit.Status.Ok);
         }
 
         public static IEnumerable<object[]> GetInvalidTestCases()

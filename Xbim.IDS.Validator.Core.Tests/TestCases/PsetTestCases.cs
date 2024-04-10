@@ -24,6 +24,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             { "pass-dates_are_treated_as_strings_1_2.ids", new [] { XbimSchemaVersion.Ifc4 } },
             { "pass-durations_are_treated_as_strings_1_2.ids", new [] { XbimSchemaVersion.Ifc4 } },
 
+            { "pass-any_matching_value_in_an_enumerated_property_will_pass_1_3.ids", new [] { XbimSchemaVersion.Ifc4 } },
+            { "pass-any_matching_value_in_an_enumerated_property_will_pass_2_3.ids", new [] { XbimSchemaVersion.Ifc4 } },
+
 
             // Unsupported tests
             { "fail-predefined_properties_are_supported_but_discouraged_2_2.ids", new [] { XbimSchemaVersion.Unsupported } }, // To implement IFCDOORPANELPROPERTIES edgecase
@@ -42,7 +45,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             {
                 var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
-                outcome.Status.Should().Be(ValidationStatus.Pass, schema.ToString());
+                outcome.Status.Should().Be(ValidationStatus.Pass, $"{idsFile} ({schema})");
             }
             
         }
@@ -56,7 +59,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
             Skip.If(outcome.Status != ValidationStatus.Pass, "DoorPanelsProperties etc & FP precision not yet supported");
 
-            outcome.Status.Should().Be(ValidationStatus.Pass);
+            outcome.Status.Should().Be(ValidationStatus.Pass, idsFile);
         }
 
 
@@ -69,7 +72,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             {
                 var outcome = await VerifyIdsFile(idsFile);
 
-                outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());
+                outcome.Status.Should().Be(ValidationStatus.Fail, $"{idsFile} ({schema})");
             }
         }
 

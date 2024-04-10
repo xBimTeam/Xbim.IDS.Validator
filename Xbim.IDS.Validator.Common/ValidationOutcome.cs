@@ -90,9 +90,7 @@ namespace Xbim.IDS.Validator.Common
         {
             get
             {
-                return Specification.Cardinality.NoMatchingEntities ?
-                    ApplicableResults.Where(a => a.ValidationStatus == ValidationStatus.Pass)
-                    : ApplicableResults.Where(a => a.ValidationStatus == ValidationStatus.Fail);
+                return ApplicableResults.Where(a => a.ValidationStatus == ValidationStatus.Fail);
             }
 
         }
@@ -104,9 +102,7 @@ namespace Xbim.IDS.Validator.Common
         {
             get
             {
-                return Specification.Cardinality.NoMatchingEntities ?
-                    ApplicableResults.Where(a => a.ValidationStatus == ValidationStatus.Fail)
-                    : ApplicableResults.Where(a => a.ValidationStatus == ValidationStatus.Pass);
+                return ApplicableResults.Where(a => a.ValidationStatus == ValidationStatus.Pass);
             }
 
         }
@@ -118,8 +114,7 @@ namespace Xbim.IDS.Validator.Common
         /// <returns></returns>
         public bool IsFailure(IdsValidationResult result)
         {
-            return (Specification.Cardinality.AllowsRequirements && result.ValidationStatus != ValidationStatus.Pass) ||
-                (Specification.Cardinality.NoMatchingEntities && result.ValidationStatus != ValidationStatus.Fail);
+            return result.ValidationStatus == ValidationStatus.Fail;
         }
 
         /// <summary>
@@ -129,7 +124,7 @@ namespace Xbim.IDS.Validator.Common
         /// <returns></returns>
         public bool IsSuccess(IdsValidationResult result)
         {
-            return !IsFailure(result);
+            return result.ValidationStatus == ValidationStatus.Pass;
         }
 
     }

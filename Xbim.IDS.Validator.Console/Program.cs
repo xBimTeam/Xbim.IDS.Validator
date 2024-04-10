@@ -187,7 +187,8 @@ class Program
         WriteColored($" : {req.Specification.Name} [{passed} passed from {req.ApplicableResults.Count}]", ConsoleColor.Gray);
         WriteColored($" {req.Specification.Cardinality.Description} Requirement\n", ConsoleColor.Cyan);
         WriteColored($"  -- For {req.Specification.Applicability.GetApplicabilityDescription().SplitClauses()}\n", ConsoleColor.Blue);
-        WriteColored($"  -- It is {req.Specification.Cardinality.Description} that elements {req.Specification.Requirement?.GetRequirementDescription().SplitClauses()}\n", ConsoleColor.DarkGreen);
+        if(req.Specification.Cardinality.AllowsRequirements)
+            WriteColored($"  -- It is {req.Specification.Cardinality.Description} that elements {req.Specification.Requirement?.GetRequirementDescription().SplitClauses()}\n", ConsoleColor.DarkGreen);
 
         Console.ForegroundColor = ConsoleColor.White;
         foreach (var itm in req.ApplicableResults)

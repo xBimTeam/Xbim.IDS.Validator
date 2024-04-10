@@ -75,18 +75,23 @@ It currently supports:
 - Edge cases
     - [x] Support for 1.e-6 precision tolerance
 - Restrictions can be used in both Applicability filtering and Requirements verification
-- Reading of IDS in v0.9 Schema in Xml and JSON formats
+- Reading of IDS 
+    - in v0.9-0.9.7 Schema in BuildingSmart Xml formats
+    - in v0.9.7 IDS JSON formats
 - Optionality of Facets
 - Cardinality of Specification (Expected, Prohibited, Optional)
 - Support for validating models in following IFC Schemas
     - [x] IFC2x3
     - [x] IFC4 schemas
     - [x] IFC4x3-ADD1
+- Support for validating IDS schema validity using ids-lib
+- Support for upgrading older IDS schemas to latest Xml Schema
 - Extensions
     - [x] Case Insensitivity testing
     - [x] Optional Support for Ifc Type Inheritance
     - [x] Optional Support for querying Derived Properties
     - [x] Optional support for running IDS against COBie (using Xbim.COBieExpress extensions)
+    - [x] Support for use of IFC4+ schema items on Ifc23x models - e.g. to supprot IfcAirTerminal queries via an inferred IfcAirTerminalType definition
 
 The library has been tested against the [IDS test suite](https://github.com/buildingSMART/IDS/blob/master/Documentation/developer-guide.md#checking-ids-against-ifc)
 
@@ -96,6 +101,5 @@ Currently only one minor cases are unimplemented. (See PropertySet Skipped Tests
 
 - [ ] Support for Xbim.XIDS extensions (Documents)
     - [ ] IfcType SubClasses extension
-- [x] Support for IFC4x3
 
 - [ ] Testing Pre-defined Properties. e.g. IFCDOORPANELPROPERTIES.PanelOperation

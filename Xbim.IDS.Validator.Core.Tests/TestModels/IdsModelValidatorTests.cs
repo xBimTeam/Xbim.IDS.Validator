@@ -35,7 +35,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestModels
 
             var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
 
-            var results = await idsValidator.ValidateAgainstIdsAsync(model, idsScript, logger);
+            var results = await idsValidator.ValidateAgainstIdsAsync(model, idsScript, logger, verificationOptions: new VerificationOptions { PermittedIdsAuditStatuses = VerificationOptions.Relaxed});
 
             results.Should().NotBeNull();
 

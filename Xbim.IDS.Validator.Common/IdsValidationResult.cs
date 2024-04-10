@@ -148,11 +148,11 @@ namespace Xbim.IDS.Validator.Core
         {
             if(Status == ValidationStatus.Fail)
             {
-                return $"[{Status}] {Clause?.GetType().Name}.{ValidatedField} {Expectation} to be '{ExpectedResult}' - but actually found '{ActualResult}'";
+                return $"[{Status}] {Reason}: {Clause?.GetType().Name}.{ValidatedField} {Expectation} to be '{ExpectedResult}' - but actually found '{ActualResult}'";
             }
             else
             {
-                return $"[{Status}] {Clause?.GetType().Name}.{ValidatedField} {Expectation} to be '{ExpectedResult}' and found '{ActualResult}'";
+                return $"[{Status}] {Reason}: {Clause?.GetType().Name}.{ValidatedField} {Expectation} to be '{ExpectedResult}' and found '{ActualResult}'";
             }
         }
 
@@ -234,7 +234,7 @@ namespace Xbim.IDS.Validator.Core
         }
 
         /// <summary>
-        /// Builds a messge representing an Error when validating
+        /// Builds a message representing an Error when validating
         /// </summary>
         /// <param name="reason"></param>
         /// <returns></returns>
@@ -249,7 +249,23 @@ namespace Xbim.IDS.Validator.Core
         }
 
         /// <summary>
-        /// Default Constructot
+        /// Builds a message representing a prohibited entity for this specification
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public static ValidationMessage Prohibited(IPersist entity)
+        {
+            return new ValidationMessage
+            {
+                Status = ValidationStatus.Fail,
+                Reason = "Entity prohibited",
+                Expectation = Cardinality.Prohibited,
+                EntityAffected = entity
+            };
+        }
+
+        /// <summary>
+        /// Default Constructor
         /// </summary>
         public ValidationMessage()
         {

@@ -134,7 +134,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                                 object? value = GetNormalisedValue(propValue);
                                 bool isPopulated = IsValueRelevant(value);
                                 var valueExpected = cardinality != Cardinality.Prohibited || !facet.PropertyValue.IsNullOrEmpty();
-                                if (isPopulated = valueExpected)
+                                if (isPopulated == valueExpected)
                                 {
                                     satisfiedProp = true;
                                 }
@@ -179,8 +179,11 @@ namespace Xbim.IDS.Validator.Core.Binders
                             var propValue = UnwrapQuantity(quant);
                             object? value = GetNormalisedValue(propValue);
                             bool isPopulated = IsValueRelevant(value);
+                            var valueExpected = cardinality != Cardinality.Prohibited || !facet.PropertyValue.IsNullOrEmpty();
 
-                            if (isPopulated)
+
+                            // TODO: No test cases for Quantity values
+                            if (isPopulated == valueExpected)
                             {
                                 result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertyName!, quant.Name, $"Quantity provided in {pset.Name}", quant));
                                 success = true;
@@ -195,12 +198,12 @@ namespace Xbim.IDS.Validator.Core.Binders
 
                             if (ValueSatifiesConstraint(facet, value, ctx))
                             {
-                                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, value, $"Value matched in {pset.Name}_{quant.Name}", propValue));
+                                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, value, $"Quantity matched in {pset.Name}_{quant.Name}", propValue));
                                 success = true;
                             }
                             else
                             {
-                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyValue!, value, $"Invalid Value in {pset.Name}_{quant.Name}", propValue));
+                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyValue!, value, $"Invalid quantity in {pset.Name}_{quant.Name}", propValue));
                                 failure = true;
                             }
                         }
