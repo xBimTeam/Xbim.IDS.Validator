@@ -17,9 +17,6 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
             // Schema dependent tests
 
-            //{ "fail-a_specification_passes_only_if_all_requirements_pass_1_2.ids", new [] { XbimSchemaVersion.Ifc2X3 } },
-            //{ "fail-prohibited_specifications_fails_if_the_applicability_matches.ids", new [] { XbimSchemaVersion.Ifc2X3 } },
-            // 
 
         };
 
@@ -30,7 +27,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
             foreach (var schema in GetSchemas(schemas))
             {
-                var outcome = await VerifyIdsFile(idsFile);
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
                 outcome.Status.Should().Be(ValidationStatus.Pass, $"{idsFile} ({schema})");
             }
@@ -44,7 +41,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
             foreach (var schema in GetSchemas(schemas))
             {
-                var outcome = await VerifyIdsFile(idsFile);
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
                 outcome.Status.Should().Be(ValidationStatus.Fail, $"{idsFile} ({schema})");
             }
