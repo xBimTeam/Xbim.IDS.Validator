@@ -4,14 +4,9 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <ImplicitUsings>false</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>1.0.1</Version>
-    <VersionSuffix>Beta</VersionSuffix>
-    <Description>Enables validation of IFC models using BuildingSmart IDS</Description>
-    <Copyright>xbim Ltd</Copyright>
     <PackageReadmeFile>Readme.md</PackageReadmeFile>
-    <PackageTags>xbim ifc ids bim validation</PackageTags>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <PackageLicenseExpression>CDDL-1.0</PackageLicenseExpression>
+    <Description>Common interfaces for IDS validation of IFC models using xbim Toolkit</Description>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,17 +18,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="ids-lib" Version="1.0.70" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
-    <PackageReference Include="Xbim.CobieExpress.Exchanger" Version="6.0.167-develop" />
-    <PackageReference Include="Xbim.Essentials" Version="6.0.414-develop" />
-		<PackageReference Include="Xbim.InformationSpecifications" Version="0.3.35" />
-		<PackageReference Include="Xbim.IO.CobieExpress" Version="6.0.167-develop" />
+    <PackageReference Include="Xbim.CobieExpress.Exchanger" Version="6.0.168-develop" />
+    <PackageReference Include="Xbim.Essentials" Version="6.0.445" />
+    <PackageReference Include="Xbim.IO.CobieExpress" Version="6.0.168-develop" />
+    <PackageReference Include="Xbim.InformationSpecifications" Version="0.97.2" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="Example.ids">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 
 </Project>

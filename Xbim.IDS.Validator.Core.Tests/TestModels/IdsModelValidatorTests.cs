@@ -35,7 +35,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestModels
 
             var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
 
-            var results = await idsValidator.ValidateAgainstIdsAsync(model, idsScript, logger);
+            var results = await idsValidator.ValidateAgainstIdsAsync(model, idsScript, logger, verificationOptions: new VerificationOptions { PermittedIdsAuditStatuses = VerificationOptions.Relaxed});
 
             results.Should().NotBeNull();
 
@@ -50,7 +50,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestModels
 
         }
         [Fact]
-        public async Task Can_ValidateModelsAganistXids()
+        public async Task Can_ValidateModelsAgainstXids()
         {
             string modelFile = @"TestModels\SampleHouse4.ifc";
             string idsScript = @"TestModels\Example.ids";
@@ -61,7 +61,12 @@ namespace Xbim.IDS.Validator.Core.Tests.TestModels
 
 
             var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
-            var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idsScript, logger);
+            var idsMigrator = provider.GetRequiredService<IIdsSchemaMigrator>();
+
+            // Apply migrations
+            idsMigrator.MigrateToIdsSchemaVersion(idsScript, out var upgraded);
+
+            var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(upgraded.Root, logger);
 
             var results = await idsValidator.ValidateAgainstXidsAsync(model, idsSpec, logger);
 

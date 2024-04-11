@@ -12,17 +12,26 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
         }
 
-        
+
+        public static IDictionary<string, XbimSchemaVersion[]> testExceptions = new Dictionary<string, XbimSchemaVersion[]>
+        {
+            // Schema dependent tests
+
+
+        };
+
+
         [MemberData(nameof(GetPassTestCases))]
         [Theory]
         public async Task ExpectedPasses(string idsFile, params XbimSchemaVersion[] schemas)
         {
             foreach (var schema in GetSchemas(schemas))
             {
-                var outcome = await VerifyIdsFile(idsFile);
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
-                outcome.Status.Should().Be(ValidationStatus.Pass, schema.ToString());
+                outcome.Status.Should().Be(ValidationStatus.Pass, $"{idsFile} ({schema})");
             }
+            ValidateIds(idsFile).Should().Be(IdsLib.Audit.Status.Ok);
         }
 
 
@@ -32,11 +41,33 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
             foreach (var schema in GetSchemas(schemas))
             {
-                var outcome = await VerifyIdsFile(idsFile);
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
-                outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());
+                outcome.Status.Should().Be(ValidationStatus.Fail, $"{idsFile} ({schema})");
             }
+            ValidateIds(idsFile).Should().Be(IdsLib.Audit.Status.Ok);
         }
+
+        
+
+        [MemberData(nameof(GetInvalidTestCases))]
+        [Theory]
+        public async Task ExpectedInvalid(string idsFile, params XbimSchemaVersion[] schemas)
+        {
+            foreach (var schema in GetSchemas(schemas))
+            {
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
+
+                outcome.Status.Should().Be(ValidationStatus.Fail, $"{idsFile} ({schema})");
+            }
+            ValidateIds(idsFile).Should().NotBe(IdsLib.Audit.Status.Ok);
+        }
+
+        public static IEnumerable<object[]> GetInvalidTestCases()
+        {
+            return GetApplicableTestCases(TestCaseFolder, "invalid", testExceptions);
+        }
+
 
         public static IEnumerable<object[]> GetFailureTestCases()
         {
@@ -49,10 +80,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             return GetApplicableTestCases(TestCaseFolder, "pass", testExceptions);
         }
 
-        public static IDictionary<string, XbimSchemaVersion[]> testExceptions = new Dictionary<string, XbimSchemaVersion[]>
+        public static IEnumerable<object[]> GetUnsupportedTestCases()
         {
-            // { "fail-durations_are_treated_as_strings_2_2.ids" , new [] { XbimSchemaVersion.Ifc4} },
-
-        };
+            return GetUnsupportedTestsCases(TestCaseFolder, "*", testExceptions);
+        }
     }
 }

@@ -22,9 +22,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
 
 
-            // Unsupported tests
-            { "pass-an_aggregate_may_specify_the_predefined_type_of_the_whole_1_2.ids", new [] { XbimSchemaVersion.Unsupported } }, // 
-            { "fail-an_aggregate_may_specify_the_predefined_type_of_the_whole_2_2.ids", new [] { XbimSchemaVersion.Unsupported } },
+            // Unsupported tests: None
 
         };
 
@@ -44,18 +42,6 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         }
 
 
-       
-        [MemberData(nameof(GetUnsupportedPassTestCases))]
-        [SkippableTheory]
-        public async Task UnsupportedPasses(string idsFile)
-        {
-            var outcome = await VerifyIdsFile(idsFile);
-
-            Skip.If(outcome.Status != ValidationStatus.Pass, "Not yet supported");
-
-            outcome.Status.Should().Be(ValidationStatus.Pass);
-        }
-
 
 
 
@@ -74,17 +60,23 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         }
 
 
-
-        [MemberData(nameof(GetUnsupportedFailTestCases))]
-        [SkippableTheory]
-        public async Task UnsupportedFailures(string idsFile)
+        [MemberData(nameof(GetInvalidTestCases))]
+        [Theory]
+        public async Task ExpectedInvalid(string idsFile, params XbimSchemaVersion[] schemas)
         {
-            var outcome = await VerifyIdsFile(idsFile);
+            foreach (var schema in GetSchemas(schemas))
+            {
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
+
+                outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());
+            }
+            ValidateIds(idsFile).Should().NotBe(IdsLib.Audit.Status.Ok);
+        }
 
 
-            Skip.If(outcome.Status != ValidationStatus.Inconclusive, "Not yet supported");
-
-            outcome.Status.Should().Be(ValidationStatus.Fail);
+        public static IEnumerable<object[]> GetInvalidTestCases()
+        {
+            return GetApplicableTestCases(TestCaseFolder, "invalid", testExceptions);
         }
 
         public static IEnumerable<object[]> GetFailureTestCases()
@@ -100,11 +92,6 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         public static IEnumerable<object[]> GetUnsupportedPassTestCases()
         {
             return GetUnsupportedTestsCases(TestCaseFolder, "pass", testExceptions);
-        }
-
-        public static IEnumerable<object[]> GetUnsupportedFailTestCases()
-        {
-            return GetUnsupportedTestsCases(TestCaseFolder, "fail", testExceptions);
         }
 
 

@@ -1,29 +1,30 @@
-﻿<ids xmlns="http://standards.buildingsmart.org/IDS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://standards.buildingsmart.org/IDS/ids_05.xsd">
-    <info>
-        <title>Unit conversions shall take place to IDS-nominated standard units 2/2</title>
-    </info>
-    <specifications>
-        <specification name="Unit conversions shall take place to IDS-nominated standard units 2/2" ifcVersion="IFC2X3 IFC4" minOccurs="1" maxOccurs="unbounded">
-            <applicability>
-                <entity>
-                    <name>
-                        <simpleValue>IFCWALL</simpleValue>
-                    </name>
-                </entity>
-            </applicability>
-            <requirements>
-                <property measure="IfcLengthMeasure" minOccurs="1" maxOccurs="1">
-                    <propertySet>
-                        <simpleValue>Foo_Bar</simpleValue>
-                    </propertySet>
-                    <name>
-                        <simpleValue>Foo</simpleValue>
-                    </name>
-                    <value>
-                        <simpleValue>2</simpleValue>
-                    </value>
-                </property>
-            </requirements>
-        </specification>
-    </specifications>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ids xsi:schemaLocation="http://standards.buildingsmart.org/IDS http://standards.buildingsmart.org/IDS/0.9.7/ids.xsd" xmlns="http://standards.buildingsmart.org/IDS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <info>
+    <title>Unit conversions shall take place to IDS-nominated standard units 2/2</title>
+  </info>
+  <specifications>
+    <specification name="Unit conversions shall take place to IDS-nominated standard units 2/2" ifcVersion="IFC2X3 IFC4">
+      <applicability minOccurs="1" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCWALL</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <property cardinality="required" dataType="IFCLENGTHMEASURE">
+          <propertySet>
+            <simpleValue>Foo_Bar</simpleValue>
+          </propertySet>
+          <baseName >
+            <simpleValue>Foo</simpleValue>
+          </baseName>
+          <value>
+            <simpleValue>2</simpleValue>
+          </value>
+        </property>
+      </requirements>
+    </specification>
+  </specifications>
 </ids>

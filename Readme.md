@@ -2,7 +2,7 @@
 
 
 Xbim.IDS.Validator is a library to help validate IFC models against the 
-BuildingSMART [Information Delivery Specification](https://github.com/buildingSMART/IDS/tree/master/Documentation) (IDS) schema.
+BuildingSMART [Information Delivery Specification](https://github.com/buildingSMART/IDS/blob/master/Documentation/README.md) (IDS) schema.
 
 Powered by xbim Tookit, this library can be used to translate IDS files into an executable specification, 
 which can be run against any IFC2x3 or IFC4 model and provide a detailed breakdown of the results.
@@ -10,7 +10,7 @@ which can be run against any IFC2x3 or IFC4 model and provide a detailed breakdo
 
 ## How do I use it?
 
-Given an IDS file such as [example.ids](https://raw.githubusercontent.com/andyward/Xbim.IDS.Validator/master/Xbim.IDS.Validator.Core.Tests/TestModels/Example.ids?token=GHSAT0AAAAAABYNDJ4NB3E6GAGY7ZR7QFNQY5O2P3Q])
+Given an IDS file such as [example.ids](https://github.com/andyward/Xbim.IDS.Validator/blob/master/Xbim.IDS.Validator.Core.Tests/TestModels/Example.ids])
 
 
 ```csharp
@@ -26,7 +26,7 @@ IModel model = IfcStore.Open(ifcModelFile);
 // Get IdsModelValidator from DI provider / or inject to your service
 var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
 
-ValidationOutcome outcome = idsValidator.ValidateAgainstIds(model, "example.ids", logger)
+ValidationOutcome outcome = await idsValidator.ValidateAgainstIdsAsync(model, "example.ids", logger)
 
 foreach (ValidationRequirement requirement in results.ExecutedRequirements)
 {
@@ -72,24 +72,34 @@ It currently supports:
     - [x] Patterns (Regex)
     - [x] Bounds
     - [x] Structure (Min/Max length)
-    - Restrictions can be used in both Applicability filtering and Requirements verification
-- Reading of IDS in v0.9 Schema in Xml and JSON formats
+- Edge cases
+    - [x] Support for 1.e-6 precision tolerance
+- Restrictions can be used in both Applicability filtering and Requirements verification
+- Reading of IDS 
+    - in v0.9-0.9.7 Schema in BuildingSmart Xml formats
+    - in v0.9.7 IDS JSON formats
 - Optionality of Facets
 - Cardinality of Specification (Expected, Prohibited, Optional)
 - Support for validating models in following IFC Schemas
     - [x] IFC2x3
     - [x] IFC4 schemas
-    - [x] WIP support for IFC4x3
+    - [x] IFC4x3-ADD1
+- Support for validating IDS schema validity using ids-lib
+- Support for upgrading older IDS schemas to latest Xml Schema
+- Extensions
+    - [x] Case Insensitivity testing
+    - [x] Optional Support for Ifc Type Inheritance
+    - [x] Optional Support for querying Derived Properties
+    - [x] Optional support for running IDS against COBie (using Xbim.COBieExpress extensions)
+    - [x] Support for use of IFC4+ schema items on Ifc23x models - e.g. to supprot IfcAirTerminal queries via an inferred IfcAirTerminalType definition
 
 The library has been tested against the [IDS test suite](https://github.com/buildingSMART/IDS/blob/master/Documentation/developer-guide.md#checking-ids-against-ifc)
 
-Currently only two minor cases are unimplemented. (See Skipped Tests). Plus 2 PartOf tests covering PredefinedType 
+Currently only one minor cases are unimplemented. (See PropertySet Skipped Tests).
 
 ## To-do list
 
-- [x] Support for PartOf facets
-    - [ ] Latest IDS 0.9 PartOf feature [See Issue](https://github.com/CBenghi/Xbim.Xids/issues/3)
 - [ ] Support for Xbim.XIDS extensions (Documents)
     - [ ] IfcType SubClasses extension
-- [x] Support for IFC4x3 (Partially implemented)
-- [ ] Support for 1.e-6 precision
+
+- [ ] Testing Pre-defined Properties. e.g. IFCDOORPANELPROPERTIES.PanelOperation

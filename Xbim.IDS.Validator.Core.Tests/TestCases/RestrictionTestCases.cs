@@ -43,6 +43,25 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             }
         }
 
+
+        [MemberData(nameof(GetInvalidTestCases))]
+        [Theory]
+        public async Task ExpectedInvalid(string idsFile, params XbimSchemaVersion[] schemas)
+        {
+            foreach (var schema in GetSchemas(schemas))
+            {
+                var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
+
+                outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());
+            }
+            ValidateIds(idsFile).Should().NotBe(IdsLib.Audit.Status.Ok);
+        }
+
+        public static IEnumerable<object[]> GetInvalidTestCases()
+        {
+            return GetApplicableTestCases(TestCaseFolder, "invalid", testExceptions);
+        }
+
         public static IEnumerable<object[]> GetFailureTestCases()
         {
             return GetApplicableTestCases(TestCaseFolder, "fail", testExceptions);

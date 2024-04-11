@@ -24,13 +24,14 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             { "pass-dates_are_treated_as_strings_1_2.ids", new [] { XbimSchemaVersion.Ifc4 } },
             { "pass-durations_are_treated_as_strings_1_2.ids", new [] { XbimSchemaVersion.Ifc4 } },
 
+            { "pass-any_matching_value_in_an_enumerated_property_will_pass_1_3.ids", new [] { XbimSchemaVersion.Ifc4 } },
+            { "pass-any_matching_value_in_an_enumerated_property_will_pass_2_3.ids", new [] { XbimSchemaVersion.Ifc4 } },
+
 
             // Unsupported tests
             { "fail-predefined_properties_are_supported_but_discouraged_2_2.ids", new [] { XbimSchemaVersion.Unsupported } }, // To implement IFCDOORPANELPROPERTIES edgecase
             { "pass-predefined_properties_are_supported_but_discouraged_1_2.ids", new [] { XbimSchemaVersion.Unsupported } }, // To implement IFCDOORPANELPROPERTIES edgecase
-            { "pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_1_4.ids", new [] { XbimSchemaVersion.Unsupported } }, // XIDS support?
-            { "pass-floating_point_numbers_are_compared_with_a_1e_6_tolerance_2_4.ids", new [] { XbimSchemaVersion.Unsupported } },
-            //
+            
 
         };
 
@@ -44,7 +45,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             {
                 var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
 
-                outcome.Status.Should().Be(ValidationStatus.Pass, schema.ToString());
+                outcome.Status.Should().Be(ValidationStatus.Pass, $"{idsFile} ({schema})");
             }
             
         }
@@ -58,7 +59,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
             Skip.If(outcome.Status != ValidationStatus.Pass, "DoorPanelsProperties etc & FP precision not yet supported");
 
-            outcome.Status.Should().Be(ValidationStatus.Pass);
+            outcome.Status.Should().Be(ValidationStatus.Pass, idsFile);
         }
 
 
@@ -71,7 +72,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             {
                 var outcome = await VerifyIdsFile(idsFile);
 
-                outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());
+                outcome.Status.Should().Be(ValidationStatus.Fail, $"{idsFile} ({schema})");
             }
         }
 
@@ -87,6 +88,23 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             outcome.Status.Should().Be(ValidationStatus.Fail);
         }
 
+
+        //[MemberData(nameof(GetInvalidTestCases))]
+        //[Theory(Skip = "None to do")]
+        //public async Task ExpectedInvalid(string idsFile, params XbimSchemaVersion[] schemas)
+        //{
+        //    foreach (var schema in GetSchemas(schemas))
+        //    {
+        //        var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema, validateIds: true);
+
+        //        outcome.Status.Should().Be(ValidationStatus.Error, schema.ToString());
+        //    }
+        //}
+
+        public static IEnumerable<object[]> GetInvalidTestCases()
+        {
+            return GetApplicableTestCases(TestCaseFolder, "invalid", testExceptions);
+        }
 
         public static IEnumerable<object[]> GetFailureTestCases()
         {

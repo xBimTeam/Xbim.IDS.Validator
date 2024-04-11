@@ -1,15 +1,44 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Linq.Expressions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
+using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Extensions
 {
     public static class ValueConstraintExtensions
     {
+
+
+        /// <summary>
+        /// Evaluates a candidate value against a constraint, accounting for the facet cardinality
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="constraint"></param>
+        /// <param name="candidateValue"></param>
+        /// <param name="ctx"></param>
+        /// <param name="logger"></param>
+        /// <param name="caseSensitive"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        [return: NotNull]
+        public static bool ExpectationIsSatisifedBy<T>([NotNullWhen(true)]this ValueConstraint? constraint, object candidateValue, ValidationContext<T> ctx, ILogger? logger = null, bool caseSensitive = false) where T: IFacet
+        {
+            var expectation = ctx.FacetCardinality switch
+            {
+                Cardinality.Expected => true,
+                Cardinality.Prohibited => false,
+                Cardinality.Optional => true,  // Check
+                
+                _ => throw new NotImplementedException()
+            };
+            return constraint?.IsSatisfiedBy(candidateValue, caseSensitive, logger) == expectation;
+        }
+
         /// <summary>
         /// Determines if the Constraint is null, empty or otherwise contains a null or empty string
         /// </summary>
@@ -55,29 +84,29 @@ namespace Xbim.IDS.Validator.Core.Extensions
             return true;
         }
 
-        public static RequirementCardinalityOptions? GetCardinality(this FacetGroup requirement, int idx)
+        public static Cardinality? GetCardinality(this FacetGroup requirement, int idx)
         {
             if(requirement.RequirementOptions == null)
             {
                 // Workaround for Options being null when any facet is invalid. Expected is the default
-                requirement.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>(requirement.Facets.Select(f => RequirementCardinalityOptions.Expected));
+                requirement.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>(requirement.Facets.Select(f => new RequirementCardinalityOptions(f, Cardinality.Expected)));
             }
-            return requirement.RequirementOptions?[idx];
+            if(requirement.RequirementOptions.Count > idx)
+            {
+                return requirement.RequirementOptions?[idx]?.RelatedFacetCardinality;
+            }
+            else
+            {
+                return Cardinality.Expected;
+            }
         }
 
-        public static RequirementCardinalityOptions GetCardinality(this FacetGroup requirement, IFacet facet)
+        public static Cardinality? GetCardinality(this FacetGroup requirement, IFacet facet)
         {
             var idx = requirement.Facets.IndexOf(facet);
             if (idx != -1)
             {
-
-
-                if (requirement.RequirementOptions == null)
-                {
-                    // Workaround for Options being null when any facet is invalid. Expected is the default
-                    requirement.RequirementOptions = new System.Collections.ObjectModel.ObservableCollection<RequirementCardinalityOptions>(requirement.Facets.Select(f => RequirementCardinalityOptions.Expected));
-                }
-                return requirement.RequirementOptions[idx];
+                return GetCardinality(requirement, idx);
             }
             throw new ArgumentOutOfRangeException(nameof(facet));
         }
@@ -96,8 +125,8 @@ namespace Xbim.IDS.Validator.Core.Extensions
             {
                 switch (requirement.GetCardinality(idx))
                 {
-                    case RequirementCardinalityOptions.Expected: return true;
-                    case RequirementCardinalityOptions.Prohibited: return false;
+                    case Cardinality.Expected: return true;
+                    case Cardinality.Prohibited: return false;
                 }
             }
             return null;
@@ -108,7 +137,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
             var idx = requirement.Facets.IndexOf(currentFacet);
             if (idx != -1)
             {
-                return requirement.GetCardinality(idx) == null;
+                return requirement.GetCardinality(idx) == Cardinality.Optional;
             }
             return true;
         }

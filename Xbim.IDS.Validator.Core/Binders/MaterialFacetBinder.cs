@@ -8,6 +8,7 @@ using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
+using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Binders
 {
@@ -15,7 +16,7 @@ namespace Xbim.IDS.Validator.Core.Binders
     {
         private readonly ILogger<MaterialFacetBinder> logger;
 
-        public MaterialFacetBinder(BinderContext context, ILogger<MaterialFacetBinder> logger) : base(context)
+        public MaterialFacetBinder(BinderContext context, ILogger<MaterialFacetBinder> logger) : base(context, logger)
         {
             this.logger = logger;
         }
@@ -101,41 +102,70 @@ namespace Xbim.IDS.Validator.Core.Binders
             throw new NotSupportedException("Cannot filter materials on this type " + elementType.Name);
         }
 
-        public override void ValidateEntity(IPersistEntity item, MaterialFacet facet, RequirementCardinalityOptions requirement, IdsValidationResult result)
+        public override void ValidateEntity(IPersistEntity item, MaterialFacet facet, Cardinality cardinality, IdsValidationResult result)
         {
             if (facet is null)
             {
                 throw new ArgumentNullException(nameof(facet));
             }
-            var ctx = CreateValidationContext(requirement, facet);
+            var ctx = CreateValidationContext(cardinality, facet);
 
             var candidates = GetMaterialsValues(item);
 
             if (candidates.Any())
             {
                 bool? success = null;
-
-                
-                foreach (var material in candidates)
+                if (facet.Value != null)
                 {
-                    var materialName = material;
-                    
-                    if (facet.Value == null || facet.Value?.IsSatisfiedBy(materialName, true, logger) == true)
+
+                    foreach (var material in candidates)
                     {
-                        result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.Value!, materialName, "Material satisfied", item));
-                        success = true;
+                        var materialName = material;
+                    
+                        if (facet.Value.ExpectationIsSatisifedBy(materialName, ctx, logger, true))
+                        {
+                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.Value!, materialName, "Material matched", item));
+                            success = true;
+                        }
                     }
                 }
-                // If no matching value found after all the psets checked, mark as failed
+                else
+                {
+                    if(cardinality == Cardinality.Prohibited)
+                    {
+                        result.Fail(ValidationMessage.Failure(ctx, fn => fn.Value!, null, "Material Prohibited", item));
+                    }
+                    else
+                    {
+                        result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.Value!, null, "Found a material", item));
+                        success = true; // Found a material. Any will do
+                    }
+                }
+                // If no matching value found after all the materials checked, mark as failed
                 if (success == default)
                 {
                     var materials = string.Join(",", candidates);
-                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Value!, materials, "No materials matched", item));
+                    result.Fail(ValidationMessage.Failure(ctx, fn => fn.Value!, materials, "No materials matched", item));
                 }
             }
             else
             {
-                result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.Value!, null, "No materials found", item));
+                switch (cardinality)
+                {
+                    case Cardinality.Expected:
+                        {
+                            result.Fail(ValidationMessage.Failure(ctx, fn => fn.Value!, null, "No materials found", item));
+                            break;
+                        }
+
+                    case Cardinality.Optional:
+                    case Cardinality.Prohibited:
+                        {
+                            result.MarkSatisified(ValidationMessage.Failure(ctx, fn => fn.Value!, null, "No Material found", item));
+                            break;
+                        }
+                }
+                
             }
         }
 

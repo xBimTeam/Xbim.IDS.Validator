@@ -32,7 +32,7 @@ namespace Xbim.IDS.Validator.Core.Tests.COBie
         ILogger<IfcTypeFacetBinder> IfcTypeLogger { get => GetLogger<IfcTypeFacetBinder>(); }
 
 
-        const string file = @"TestModels/SampleHouse4";
+        const string file = @"TestModels/SampleHouse4.xlsx";
 
         [Fact]
         public void CanOpenCobie()
@@ -271,6 +271,8 @@ namespace Xbim.IDS.Validator.Core.Tests.COBie
 
         private static IModel BuildCOBieModel(ITestOutputHelper outputHelper = null)
         {
+            if (!File.Exists(file))
+                throw new FileNotFoundException(file);
             var mapping = CobieModel.GetMapping();
             mapping.ClassMappings.RemoveAll(m => m.Class == "System");
             var model = CobieModel.ImportFromTable(file, out string report, mapping);

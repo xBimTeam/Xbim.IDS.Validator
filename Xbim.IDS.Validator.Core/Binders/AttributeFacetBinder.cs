@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using IdsLib.IfcSchema;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,11 +8,13 @@ using System.Reflection;
 using Xbim.Common;
 using Xbim.Common.Metadata;
 using Xbim.IDS.Validator.Common.Interfaces;
+using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4x3;  // To provide ToIfc4() extension method
 using Xbim.InformationSpecifications;
-using Xbim.InformationSpecifications.Helpers;
+using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
+
 
 namespace Xbim.IDS.Validator.Core.Binders
 {
@@ -20,14 +23,14 @@ namespace Xbim.IDS.Validator.Core.Binders
         private readonly ILogger<AttributeFacetBinder> logger;
         private VerificationOptions _options = new VerificationOptions();
 
-        public AttributeFacetBinder(BinderContext context, ILogger<AttributeFacetBinder> logger) : base(context)
+        public AttributeFacetBinder(BinderContext context, ILogger<AttributeFacetBinder> logger) : base(context, logger)
         {
             this.logger = logger;
         }
 
 
         /// <summary>
-        /// Binds an IFC attribute filter to an expression, where Attributes are built in IFC schema fields
+        /// Binds an IFC attribute filter to an expression, where Attributes are built-in IFC schema fields
         /// </summary>
         /// <remarks>e.g Where(p=> p.GlobalId == "someGuid")</remarks>
         /// <param name="baseExpression"></param>
@@ -49,7 +52,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             if (!attrFacet.IsValid() && Model.SchemaVersion != Xbim.Common.Step21.XbimSchemaVersion.Cobie2X4)
             {
-                // IsValid checks against a know list of all IFC Attributes
+                // IsValid checks against a known list of all IFC Attributes
                 throw new InvalidOperationException($"Attribute Facet '{attrFacet?.AttributeName}' is not valid");
             }
 
@@ -57,14 +60,15 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             if (attrFacet.AttributeName?.IsSingleExact(out var attributeName) == true)
             {
-                // When an Ifc Type facet has not yet been specified, find correct root type(s) for this AttributeName
-                // using the lookup that XIDS provides
+                // When an Ifc Type facet has not yet been specified, find correct IFC type(s) for this AttributeName
+                // using the lookup that IDSLib provides
 
+                // Test for raw Model.Instances:
                 if (expression.Type.IsInterface && typeof(IEntityCollection).IsAssignableFrom(expression.Type))
                 {
                     // Work out the set of all types this attribute could apply to.
                     // This is schema dependent. We want to get the highest common roots
-                    string[] rootTypes;
+                    IEnumerable<string> rootTypes;
 
                     switch (Model.SchemaVersion)
                     {
@@ -90,21 +94,29 @@ namespace Xbim.IDS.Validator.Core.Binders
                             throw new NotImplementedException($"Unsupported Schema {Model.SchemaVersion}");
 
                     }
+                    
 
-                    expression = base.BindIfcExpressTypes(expression, rootTypes);
+                    return BindIfcTypeForAttributes(expression, rootTypes, attrFacet, (string)attributeName);
 
 
                 }
-                var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
-                var expressType = Model.Metadata.ExpressType(collectionType);
-                if(!ExpressTypeIsValid(expressType))
+                else
                 {
-                    throw new InvalidOperationException($"Invalid IFC Type '{expression.Type.Name}'");
-                }
+                    // We know the Collection type, so can bind the Attribute predicate as long as it is a valid IFC type
+                    // i.e. Apply straight forward predicate to the expression.
 
-                expression = BindAttributeSelection(expression, expressType, (string)attributeName,
-                    attrFacet?.AttributeValue);
-                return expression;
+                    var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
+                    var expressType = Model.Metadata.ExpressType(collectionType);
+                    if (!ExpressTypeIsValid(expressType))
+                    {
+                        throw new InvalidOperationException($"Invalid IFC Type '{expression.Type.Name}'");
+                    }
+
+                    expression = BindAttributeSelection(expression, expressType, (string)attributeName,
+                        attrFacet?.AttributeValue);
+                    return expression;
+                }
+                
 
             }
             else
@@ -121,63 +133,147 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         }
 
+        /// <summary>
+        /// Selects the relevant types and applies the appropriate Attribute predicate to each before concatenating the resuls 
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <param name="rootTypes"></param>
+        /// <param name="attrFacet"></param>
+        /// <param name="attributeName"></param>
+        /// <returns>An expression applying the IfcType filters with relevant Attribute predicate, cast to the highest common type</returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        internal Expression BindIfcTypeForAttributes(Expression expression, IEnumerable<string> rootTypes, AttributeFacet attrFacet, string attributeName)
+        {
+            IEnumerable<ExpressType> expressTypes = base.GetExpressTypes(rootTypes);
+            if (!ExpressTypesAreValid(expressTypes))
+            {
+                var types = string.Join(',', rootTypes);
+                throw new InvalidOperationException($"Invalid IFC Types '{types}'");
+            }
+
+            var baseExpression = expression;
+            bool doConcat = false;
+            foreach (var expressType in expressTypes)
+            {
+
+                var rightExpr = BindIfcExpressType(baseExpression, expressType, true);
+
+                rightExpr = BindAttributeSelection(rightExpr, expressType, (string)attributeName,
+                    attrFacet?.AttributeValue);
+
+
+                // Concat to main expression.
+                if (doConcat)
+                {
+                    expression = BindConcat(expression, rightExpr);
+                }
+                else
+                {
+                    expression = rightExpr;
+                    doConcat = true;
+                }
+            }
+
+            return expression;
+        }
+
         public override Expression BindWhereExpression(Expression baseExpression, AttributeFacet attrFacet)
         {
             // We can use use straight forward selection as we're not traversing any relationships
             return BindSelectionExpression(baseExpression, attrFacet);
         }
 
-        
-        public override void ValidateEntity(IPersistEntity item, AttributeFacet af, RequirementCardinalityOptions requirement, IdsValidationResult result)
+        public override void ValidateEntity(IPersistEntity item, AttributeFacet af, Cardinality cardinality, IdsValidationResult result)
         {
             if (af is null)
             {
                 throw new ArgumentNullException(nameof(af));
             }
-            var ctx = CreateValidationContext(requirement, af);
+            var ctx = CreateValidationContext(cardinality, af);
 
             var candidates = GetAttributes(item, af);
 
             FixDataType(af, candidates.FirstOrDefault().Value);
-
-            foreach (var pair in candidates)
+            if (candidates.Any())
             {
-                var attrName = pair.Key;
-                var attrvalue = pair.Value;
-                if (IsIfc2x3Model() && attrvalue is Xbim.Ifc2x3.MeasureResource.IfcValue ifc2x3Value)
-                {
-                    attrvalue = ifc2x3Value.ToIfc4();
-                }
-                else if (IsIfc4x3Model() && attrvalue is Xbim.Ifc4x3.MeasureResource.IfcValue ifc4x3Value)
-                {
-                    attrvalue = ifc4x3Value.ToIfc4();
-                }
-                bool isPopulated = IsValueRelevant(attrvalue);
-                // Name meets requirement if it has a value and is Required. Treat unknown logical as no value
-                if (isPopulated)
-                {
-                    result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.AttributeName!, attrName, "Was populated", item));
-                }
-                else
-                {
-                    result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.AttributeName!, attrName, "No attribute matched", item));
-                }
 
-                attrvalue = HandleBoolConventions(attrvalue);
-                // Unpack Ifc Values
-                if (attrvalue is IIfcValue v)
+
+                foreach (var pair in candidates)
                 {
-                    attrvalue = v.Value;
-                }
-                if (af.AttributeValue != null)
-                {
-                    attrvalue = ApplyWorkarounds(attrvalue, af.AttributeValue);
-                    if (IsTypeAppropriateForConstraint(af.AttributeValue, attrvalue) && af.AttributeValue.IsSatisfiedBy(attrvalue, logger))
-                        result.Messages.Add(ValidationMessage.Success(ctx, fn => fn.AttributeValue!, attrvalue, "Was populated", item));
+                    var attrName = pair.Key;
+                    var attrvalue = pair.Value;
+                    if (IsIfc2x3Model() && attrvalue is Xbim.Ifc2x3.MeasureResource.IfcValue ifc2x3Value)
+                    {
+                        attrvalue = ifc2x3Value.ToIfc4();
+                    }
+                    else if (IsIfc4x3Model() && attrvalue is Xbim.Ifc4x3.MeasureResource.IfcValue ifc4x3Value)
+                    {
+                        attrvalue = ifc4x3Value.ToIfc4();
+                    }
+
+                    if (af.AttributeValue != null)
+                    {
+                        attrvalue = HandleBoolConventions(attrvalue);
+                        // Unpack Ifc Values
+                        if (attrvalue is IIfcValue v)
+                        {
+                            attrvalue = v.Value;
+                        }
+                        if (IsTypeAppropriateForConstraint(af.AttributeValue, attrvalue) && af.AttributeValue.ExpectationIsSatisifedBy(attrvalue, ctx, logger))
+                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.AttributeValue!, attrvalue, "Attribute value OK", item));
+                        else
+                        {
+                            switch (cardinality)
+                            {
+                                case Cardinality.Expected:
+                                    result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No attribute value matched", item));
+                                    break;
+
+                                case Cardinality.Prohibited:
+                                    result.MarkSatisified(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No matching attribute value", item));
+                                    break;
+
+                                case Cardinality.Optional:
+                                    if (attrvalue is string s && s == string.Empty)
+                                    {
+                                        result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "Empty attribute found", item));
+                                    }
+                                    else
+                                    {
+                                        result.MarkSatisified(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No matching attribute value", item));
+                                    }
+                                    break;
+                            }
+                        }
+                    }
                     else
-                        result.Messages.Add(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No attribute value matched", item));
-                }
+                    {
+                        // Value not specified - just check presence or otherwise of a Value
+                        bool isPopulated = IsValueRelevant(attrvalue);
+                        var valueExpected = cardinality == Cardinality.Expected;
+                        // Name meets requirement if it has a value and is Required. Treat unknown logical as no value
+                        if (isPopulated)
+                        {
+                            if (valueExpected)
+                                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.AttributeName!, attrName, "Attribute value populated", item));
+                            else
+                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeName!, attrName, "Attribute value prohibited", item));
+                        }
+                        else
+                        {
+                            if (valueExpected)
+                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeName!, null, "Attribute value blank", item));
+                            else
+                                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.AttributeName!, null, "Attribute value not set", item));
+                        }
+                    }
 
+                }
+            }
+            else
+            {
+                // Not a valid attribute. Always fails. 
+                result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeName!, null, "No valid attribute", item));
             }
         }
 
@@ -190,20 +286,20 @@ namespace Xbim.IDS.Validator.Core.Binders
             if (af.AttributeValue.IsSingleExact(out _))
                 return;
 
-            if(value is IIfcValue v)
+            if (value is IIfcValue v)
             {
                 value = v.Value;    // Unpack again if required
             }
-            
-            if(value is double || value is IIfcMeasureValue)
+
+            if (value is double || value is IIfcMeasureValue)
             {
                 af.AttributeValue.BaseType = NetTypeName.Double;
             }
-            else if (value is int || value is long )
+            else if (value is int || value is long)
             {
                 af.AttributeValue.BaseType = NetTypeName.Integer;
             }
-            
+
         }
 
         private IDictionary<string, object?> GetAttributes(IPersistEntity entity, AttributeFacet facet)
@@ -223,11 +319,11 @@ namespace Xbim.IDS.Validator.Core.Binders
                 
 
                 var propertyMeta = properties.FirstOrDefault(p => p.Name == attrName);
-                if (propertyMeta == null)
-                {
-                    results.Add(attrName, default);
-                }
-                else
+                if (propertyMeta != null)
+                //{
+                //    results.Add(attrName, default);
+                //}
+                //else
                 {
                     var ifcAttributePropInfo = propertyMeta.PropertyInfo;
                     var value = ifcAttributePropInfo.GetValue(entity);

@@ -57,7 +57,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             int expectedCount = 7;
             IfcTypeFacet ifcFacet = new IfcTypeFacet
             {
-                IfcType = new ValueConstraint(NetTypeName.String),
+                IfcType = new ValueConstraint(),
             };
             
             ifcFacet.IfcType.AddAccepted(new ExactConstraint("IFCDOOR"));
@@ -65,7 +65,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             AttributeFacet attrFacet = new AttributeFacet
             {
                 AttributeName = "Tag",
-                AttributeValue = new ValueConstraint(NetTypeName.String)
+                AttributeValue = new ValueConstraint()
             };
             attrFacet.AttributeValue.AddAccepted(new StructureConstraint() { MinLength = 1, MaxLength = 10 });
 
@@ -149,7 +149,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             MaterialFacet materialFacet = new MaterialFacet
             {
-                Value = new ValueConstraint(NetTypeName.String),
+                Value = new ValueConstraint(),
             };
             materialFacet.Value = material;
             var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
@@ -184,8 +184,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             IfcPropertyFacet propertyFacet = new IfcPropertyFacet
             {
-                PropertySetName = new ValueConstraint(NetTypeName.String),
-                PropertyName = new ValueConstraint(NetTypeName.String),
+                PropertySetName = new ValueConstraint(),
+                PropertyName = new ValueConstraint(),
                 PropertyValue = new ValueConstraint(),
             };
             propertyFacet.PropertySetName.AddAccepted( new ExactConstraint(psetName));
@@ -221,7 +221,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             {
                 PropertySetName = new ValueConstraint("Pset_MaterialCombustion"),
                 PropertyName = new ValueConstraint("SpecificHeatCapacity"),
-                Measure = "IFCLABEL"
+                DataType = "IFCLABEL"
             };
 
             var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);

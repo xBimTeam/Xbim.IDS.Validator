@@ -1,6 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using IdsLib;
+using IdsLib.IdsSchema.IdsNodes;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,8 +12,6 @@ using Xbim.IDS.Validator.Common;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
-using Xbim.InformationSpecifications.Cardinality;
-using Xbim.IO.Parser;
 
 namespace Xbim.IDS.Validator.Core
 {
@@ -19,12 +20,23 @@ namespace Xbim.IDS.Validator.Core
     /// </summary>
     public class IdsModelValidator : IIdsModelValidator
     {
-        public IdsModelValidator(IIdsModelBinder modelBinder)
+        private readonly IIdsSchemaMigrator idsSchemaMigrator;
+        private readonly IIdsValidator schemaValidator;
+
+        /// <summary>
+        /// Constructs a new <see cref="IdsModelValidator"/>
+        /// </summary>
+        /// <param name="modelBinder"></param>
+        /// <param name="idsSchemaMigrator"></param>
+        /// <param name="schemaValidator"></param>
+        public IdsModelValidator(IIdsModelBinder modelBinder, IIdsSchemaMigrator idsSchemaMigrator, IIdsValidator schemaValidator)
         {
             ModelBinder = modelBinder;
+            this.idsSchemaMigrator = idsSchemaMigrator;
+            this.schemaValidator = schemaValidator;
         }
 
-        public IIdsModelBinder ModelBinder { get; }
+        private IIdsModelBinder ModelBinder { get; }
 
         /// <inheritdoc/>
         public ValidationOutcome ValidateAgainstIds(IModel model, string idsFile, ILogger logger, VerificationOptions? options = default)
@@ -32,7 +44,9 @@ namespace Xbim.IDS.Validator.Core
             // Plan to obsolete the Synchronous
             return ValidateAgainstIdsAsync(model, idsFile, logger, null, options).Result;
         }
-        public async Task<ValidationOutcome> ValidateAgainstXidsAsync(IModel model, Xids idsSpec, ILogger logger,  Func<ValidationRequirement, Task>? requirementCompleted, VerificationOptions? verificationOptions = null,
+
+        /// <inheritdoc/>
+        public async Task<ValidationOutcome> ValidateAgainstXidsAsync(IModel model, Xids idsSpec, ILogger logger, Func<ValidationRequirement, Task>? requirementCompleted, VerificationOptions? verificationOptions = null,
             CancellationToken token = default)
         {
             if (logger is null)
@@ -42,18 +56,23 @@ namespace Xbim.IDS.Validator.Core
 
             try
             {
-
-
+                verificationOptions ??= new VerificationOptions();
                 ModelBinder.SetOptions(verificationOptions);
 
                 var outcome = new ValidationOutcome(idsSpec);
-                if (idsSpec == null)
+                if(verificationOptions.PermittedIdsAuditStatuses != VerificationOptions.AnyState)
                 {
-                    outcome.MarkCompletelyFailed($"Unable to open IDS file '{idsSpec.Name}'");
-                    logger.LogError("Unable to open IDS file '{idsFile}", idsSpec.Name);
-                    return outcome;
-                }
+                    // Validate the IDS
+                    Audit.Status schemaStatus = ValidateIdsSchema(idsSpec);
 
+                    if(!verificationOptions.PermittedIdsAuditStatuses.HasFlag(schemaStatus))
+                    {
+                        outcome.MarkCompletelyFailed($"IDS Validation failed: {schemaStatus}");
+                        var name = idsSpec.AllSpecifications().Select(x => x.Name).FirstOrDefault();
+                        logger.LogError("IDS '{idsName}' was invalid: {auditstatus}", name, schemaStatus);
+                        return outcome;
+                    }
+                }
 
                 foreach (var group in idsSpec.SpecificationsGroups)
                 {
@@ -62,8 +81,6 @@ namespace Xbim.IDS.Validator.Core
                     {
 
                         var requirementResult = ValidateRequirement(spec, model, logger, token);
-
-
 
                         if (requirementResult.Status != ValidationStatus.Error)
                         {
@@ -74,7 +91,7 @@ namespace Xbim.IDS.Validator.Core
                         if (requirementCompleted != null)
                         {
                             // report progress
-                           await requirementCompleted(requirementResult);
+                            await requirementCompleted(requirementResult);
                         }
                         outcome.ExecutedRequirements.Add(requirementResult);
 
@@ -101,8 +118,18 @@ namespace Xbim.IDS.Validator.Core
             }
         }
 
+        private Audit.Status ValidateIdsSchema(Xids idsSpec)
+        {
+            using (var memStream = new MemoryStream())
+            {
+                idsSpec.ExportBuildingSmartIDS(memStream);
+                memStream.Seek(0, SeekOrigin.Begin);
+                return schemaValidator.ValidateIDS(memStream);
+            }
+        }
+
         /// <inheritdoc/>
-        public async Task<ValidationOutcome> ValidateAgainstIdsAsync(IModel model, string idsFile, ILogger logger,  Func<ValidationRequirement, Task>? requirementCompleted, VerificationOptions? verificationOptions = null,
+        public async Task<ValidationOutcome> ValidateAgainstIdsAsync(IModel model, string idsFile, ILogger logger, Func<ValidationRequirement, Task>? requirementCompleted, VerificationOptions? verificationOptions = null,
             CancellationToken token = default)
         {
             if (logger is null)
@@ -114,18 +141,50 @@ namespace Xbim.IDS.Validator.Core
             {
                 ModelBinder.SetOptions(verificationOptions);
 
-                var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(idsFile, logger);
+                if (!Xids.CanLoad(new FileInfo(idsFile)))
+                {
+                    var outcome = new ValidationOutcome(new Xids());
+                    outcome.MarkCompletelyFailed($"Unable to open IDS file '{idsFile}'");
+                    logger.LogError("Unable to open IDS file '{idsFile}", idsFile);
+                    return outcome;
+                }
 
-                return await ValidateAgainstXidsAsync( model,  idsSpec,  logger, requirementCompleted, verificationOptions,token);
-                
+                Xids? idsSpec = LoadIdsFile(idsFile, logger, verificationOptions);
+
+                return await ValidateAgainstXidsAsync(model, idsSpec, logger, requirementCompleted, verificationOptions, token);
+
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to complete validation");
                 var badOutcome = new ValidationOutcome(new Xids());
                 badOutcome.MarkCompletelyFailed(ex.Message);
-                return badOutcome;
+                return await Task.FromResult(badOutcome);
             }
+        }
+
+        private Xids? LoadIdsFile(string idsFile, ILogger logger, VerificationOptions? verificationOptions)
+        {
+            if (verificationOptions?.PerformInPlaceSchemaUpgrade == true && idsSchemaMigrator.HasMigrationsToApply(idsFile))
+            {
+                // Do an in place upgrade to latest schema
+                // Note: won't support zipped IDS upgrades, JSON etc.
+                var targetVersion = IdsVersion.Ids0_9_7;
+                var currentVersion = idsSchemaMigrator.GetIdsVersion(idsFile);
+                logger.LogWarning("IDS schema {oldVersion} is out of date for {file}. Applying in-place upgrade to latest {version} schema.",
+                    currentVersion, idsFile, targetVersion);
+                if (idsSchemaMigrator.MigrateToIdsSchemaVersion(idsFile, out var upgraded, targetVersion))
+                {
+                    logger.LogInformation("IDS file {file} upgraded in-place to latest schema", idsFile);
+                    return Xids.LoadBuildingSmartIDS(upgraded.Root, logger);
+                }
+                else
+                {
+                    logger.LogWarning("Failed to update IDS to latest schema. Using original version");
+                }
+
+            }
+            return Xids.LoadBuildingSmartIDS(idsFile, logger);
         }
 
         private ValidationRequirement ValidateRequirement(Specification spec, IModel model, ILogger logger, CancellationToken token)
@@ -135,54 +194,112 @@ namespace Xbim.IDS.Validator.Core
                 throw new ArgumentNullException(nameof(spec));
             }
             
+
+            
             var requirementResult = new ValidationRequirement(spec);
 
             try
             {
-                logger.LogInformation(" -- {cardinality} Spec '{spec}' : versions {ifcVersions}", spec.Cardinality.Description, spec.Name, spec.IfcVersion);
-               
+                var specCardinality = spec.Cardinality;
+                logger.LogInformation(" -- {cardinality} Spec '{spec}' : versions {ifcVersions}", specCardinality.Description, spec.Name, spec.IfcVersion);
+
+                var modelSchema = model.SchemaVersion.ToString();
+                if (!spec.IfcVersion.Any(s => s.ToString().Equals(modelSchema, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    var versions = spec.IfcVersion.Any() ? spec.IfcVersion.Select(s => s.ToString()).Aggregate((a, b) => $"{a},{b}") : "";
+                    logger.LogWarning("Specification may not be compatible for this model. Spec is for {versions}, while model is {modelVersion}", versions, modelSchema);
+                }
+
                 logger.LogInformation("    Applicable to : {applicable}", spec.Applicability.GetApplicabilityDescription());
                 foreach (var applicableFacet in spec.Applicability.Facets)
                 {
                     logger.LogDebug("       - {facetType}: where {description} ", applicableFacet.GetType().Name, applicableFacet.Short());
                 }
-                var facetReqs = spec.Requirement?.GetRequirementDescription();
-                logger.LogInformation("    Requirements {reqCount}: {expectation}", spec.Requirement?.Facets.Count, facetReqs);
-              
+
+                if (specCardinality.AllowsRequirements)
+                {
+                    var facetReqs = spec.Requirement?.GetRequirementDescription();
+                    logger.LogInformation("    Requirements {reqCount}: {expectation}", spec.Requirement?.Facets.Count, facetReqs);
+                }
+
+
 
                 // Get the applicable items
                 IEnumerable<IPersistEntity> items = ModelBinder.SelectApplicableEntities(model, spec);
-                token.ThrowIfCancellationRequested();
-                logger.LogInformation("          Checking {count} applicable items", items.Count());
+                logger.LogInformation("          Found {count} applicable items", items.Count());
+
                 foreach (var item in items)
                 {
-                    var i = item as IIfcRoot;
-
-                    var result = ModelBinder.ValidateRequirement(item, spec.Requirement, logger);
-                    GetLogLevel(result.ValidationStatus, out LogLevel level, out int pad);
-                    logger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '),
-                        result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Requirement.Short());
-                    foreach (var message in result.Messages)
+                    if (specCardinality.NoMatchingEntities) // Prohibited items
                     {
-                        GetLogLevel(message.Status, out level, out pad, LogLevel.Debug);
-                        logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
+                        var result = new IdsValidationResult(item, spec.Applicability);
+                        var message = ValidationMessage.Prohibited(item);
+                        result.Fail(message);
+                        GetLogLevel(result.ValidationStatus, out LogLevel level, out int pad);
+                        if(logger.IsEnabled(level))
+                            logger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '),
+                                result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Applicability?.Short() ?? "No applicability");
+                        requirementResult.ApplicableResults.Add(result);
                     }
-                    requirementResult.ApplicableResults.Add(result);
+                    else
+                    {
+                        // Test requirements are met
+                        var result = ModelBinder.ValidateRequirement(item, spec.Requirement, logger);
+                        GetLogLevel(result.ValidationStatus, out LogLevel level, out int pad);
+                        if (logger.IsEnabled(level))
+                            logger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '),
+                                result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Requirement?.Short() ?? "No requirement");
+                        foreach (var message in result.Messages)
+                        {
+                            GetLogLevel(message.Status, out level, out pad, LogLevel.Debug);
+                            if (logger.IsEnabled(level))
+                                logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
+                        }
+                        requirementResult.ApplicableResults.Add(result);
+                    }
                     token.ThrowIfCancellationRequested();
                 }
+                PostProcessAssembliesAndVoids(model, requirementResult);
+
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to run specification: {reason}", ex.Message);
                 requirementResult.Status = ValidationStatus.Error;
                 var errorResult = new IdsValidationResult(null, null);
-                errorResult.Messages.Add(ValidationMessage.Error(ex.Message));
-                errorResult.ValidationStatus = ValidationStatus.Error;
+                errorResult.FailWithError(ValidationMessage.Error(ex.Message));
                 requirementResult.ApplicableResults.Add(errorResult);
             }
-            
+
 
             return requirementResult;
+        }
+
+        private static void PostProcessAssembliesAndVoids(IModel model, ValidationRequirement requirementResult)
+        {
+            // Optimisations to help elements thart may not have representation to a parent that can be visualised
+
+            // Assign parents to child items. E.g IfcRoof Composed of IfcSlabs
+            var relAggregations = model.Instances.OfType<IIfcRelAggregates>(true);
+            foreach (var relAggregation in relAggregations.Where(rel => rel.RelatingObject != null && requirementResult.ApplicableResults.Select(x => x.Entity).Contains(rel.RelatingObject.EntityLabel))) //only take top level assemblies that are in the filter
+            {
+                foreach (var relObject in relAggregation.RelatedObjects)
+                {
+
+                    var result = requirementResult.ApplicableResults.FirstOrDefault(x => x.Entity == relObject.EntityLabel);
+                    if (result != null)
+                        result.ParentEntity = relAggregation.EntityLabel;
+                }
+            }
+
+            // Link Openings to their parent
+            var voids = model.Instances.OfType<IIfcRelVoidsElement>(true).ToList();
+            foreach (var v in voids)
+            {
+                var result = requirementResult.ApplicableResults.FirstOrDefault(x => x.Entity == v.RelatedOpeningElement.EntityLabel);
+                if (result != null)
+                    result.ParentEntity = v.RelatingBuildingElement.EntityLabel;
+            }
         }
 
         private static void GetLogLevel(ValidationStatus status, out LogLevel level, out int pad, LogLevel defaultLevel = LogLevel.Information)
@@ -195,82 +312,45 @@ namespace Xbim.IDS.Validator.Core
 
         private static void SetResults(Specification specification, ValidationRequirement validation)
         {
-            // TODO: Check this logic
-            if (specification.Cardinality is SimpleCardinality simpleCard)
+            
+            var cardinality = specification.Cardinality;
+            if (cardinality.NoMatchingEntities)  // Prohibited
             {
-                if (simpleCard.ExpectsRequirements) // Required or Optional
+                if (validation.ApplicableResults.Any())
                 {
-                    if (validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Fail))
-                    {
-                        validation.Status = ValidationStatus.Fail;
-                    }
-                    else
-                    {
-                        if (simpleCard.IsModelConstraint) // Definitely required
-                        {
-                            validation.Status = validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Pass)
-                                ? ValidationStatus.Pass
-                                : ValidationStatus.Fail;
-                        }
-                        else
-                        {
-                            // Optional
-                            validation.Status = ValidationStatus.Pass;
-                        }
-                    }
-
+                    validation.Status = ValidationStatus.Fail;
                 }
-                if (simpleCard.NoMatchingEntities)  // Prohibited
+                else
                 {
-                    if (validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Pass))
-                    {
-                        validation.Status = ValidationStatus.Fail;
-                    }
-                    else
-                    {
-                        validation.Status = ValidationStatus.Pass;
-                    }
+                    validation.Status = ValidationStatus.Pass;
                 }
             }
-            else if (specification.Cardinality is MinMaxCardinality cardinality)
+            else if (cardinality.AllowsRequirements) // Required or Optional
             {
-                if (cardinality.ExpectsRequirements)
+                if (validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Fail))
                 {
-                    if (cardinality.IsModelConstraint)
-                    {
-                        var successes = validation.ApplicableResults.Count(r => r.ValidationStatus == ValidationStatus.Pass);
-                        // If None have failed and we have the number expected successful is within bounds of min-max we succeed
-                        validation.Status = cardinality.IsSatisfiedBy(successes) &&
-                            !validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Fail)
-                            ? ValidationStatus.Pass
-                            : ValidationStatus.Fail;
-
-                    }
-                    else
-                    {
-                        validation.Status = ValidationStatus.Pass;
-                    }
+                    validation.Status = ValidationStatus.Fail;
                 }
-                if (cardinality.NoMatchingEntities)
+                else
                 {
-                    if (cardinality.IsModelConstraint)
+                    if (cardinality.IsModelConstraint) // Required Items - None should fail the requirements
                     {
-                        var failures = validation.ApplicableResults.Count(r => r.ValidationStatus == ValidationStatus.Fail);
-                        // If None have suceeded and we have the number expected failed is within bounds of min-max we succeed
-                        validation.Status = (cardinality.MinOccurs <= failures && cardinality.MaxOccurs >= failures) &&
-                            !validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Pass)
+                        validation.Status = validation.ApplicableResults.Any(r => r.ValidationStatus == ValidationStatus.Pass || r.ValidationStatus == ValidationStatus.Inconclusive)
                             ? ValidationStatus.Pass
                             : ValidationStatus.Fail;
                     }
                     else
                     {
+                        // Optional pass so long as we had no failure
                         validation.Status = ValidationStatus.Pass;
                     }
                 }
+
             }
+            
         }
 
     }
 
-   
+
 }

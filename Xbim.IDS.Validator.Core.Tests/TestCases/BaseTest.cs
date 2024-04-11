@@ -9,6 +9,7 @@ using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.IO.CobieExpress;
 using Xunit.Abstractions;
+using AuditStatus = IdsLib.Audit.Status;
 
 namespace Xbim.IDS.Validator.Core.Tests.TestCases
 {
@@ -121,6 +122,10 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             IModel model = null;
             try
             {
+                if(false)
+                {
+                    DoInPlaceUpgrade(idsFile);
+                }
                 string modelFile = Path.ChangeExtension(idsFile, "ifc");
                 logger.LogInformation("Verifying {schema} model {model}", schemaVersion, modelFile);
                 switch (schemaVersion)
@@ -173,6 +178,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                         {
                             model.Delete(rogue);
                             tran.Commit();
+                            logger.LogWarning("Spotfixing extraneous IfcWall 3Agm079vPIYBL4JExVrhD5");
                         }
                     }
                     else
@@ -183,6 +189,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                 }
 
                 var validator = provider.GetRequiredService<IIdsModelValidator>();
+                
                 var outcome = await validator.ValidateAgainstIdsAsync(model, idsFile, logger, null, options);
 
                 return outcome;
@@ -196,8 +203,38 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             }
         }
 
+        protected AuditStatus ValidateIds(string idsFile)
+        {
+            var fileValidator = provider.GetRequiredService<IIdsValidator>();
+            var fileValidity = fileValidator.ValidateIDS(idsFile);
+            if (!AllowedStatuses.Contains(fileValidity))
+            {
+                //outcome.MarkCompletelyFailed($"IDS Validation failure {fileValidity}");
+                logger.LogWarning("IDS File invalid: {errorCode}", fileValidity);
+            }
+            return fileValidity;
+
+        }
+
+        private void DoInPlaceUpgrade(string idsFile)
+        {
+            var migrator = new IdsSchemaMigrator(TestEnvironment.GetXunitLogger<IdsSchemaMigrator>(output));
+            if(migrator.HasMigrationsToApply(idsFile))
+            {
+                if(migrator.MigrateToIdsSchemaVersion(idsFile, out var upgraded))
+                {
+                    var masterFile = Path.Combine("../../..", idsFile);
+                    upgraded.Save(masterFile);
+                }
+            }
+        }
+
+        private static AuditStatus[] AllowedStatuses = new AuditStatus[] { AuditStatus.Ok };
+
         private IModel OpenCOBie(string file)
         {
+            if(!File.Exists(file))
+                throw new FileNotFoundException(file);
             var mapping = CobieModel.GetMapping();
             //mapping.ClassMappings.RemoveAll(m => m.Class == "System");
             var model = CobieModel.ImportFromTable(file, out string report, mapping);

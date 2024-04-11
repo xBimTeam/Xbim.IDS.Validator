@@ -1,28 +1,29 @@
-﻿<ids xmlns="http://standards.buildingsmart.org/IDS" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://standards.buildingsmart.org/IDS/ids_05.xsd">
-    <info>
-        <title>A Cobie XLS model can be tested across tables</title>
-    </info>
-    <specifications>
-        <specification name="All rows should have CreatedOn date" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
-            <applicability>
-                <entity>
-                    <name>
-                        <simpleValue>COBieReferencedObject</simpleValue>
-                    </name>
-                </entity>
-            </applicability>
-            <requirements>
-              <attribute minOccurs="1" maxOccurs="1">
-                <name>
-                  <simpleValue>CreatedOn</simpleValue>
-                </name>
-                <value>
-                  <xs:restriction base="xs:string">
-                    <xs:pattern value="20(\d{2})-(0\d|1[012])-([012]\d|3[01])(T([01]\d|2[0123])(:([0-5]\d)){2})?" />
-                  </xs:restriction>
-                </value>
-              </attribute>
-            </requirements>
-        </specification>
-    </specifications>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ids xsi:schemaLocation="http://standards.buildingsmart.org/IDS http://standards.buildingsmart.org/IDS/0.9.7/ids.xsd" xmlns="http://standards.buildingsmart.org/IDS" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <info>
+    <title>A Cobie XLS model can be tested across tables</title>
+  </info>
+  <specifications>
+    <specification name="All rows should have CreatedOn date" ifcVersion="COBIE2.4">
+      <applicability minOccurs="1" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>COBIEREFERENCEDOBJECT</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required">
+          <name>
+            <simpleValue>CreatedOn</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:pattern value="20(\d{2})-(0\d|1[012])-([012]\d|3[01])(T([01]\d|2[0123])(:([0-5]\d)){2})?" />
+            </xs:restriction>
+          </value>
+        </attribute>
+      </requirements>
+    </specification>
+  </specifications>
 </ids>

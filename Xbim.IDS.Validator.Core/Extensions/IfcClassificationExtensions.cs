@@ -23,7 +23,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
         /// </summary>
         /// <remarks>The filtering also accounts for hierarchical classification schemes</remarks>
         /// <param name="relAssociates"></param>
-        /// <param name="materialName"></param>
+        /// <param name="facet"></param>
         /// <returns></returns>
         public static IEnumerable<IIfcObjectDefinition> GetIfcObjectsUsingClassification(this IEnumerable<IIfcRelAssociatesClassification> relAssociates, IfcClassificationFacet facet)
         {
@@ -141,11 +141,11 @@ namespace Xbim.IDS.Validator.Core.Extensions
             switch (select) 
             {
                 case IIfcClassificationReference classRef:
-                    if(IsFilled(classRef.Identification))
+                    // TODO: Should we look at Name as well as Identification
+                    if (IsFilled(classRef.Identification))
                     {
                         yield return classRef.Identification.Value.ToString();
                     }
-                    // TODO: Should we look at Name as well as Identifier
                     // Recurse up hierarchy to find parent identifiers
                     foreach(var item in GetClassificationIdentifiers(classRef.ReferencedSource, logger))
                     {
@@ -169,34 +169,46 @@ namespace Xbim.IDS.Validator.Core.Extensions
         /// <returns></returns>
         public static string? GetSystemName(this IIfcClassificationSelect select, ILogger? logger = null)
         {
+            return select.GetSystem(logger)?.Name.Value?.ToString();
+        }
+
+        /// <summary>
+        /// Gets the classification system the <see cref="IIfcClassificationSelect"/> ultimately belongs to
+        /// </summary>
+        /// <param name="select"></param>
+        /// <param name="logger"></param>
+        /// <returns></returns>
+        public static IIfcClassification GetSystem(this IIfcClassificationSelect select, ILogger? logger = null)
+        {
             switch (select)
             {
                 case IIfcClassificationReference reference:
-                    return GetSystemName(reference.ReferencedSource, logger);
+                    return GetSystem(reference.ReferencedSource, logger);
 
                 case IIfcClassification classification:
-                    return classification.Name.Value?.ToString();
+                    return classification;
 
                 default:
                     logger.LogNotImplemented($"ClassificationSelect not implemented: {select.GetType().Name}");
-                    return null;
+                    return default!;
             }
         }
 
-        private static string? GetSystemName(this IIfcClassificationReferenceSelect select, ILogger? logger = null)
+        private static IIfcClassification GetSystem(this IIfcClassificationReferenceSelect select, ILogger? logger = null)
         {
-            switch(select)
+            switch (select)
             {
                 case IIfcClassificationReference reference:
-                    return GetSystemName(reference.ReferencedSource, logger);
+                    return GetSystem(reference.ReferencedSource, logger);
 
                 case IIfcClassification classification:
-                    return classification.Name.Value?.ToString();
+                    return classification;
                 default:
                     logger.LogNotImplemented($"ClassificationReferenceSelect not implemented: {select.GetType().Name}");
-                    return null;
+                    return default!;
             }
         }
+
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsFilled([NotNullWhen(true)] IfcIdentifier? value)
