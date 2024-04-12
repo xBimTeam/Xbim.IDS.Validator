@@ -25,7 +25,7 @@ variables:
   
   ${{ if ne(variables['Build.SourceBranchName'], 'master')}}:
     branchPatch: $[counter(variables['Build.SourceBranchName'], 0)]
-    branchTag: $[format('-{0}.{1}', variables['suffix', variables['branchPatch'])]
+    branchTag: $[format('-{0}.{1}', variables['suffix'], variables['branchPatch'])]
   ${{ else }}:
     branchTag: ''
   version: $(majorMinor).$(patch)
