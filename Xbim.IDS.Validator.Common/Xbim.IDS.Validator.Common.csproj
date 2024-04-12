@@ -20,9 +20,9 @@
   <ItemGroup>
     <PackageReference Include="ids-lib" Version="1.0.70" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
-    <PackageReference Include="Xbim.CobieExpress.Exchanger" Version="6.0.168-develop" />
+    <PackageReference Include="Xbim.CobieExpress.Exchanger" Version="6.0.172" />
     <PackageReference Include="Xbim.Essentials" Version="6.0.445" />
-    <PackageReference Include="Xbim.IO.CobieExpress" Version="6.0.168-develop" />
+    <PackageReference Include="Xbim.IO.CobieExpress" Version="6.0.172" />
     <PackageReference Include="Xbim.InformationSpecifications" Version="0.97.2" />
   </ItemGroup>
 
