@@ -27,7 +27,6 @@ Building the solution is easy, which includes a fully functional Console applica
 To integrate in your own application is also simple. Given an IDS file such as [example.ids](Xbim.IDS.Validator.Core.Tests/TestModels/Example.ids) and an input IFC such as 
 [SampleHouse4.ifc](Xbim.IDS.Validator.Core.Tests/TestModels/SampleHouse4.ifc), a basic C# implementation might look like:
 
-
 ```csharp
 
 // during application startup/bootstrap:
