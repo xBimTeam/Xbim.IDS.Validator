@@ -396,7 +396,11 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         protected bool IsIfc4x3Model()
         {
+#if XbimV6
             return Model.SchemaVersion == XbimSchemaVersion.Ifc4x3;
+#else
+            return false;
+#endif
         }
 
         protected bool IsCobieModel()

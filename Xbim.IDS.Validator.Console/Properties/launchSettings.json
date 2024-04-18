@@ -2,7 +2,7 @@
   "profiles": {
     "Xbim.IDS.Validator.Console": {
       "commandName": "Project",
-      "commandLineArgs": "-ids ..\\..\\..\\..\\Xbim.IDS.Validator.Core.Tests\\TestModels\\Example.ids -ifc ..\\..\\..\\..\\Xbim.IDS.Validator.Core.Tests\\TestModels\\SampleHouse4.ifc"
+      "commandLineArgs": "-ids ..\\..\\..\\..\\Xbim.IDS.Validator.Extensions.COBie.Tests\\TestModels\\COBie.ids -m ..\\..\\..\\..\\Xbim.IDS.Validator.Extensions.COBie.Tests\\TestModels\\SampleHouse4.xlsx"
     }
   }
 }

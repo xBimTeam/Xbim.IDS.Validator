@@ -8,7 +8,7 @@ using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
-    public class MaterialBinderTests : BaseModelTester
+    public class MaterialBinderTests : BaseBinderTests
     {
         public MaterialBinderTests(ITestOutputHelper output) : base(output)
         {

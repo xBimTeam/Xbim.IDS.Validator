@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Xbim.Common;
+#if XbimV6
 using Xbim.Ifc4x3.MeasureResource;
 using Xbim.Ifc4x3.PropertyResource;
 using Xbim.Ifc4x3.QuantityResource;
@@ -450,3 +451,4 @@ namespace Xbim.IDS.Validator.Core.Helpers
 
 
 }
+#endif

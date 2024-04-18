@@ -4,7 +4,7 @@ using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.TestCases
 {
-    public class MaterialTestCases : BaseTest
+    public class MaterialTestCases : StandardTestCaseRunner
     {
         private const string TestCaseFolder = "material";
 

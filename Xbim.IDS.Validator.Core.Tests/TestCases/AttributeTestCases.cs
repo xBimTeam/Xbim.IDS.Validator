@@ -4,7 +4,7 @@ using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.TestCases
 {
-    public class AttributeTestCases : BaseTest
+    public class AttributeTestCases : StandardTestCaseRunner
     {
         private const string TestCaseFolder = "attribute";
         public AttributeTestCases(ITestOutputHelper output) : base(output)

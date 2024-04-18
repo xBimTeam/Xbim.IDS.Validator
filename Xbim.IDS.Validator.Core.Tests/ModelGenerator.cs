@@ -2,6 +2,7 @@
 using Xbim.Common;
 using Xbim.Common.Enumerations;
 using Xbim.Common.Step21;
+using Xbim.IDS.Validator.Tests.Common;
 using Xbim.Ifc;
 using Xbim.IO.Memory;
 
@@ -20,9 +21,9 @@ namespace Xbim.IDS.Validator.Core.Tests
             ApplicationVersion = "1.0",
             ApplicationDevelopersName = "xbim"
         };
-
+#if XbimV6
         [Fact]
-        public void CanCreateMinimalModel()
+        public void CanCreateMinimalIfc4x3Model()
         {
             string filename = "file.ifc";
 
@@ -54,6 +55,7 @@ namespace Xbim.IDS.Validator.Core.Tests
             }
             model.Dispose();
         }
+#endif
 
         [Fact]
         public void CanCreateIfc2x3Model()

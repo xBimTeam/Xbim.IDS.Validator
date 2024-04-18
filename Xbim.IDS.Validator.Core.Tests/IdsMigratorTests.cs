@@ -9,7 +9,7 @@ using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests
 {
-    public class IdsMigratorTests : BaseModelTester
+    public class IdsMigratorTests : BaseBinderTests
     {
         public IdsMigratorTests(ITestOutputHelper output) : base(output) { }
 

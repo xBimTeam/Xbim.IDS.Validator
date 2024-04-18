@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Xbim.Common;
 using Xbim.Common.Metadata;
+using Xbim.IDS.Validator.Common.Interfaces;
 using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
@@ -18,10 +19,12 @@ namespace Xbim.IDS.Validator.Core.Binders
     public class IfcTypeFacetBinder : FacetBinderBase<IfcTypeFacet>
     {
         private readonly ILogger<IfcTypeFacetBinder> logger;
+        private readonly IValueMapper valueMapper;
 
-        public IfcTypeFacetBinder(BinderContext binderContext, ILogger<IfcTypeFacetBinder> logger) : base(binderContext, logger)
+        public IfcTypeFacetBinder(BinderContext binderContext, ILogger<IfcTypeFacetBinder> logger, IValueMapper valueMapper) : base(binderContext, logger)
         {
             this.logger = logger;
+            this.valueMapper = valueMapper;
         }
 
 
@@ -250,13 +253,13 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
 
 
-            return BindPredefinedAttributeSelection(expression, ifcFacet!.PredefinedType, instanceAttributes);
+            return BindPredefinedAttributeSelection(expression, ifcFacet!.PredefinedType, instanceAttributes, valueMapper);
             // TODO: fallback to any defined Type's PDT and ElementType
 
         }
 
         internal static Expression BindPredefinedAttributeSelection(Expression expression,
-            ValueConstraint constraint, List<PropertyInfo> ifcAttributePropInfos)
+            ValueConstraint constraint, List<PropertyInfo> ifcAttributePropInfos, IValueMapper valueMapper)
         {
             if (constraint.AcceptedValues?.Any() != true)
             {
@@ -265,11 +268,6 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             // Get underlying collection type
             var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
-
-            
-            var x= Enumerable.Empty<Ifc4x3.SharedBldgElements.IfcWall>();
-            x.Where(e => e.IsTypedBy is IIfcElementType et && ValueConstraintExtensions.SatisfiesConstraint(constraint, et.ElementType));
-
 
             // Build IEnumerable<TEntity>().Where(t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName]))
             // TODO: ||
@@ -282,9 +280,10 @@ namespace Xbim.IDS.Validator.Core.Binders
             ParameterExpression ifcTypeParam = Expression.Parameter(collectionType, "ent");
 
             var constraintExpr = Expression.Constant(constraint, typeof(ValueConstraint));
+            var valueMapperExpr = Expression.Constant(valueMapper, typeof(IValueMapper));
 
             // build t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName])
-            Expression querybody = AttributeFacetBinder.BuildAttributeQuery(ifcAttributePropInfos.ToArray(), ifcTypeParam, constraintExpr);
+            Expression querybody = AttributeFacetBinder.BuildAttributeQuery(ifcAttributePropInfos.ToArray(), ifcTypeParam, constraintExpr, valueMapperExpr);
 
             // Build Lambda expression for filter predicate (Func<T,bool>)
             var filterExpression = Expression.Lambda(querybody, ifcTypeParam);

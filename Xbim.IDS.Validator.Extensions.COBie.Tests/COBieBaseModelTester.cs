@@ -1,39 +1,26 @@
-﻿using FluentAssertions;
-using Microsoft.Extensions.Logging;
-using Xbim.Common;
+﻿using Microsoft.Extensions.Logging;
 using Xbim.Common.Step21;
+using Xbim.Common;
+using Xbim.IDS.Validator.Common.Interfaces;
 using Xbim.IDS.Validator.Core.Binders;
-using Xbim.Ifc;
+using Xbim.IDS.Validator.Core.Configuration;
+using Xbim.IDS.Validator.Core;
 using Xbim.InformationSpecifications;
 using Xunit.Abstractions;
+using FluentAssertions;
+using Xbim.IDS.Validator.Extensions.COBie.Configuration;
 
-namespace Xbim.IDS.Validator.Core.Tests.Binders
+namespace Xbim.IDS.Validator.Extensions.COBie.Tests
 {
-    [Collection(nameof(TestEnvironment))]
-    public abstract class BaseModelTester
+    [Collection(nameof(COBieTestEnvironment))]
+    public abstract class COBieBaseModelTester
     {
 
-        private static Lazy<IModel> lazyIfc4Model = new Lazy<IModel>(()=> BuildIfc4Model());
-        private static Lazy<IModel> lazyIfc2x3Model = new Lazy<IModel>(() => BuildIfc2x3Model());
-
         private BinderContext _context = new BinderContext();
-        
-      
 
-        public virtual IModel Model
-        {
-            get
-            {
-                if (_schema == XbimSchemaVersion.Ifc2X3)
-                {
-                    return lazyIfc2x3Model.Value;
-                }
-                else
-                {
-                    return lazyIfc4Model.Value;
-                }
-            }
-        }
+
+
+        public abstract IModel Model { get; }
 
         public BinderContext BinderContext
         {
@@ -52,33 +39,20 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
 
 
-        public BaseModelTester(ITestOutputHelper output, XbimSchemaVersion schema = XbimSchemaVersion.Ifc4)
+        public COBieBaseModelTester(ITestOutputHelper output, XbimSchemaVersion schema = XbimSchemaVersion.Cobie2X4)
         {
             this.output = output;
             _schema = schema;
             query = new IfcQuery();
-            
-            logger = TestEnvironment.GetXunitLogger<BaseModelTester>(output);
-        }
 
-       
-
-        private static IModel BuildIfc4Model()
-        {
-            var filename = @"TestModels\SampleHouse4.ifc";
-            return IfcStore.Open(filename);
-        }
-
-        private static IModel BuildIfc2x3Model()
-        {
-            var filename = @"TestModels\Dormitory-ARC.ifczip";
-            return IfcStore.Open(filename);
+            logger = COBieTestEnvironment.GetXunitLogger<COBieBaseModelTester>(output);
         }
 
 
-        internal ILogger<T> GetLogger<T>()
+
+        protected ILogger<T> GetLogger<T>()
         {
-            return TestEnvironment.GetXunitLogger<T>(output);
+            return COBieTestEnvironment.GetXunitLogger<T>(output);
         }
 
         protected static FacetGroup BuildGroup(IFacet facet)
@@ -92,6 +66,11 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             };
             group.Facets.Add(facet);
             return group;
+        }
+
+        protected IValueMapper GetValueMapper()
+        {
+            return new IdsValueMapper(new IValueMapProvider[] { new IdsValueMapProvider(), new COBieValueMapProvider() });
         }
 
 

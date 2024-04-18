@@ -1,4 +1,4 @@
-﻿//#define SqlLite
+﻿
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
@@ -6,10 +6,13 @@ using System.CommandLine.Parsing;
 using System.Diagnostics;
 using Xbim.Common;
 using Xbim.Common.Configuration;
+#if SQLite
 using Xbim.Flex.IO.Db.FlexDb;
+#endif
 using Xbim.IDS.Validator.Common;
 using Xbim.IDS.Validator.Console;
 using Xbim.IDS.Validator.Core;
+using Xbim.IDS.Validator.Core.Configuration;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
@@ -33,7 +36,8 @@ class Program
         var command = SetupParams();
         logger = provider.GetRequiredService<ILogger<Program>>();
         var result = await command.InvokeAsync(args);
-        Console.ReadLine();
+
+        //Console.ReadLine();
 
         return result;
     }
@@ -43,7 +47,7 @@ class Program
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddLogging(/*o => o.AddConsole()*/);
 
-        serviceCollection.AddIdsValidation();
+        serviceCollection.AddIdsValidation(cfg => cfg.AddCOBie());
         serviceCollection.AddXbimToolkit(opt => opt.AddMemoryModel());
 
         var provider = serviceCollection.BuildServiceProvider();
@@ -57,10 +61,8 @@ class Program
             description: "Path to an IDS file");
 
         var modelOption = new Option<string>
-            (aliases: new[] { "--modelFile", "-ifc" },
-            description: "Path to an IFC file");
-
-
+            (aliases: new[] { "--modelFile", "-m" },
+            description: "Path to a model file in IFC or (experimentally) COBie xls format");
 
         idsOption.Arity = ArgumentArity.ExactlyOne;
         idsOption.IsRequired = true;
@@ -73,7 +75,7 @@ class Program
             modelOption
         };
 
-
+        rootCommand.Description = "IFC and COBie Model checker using BuildingSMART IDS";
 
         rootCommand.SetHandler(async (ids, model) =>
         {
@@ -90,7 +92,7 @@ class Program
         Console.WriteLine("Loading Model...");
         var sw = new Stopwatch();
         sw.Start();
-#if SqlLite
+#if SQLite
 
         IModel model = BuildModelSqlLite(modelFile);
         var ifcFlexDb = model as IfcFlexDb;
@@ -269,6 +271,7 @@ class Program
         {
             return OpenCOBie(modelFile);
         }
+#if SQLite
 
         if (modelFile.EndsWith(".db", StringComparison.OrdinalIgnoreCase))
         {
@@ -284,6 +287,7 @@ class Program
 
             return flexdb;
         }
+#endif
 
         return MemoryModel.OpenRead(modelFile);
     }
@@ -304,7 +308,7 @@ class Program
     }
 
 
-#if SqlLite
+#if SQLite
     private static IModel BuildModelSqlLite(string ifcFile)
     {
         if(!File.Exists(ifcFile))

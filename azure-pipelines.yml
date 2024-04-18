@@ -16,32 +16,45 @@ variables:
   solution: '**/*.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
-  major: 0
-  minor: 97
-  patchNo: $[counter(variables['minor'], 1)]
-  buildNo: $[counter('versioncounter', 100)]
-  suffix: $[replace(variables['Build.SourceBranchName'], '_', '-')]
 
-name: $(BuildDefinitionName)_$(major).$(minor).$(buildNo).$(patchNo)-$(suffix)
+  major: 0  # IDS Schema Major
+  minor: 97 # IDS Schema Minor
+  majorMinor: $(major).$(minor)
+  patch: $[counter(variables['majorMinor'], 108)]
+  suffix: $[replace(variables['Build.SourceBranchName'], '_', '-')]
+  
+  ${{ if ne(variables['Build.SourceBranchName'], 'master')}}:
+    branchPatch: $[counter(variables['Build.SourceBranchName'], 0)]
+    branchTag: $[format('-{0}.{1}', variables['suffix'], variables['branchPatch'])]
+  ${{ else }}:
+    branchTag: ''
+  version: $(majorMinor).$(patch)
+  semVer: $(version)$(branchTag)
+
+name: $(BuildDefinitionName)-$(suffix)-$(major).$(minor).$(patch)
 
 jobs:
 - job: Build
   steps:
 
   - task: UseDotNet@2
+    displayName: 'Install .NET'
     inputs:
       packageType: 'sdk'
       version: '8.0.100'
+
   - task: VersionDotNetCoreAssemblies@3
     displayName: 'Version files'
     inputs:
       Path: '$(Build.SourcesDirectory)'
-      VersionNumber: '$(Build.BuildNumber)'
-      Injectversion: False
+      VersionNumber: '$(semVer)'
+      Injectversion: True
       VersionRegex: '\d+\.\d+\.\d+\.\d+'
       FilenamePattern: 'directory.build.props'
-      AddDefault: true
+      AddDefault: false
+      Field: 'Version'
       OutputVersion: 'OutputedVersion'
+
   - task: DotNetCoreCLI@2
     displayName: 'Restore'
     inputs:
@@ -77,12 +90,25 @@ jobs:
     inputs:
       PathtoPublish: $(build.artifactstagingdirectory)
 
+# Publish to NuGet/Artifact feed based on the source branch
+
   - task: NuGetCommand@2
-    displayName: 'Publish to FlexGet'
+    displayName: 'Publish private releases to FlexGet'
     inputs:
       command: 'push'
       packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
       nuGetFeedType: 'internal'
       publishVstsFeed: 'f8484947-4741-4322-87d4-9a1586904e2d'
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'master'))
+
+  - task: NuGetCommand@2
+    displayName: 'Publish master releases to xbim public NuGet feed'
+    inputs:
+      command: push
+      nuGetFeedType: external
+      packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg'
+      publishFeedCredentials: 'nuget'
+    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
+
 
   

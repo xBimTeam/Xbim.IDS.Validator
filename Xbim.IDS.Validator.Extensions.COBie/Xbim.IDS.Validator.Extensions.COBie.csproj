@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Description>Extends xbim IDS validator with experimental support for COBie validation using xbim COBieExpress</Description>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <PackageReadmeFile>Readme.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1701;1702;CS1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>1701;1702;CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="Readme.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Xbim.CobieExpress.Exchanger" Version="6.0.172" />
+    <PackageReference Include="Xbim.IO.CobieExpress" Version="6.0.172" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Xbim.IDS.Validator.Core\Xbim.IDS.Validator.Core.csproj" />
+  </ItemGroup>
+
+</Project>

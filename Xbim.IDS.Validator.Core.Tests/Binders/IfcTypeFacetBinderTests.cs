@@ -7,11 +7,11 @@ using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
-    public class IfcTypeFacetBinderTests : BaseModelTester
+    public class IfcTypeFacetBinderTests : BaseBinderTests
     {
         public IfcTypeFacetBinderTests(ITestOutputHelper output) : base(output)
         {
-            Binder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>());
+            Binder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>(), GetValueMapper());
         }
 
         /// <summary>

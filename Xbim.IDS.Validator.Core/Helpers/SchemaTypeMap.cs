@@ -29,7 +29,9 @@ namespace Xbim.IDS.Validator.Core.Helpers
             {
                 Xbim.Common.Step21.XbimSchemaVersion.Ifc2X3 => GetEquivalent(_ifc2x3Equivalents, entityType),
                 Xbim.Common.Step21.XbimSchemaVersion.Ifc4 => GetEquivalent(_ifc4Equivalents, entityType),
+#if XbimV6
                 Xbim.Common.Step21.XbimSchemaVersion.Ifc4x3 => GetEquivalent(_ifc4x3Equivalents, entityType),
+#endif
                 _ => null,
             };
         }

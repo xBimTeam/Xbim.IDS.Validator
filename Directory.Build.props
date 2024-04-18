@@ -1,11 +1,28 @@
 <Project>
   <PropertyGroup>
+    <TargetXbimV6>true</TargetXbimV6> <!-- Set false to target 5.1 and omit IFC4x3 support -->
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <Version>0.0.1.0</Version>
-    <VersionSuffix>Beta</VersionSuffix>
+    <Version>0.97.0.0</Version>
     <Copyright>xbim Ltd</Copyright>
+    <Authors>Andy Ward, xbim</Authors>
+    <PackageIcon>XbimIcon.png</PackageIcon>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/xBimTeam/Xbim.IDS.Validator</PackageProjectUrl>
     <PackageTags>xbim ifc ids bim validation</PackageTags>
+    <Product>IDS Validator xbim Toolkit</Product>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/xBimTeam/Xbim.IDS.Validator</RepositoryUrl>
     <LangVersion>10</LangVersion>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetXbimV6)' == 'true'">
+    <DefineConstants>$(DefineConstants);XbimV6</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../LICENSE" Pack="true" Visible="false" PackagePath="" />
+    <None Include="../XbimIcon.png" Pack="true" Visible="false" PackagePath="" />
+  </ItemGroup>
+
 </Project>

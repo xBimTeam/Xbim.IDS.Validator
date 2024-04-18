@@ -4,7 +4,7 @@ using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.TestCases
 {
-    public class XbimEndToEnd : BaseTest
+    public class XbimEndToEnd : StandardTestCaseRunner
     {
         public XbimEndToEnd(ITestOutputHelper output) : base(output)
         {
@@ -21,6 +21,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             outcome.Status.Should().Be(ValidationStatus.Pass);
         }
 
+#if XbimV6
         [InlineData(@"TestCases/xbim/pass-ifc4x3_models_work.ids")]
         [InlineData(@"TestCases/xbim/pass-ifc4x3_new_attributes_available.ids")]
         [Theory]
@@ -30,7 +31,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
             outcome.Status.Should().Be(ValidationStatus.Pass);
         }
-
+#endif
 
 
         [InlineData(@"TestCases/xbim/pass-subclass_type_may_be_identified_with_subtype_extension_1_2.ids")]
@@ -55,17 +56,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             outcome.Status.Should().Be(expected);
         }
 
-        [InlineData(@"TestCases/xbim/pass-cobie_models_work.ids", ValidationStatus.Pass)]
-        [InlineData(@"TestCases/xbim/pass-cobie_checks_ext_id_length.ids", ValidationStatus.Pass)]
-        [InlineData(@"TestCases/xbim/pass-cobie_models_can_verify.ids", ValidationStatus.Pass)]
-        [Theory]
-        public async Task COBieSupported(string idsFile, ValidationStatus expected)
-        {
-            var outcome = await VerifyIdsFile(idsFile, schemaVersion: XbimSchemaVersion.Cobie2X4, options: 
-                new VerificationOptions { IncludeSubtypes = true, AllowDerivedAttributes = true, PermittedIdsAuditStatuses = VerificationOptions.Relaxed });
-
-            outcome.Status.Should().Be(expected);
-        }
+      
 
         [Theory(Skip ="Needs thought on querying Type's Predefined values via expressions")]
         [InlineData(@"TestCases/xbim/pass-ifc2x3-air_terminal_edge_case_with_predefined.ids", ValidationStatus.Pass)]

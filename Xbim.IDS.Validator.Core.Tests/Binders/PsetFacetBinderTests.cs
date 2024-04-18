@@ -7,7 +7,7 @@ using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
-    public class PsetFacetBinderTests : BaseModelTester
+    public class PsetFacetBinderTests : BaseBinderTests
     {
 
         public PsetFacetBinderTests(ITestOutputHelper output) : base(output)
