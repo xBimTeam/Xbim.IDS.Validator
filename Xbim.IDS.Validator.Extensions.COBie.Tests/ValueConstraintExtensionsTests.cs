@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xbim.InformationSpecifications;
+﻿using Xbim.InformationSpecifications;
 using Xbim.IDS.Validator.Core.Extensions;
 using FluentAssertions;
 using Xbim.IO.CobieExpress;
@@ -13,6 +8,7 @@ using Xbim.IDS.Validator.Common.Interfaces;
 
 namespace Xbim.IDS.Validator.Extensions.COBie.Tests
 {
+    [Collection(nameof(COBieTestEnvironment))]
     public class ValueConstraintExtensionsTests
     {
         [Fact]
