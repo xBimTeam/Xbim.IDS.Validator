@@ -97,8 +97,8 @@ Just like a typical IDS spec. A typical example using COBie:
 
 Note: while this is completely valid IDS according to the latest IDS XSD schema, the file will raise warnings in an IDS Audit
 since the IfcVersion 'COBIE2.4' is unsupported and 'COBIECOMPONENT' is not a recognised IFC type, so you may see 'Content Warnings'.
-The implementation of this feature is proprietary to xbim, so the file is unlikely to be supported by other software implementations
-- where 'COBIE2.4' will not be recognised.
+The implementation of this feature is proprietary to xbim, so the file is unlikely to be supported by other software implementations,
+where 'COBIE2.4' will not be recognised.
 
 ## How do I use it?
 
