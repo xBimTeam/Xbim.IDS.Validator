@@ -95,7 +95,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 AttributeName = attributeFieldName,
                 AttributeValue = new ValueConstraint("not relevant")
             };
-            var ifcBinder = new IfcTypeFacetBinder(new BinderContext { Model = Model}, GetLogger<IfcTypeFacetBinder>(), GetValueMapper());
+            var ifcBinder = new IfcTypeFacetBinder(new BinderContext { Model = Model}, GetLogger<IfcTypeFacetBinder>());
 
 
             var expression = ifcBinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);

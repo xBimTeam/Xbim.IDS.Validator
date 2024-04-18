@@ -3,10 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using Xbim.Common;
 using Xbim.Common.Metadata;
-using Xbim.IDS.Validator.Common.Interfaces;
 using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
@@ -19,12 +17,10 @@ namespace Xbim.IDS.Validator.Core.Binders
     public class IfcTypeFacetBinder : FacetBinderBase<IfcTypeFacet>
     {
         private readonly ILogger<IfcTypeFacetBinder> logger;
-        private readonly IValueMapper valueMapper;
 
-        public IfcTypeFacetBinder(BinderContext binderContext, ILogger<IfcTypeFacetBinder> logger, IValueMapper valueMapper) : base(binderContext, logger)
+        public IfcTypeFacetBinder(BinderContext binderContext, ILogger<IfcTypeFacetBinder> logger) : base(binderContext, logger)
         {
             this.logger = logger;
-            this.valueMapper = valueMapper;
         }
 
 
@@ -225,105 +221,34 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
         }
 
-        // cloned from Attributes Binder as we need to special case - e.g. for Types
+
         private Expression BindPredefinedTypeFilter(IfcTypeFacet ifcFacet, Expression expression, EntitySelectionCriteria selection)
         {
             if (ifcFacet?.PredefinedType?.AcceptedValues?.Any() != true ||
                 ifcFacet?.PredefinedType?.AcceptedValues?.FirstOrDefault()?.IsValid(ifcFacet.PredefinedType) != true) return expression;
 
 
-            // Intent: match on PredefinedType or ObjectType on the instance (where present).
-            // Otherwise we need check the equivalent fields on the Type - which is non-trivial as we don't know the .NET runtime type
-            // We have a rare edge case we do know the Type, when we're infering instance from the Type. E.g. Ifc2x3 AirTerminal use case
-            var objectTypeMetadata = GetMatchingProperty(selection.ElementExpressType, nameof(IIfcObject.ObjectType));
-            var pdtMetadata = GetMatchingProperty(selection.ElementExpressType, "PredefinedType");
-            //var typeObjectTypeMetadata = GetMatchingProperty(selection.DefiningExpressType, nameof(IIfcElementType.ElementType));
-            //var typePdtMetadata = GetMatchingProperty(selection.DefiningExpressType, "PredefinedType");
-            var instanceAttributes = new List<PropertyInfo>();
-            //var typeAttributes = new List<PropertyInfo>();
-            if (pdtMetadata != null) instanceAttributes.Add(pdtMetadata.PropertyInfo);
-            if (objectTypeMetadata != null) instanceAttributes.Add(objectTypeMetadata.PropertyInfo);
-            //if (typePdtMetadata != null) typeAttributes.Add(typePdtMetadata.PropertyInfo);
-            //if (typeObjectTypeMetadata != null) typeAttributes.Add(typeObjectTypeMetadata.PropertyInfo);
+            // Expression we're building:
+            // var entities = model.Instances.OfType<IfcObjectDefinition>();
+            // var filteredresult = entities.WhereHasPredefinedType(e, facet));
+            // or
+            // var filteredresult =  IfcEntityTypeExtensions.WhereHasPredefinedType(entities, facet);
 
-            if (!instanceAttributes.Any() /*&& !typeAttributes.Any()*/)
-            {
-                var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
-                return BindNotFound(expression, collectionType);
-            }
+            var typeFacetExpr = Expression.Constant(ifcFacet, typeof(IfcTypeFacet));
 
+            var propsMethod = ExpressionHelperMethods.EnumerableWhereIfcTypeHasMatchingPredefinedType;
 
-            return BindPredefinedAttributeSelection(expression, ifcFacet!.PredefinedType, instanceAttributes, valueMapper);
-            // TODO: fallback to any defined Type's PDT and ElementType
+            return Expression.Call(null, propsMethod, new[] { expression, typeFacetExpr });
 
         }
-
-        internal static Expression BindPredefinedAttributeSelection(Expression expression,
-            ValueConstraint constraint, List<PropertyInfo> ifcAttributePropInfos, IValueMapper valueMapper)
-        {
-            if (constraint.AcceptedValues?.Any() != true)
-            {
-                return expression;
-            }
-
-            // Get underlying collection type
-            var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
-
-            // Build IEnumerable<TEntity>().Where(t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName]))
-            // TODO: ||
-            //          ValueConstraintExtensions.SatisfiesConstraint(constraint, t.IsTypedBy?[AttributeName]))
-
-            // build IEnumerable.Where<TEntity>(...)
-            var whereMethod = ExpressionHelperMethods.EnumerableWhereGeneric.MakeGenericMethod(collectionType);
-
-            // build lambda param 'ent => ...'
-            ParameterExpression ifcTypeParam = Expression.Parameter(collectionType, "ent");
-
-            var constraintExpr = Expression.Constant(constraint, typeof(ValueConstraint));
-            var valueMapperExpr = Expression.Constant(valueMapper, typeof(IValueMapper));
-
-            // build t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName])
-            Expression querybody = AttributeFacetBinder.BuildAttributeQuery(ifcAttributePropInfos.ToArray(), ifcTypeParam, constraintExpr, valueMapperExpr);
-
-            // Build Lambda expression for filter predicate (Func<T,bool>)
-            var filterExpression = Expression.Lambda(querybody, ifcTypeParam);
-            
-            // Bind Lambda to Where method
-            return Expression.Call(null, whereMethod, new[] { expression, filterExpression });
-        }
-
 
         private string? GetPredefinedType(IPersistEntity entity)
         {
-            string? value = null;
-            var expressType = Model.Metadata.ExpressType(entity.GetType());
-            var propertyMeta = expressType.Properties.FirstOrDefault(p => p.Value.Name == "PredefinedType").Value;
-
-            if (propertyMeta != null)
+            if(entity is IIfcObjectDefinition o)
             {
-                var ifcAttributePropInfo = propertyMeta.PropertyInfo;
-                value = ifcAttributePropInfo.GetValue(entity)?.ToString();
+                return IfcEntityTypeExtensions.GetPredefinedType(o);
             }
-            
-            if (value == "USERDEFINED" || value == null)
-            {
-                if (entity is IIfcObject obj)
-                    value = obj.ObjectType?.Value.ToString();
-                else if (entity is IIfcElementType type)
-                    value = type.ElementType?.Value.ToString();
-                else if (entity is IIfcTypeProcess process)
-                    value = process.ProcessType?.Value.ToString();
-            }
-            if (value == null && entity is IIfcObject entObj)
-            {
-                // Check the Type's PredefinedType if it has one
-                if (entObj.IsTypedBy?.Any() == true)
-                {
-                    return GetPredefinedType(entObj.IsTypedBy.First().RelatingType);
-                }
-            }
-
-            return value;
+            return null;
         }
 
         
