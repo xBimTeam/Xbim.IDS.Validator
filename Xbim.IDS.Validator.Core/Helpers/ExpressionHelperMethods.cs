@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Xbim.Common;
+using Xbim.IDS.Validator.Common.Interfaces;
 using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
@@ -38,7 +39,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
         private static MethodInfo _enumerableWhereObjectPartOfMethod = typeof(IfcRelationsExtensions).GetMethod(nameof(IfcRelationsExtensions.WhereHasPartOfRelationship), new Type[] { typeof(IEnumerable<IIfcObjectDefinition>), typeof(PartOfFacet) });
 
         private static MethodInfo _idsValidationIsSatisifiedMethod = typeof(IValueConstraintComponent).GetMethod(nameof(IValueConstraintComponent.IsSatisfiedBy), new Type[] { typeof(object), typeof(ValueConstraint), typeof(bool), typeof(ILogger) });
-        private static MethodInfo _idsSatisfiesConstraintMethod = typeof(ValueConstraintExtensions).GetMethod(nameof(ValueConstraintExtensions.SatisfiesConstraint), new Type[] { typeof(ValueConstraint), typeof(object) });
+        private static MethodInfo _idsSatisfiesConstraintMethod = typeof(ValueConstraintExtensions).GetMethod(nameof(ValueConstraintExtensions.SatisfiesConstraint), new Type[] { typeof(ValueConstraint), typeof(object), typeof(IValueMapper) });
 
 
         private static MethodInfo _enumerableWhereMethod = GenericMethodOf(_ => Enumerable.Where<int>(default(IEnumerable<int>), default(Func<int, bool>)));

@@ -25,6 +25,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Xbim.IDS.Validator.Core\Xbim.IDS.Validator.Core.csproj" />
+		<ProjectReference Include="..\Xbim.IDS.Validator.Extensions.COBie\Xbim.IDS.Validator.Extensions.COBie.csproj" />
 	</ItemGroup>
 
 </Project>

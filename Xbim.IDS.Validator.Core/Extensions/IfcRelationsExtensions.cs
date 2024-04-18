@@ -161,7 +161,11 @@ namespace Xbim.IDS.Validator.Core.Extensions
 
         private static string? GetSubType(IIfcObjectDefinition definingType)
         {
+#if XbimV6
             var pdt = definingType.GetPredefinedTypeValue();
+#else
+            string pdt = "";    // GetPredefinedType Not supported in v6 Toolkit
+#endif
             if (pdt == null || pdt == "USERDEFINED")
             {
                 return GetObjectType((IIfcObjectDefinition?)definingType) ?? pdt;

@@ -8,7 +8,7 @@
     <Description>Common interfaces for IDS validation of IFC models using xbim Toolkit</Description>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
     <None Include="..\Readme.md">
@@ -16,15 +16,18 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="ids-lib" Version="1.0.70" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
-    <PackageReference Include="Xbim.CobieExpress.Exchanger" Version="6.0.172" />
-    <PackageReference Include="Xbim.Essentials" Version="6.0.445" />
-    <PackageReference Include="Xbim.IO.CobieExpress" Version="6.0.172" />
     <PackageReference Include="Xbim.InformationSpecifications" Version="0.97.2" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetXbimV6)' != 'true'">
+    <PackageReference Include="Xbim.Essentials" Version="5.1.341" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetXbimV6)' == 'true'">
+    <PackageReference Include="Xbim.Essentials" Version="6.0.445" />
+  </ItemGroup>
 
 </Project>

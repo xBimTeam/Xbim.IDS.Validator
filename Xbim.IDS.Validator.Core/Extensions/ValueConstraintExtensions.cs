@@ -3,8 +3,8 @@ using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Xbim.IDS.Validator.Common.Interfaces;
 using Xbim.IDS.Validator.Core.Helpers;
-using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
@@ -142,19 +142,20 @@ namespace Xbim.IDS.Validator.Core.Extensions
             return true;
         }
 
-        public static bool SatisfiesConstraint(this ValueConstraint constraint, object value)
+        /// <summary>
+        /// Determines whether any object satisified the constraint, accounting for unwrapping the value of a complex object using a mapper
+        /// </summary>
+        /// <param name="constraint"></param>
+        /// <param name="value"></param>
+        /// <param name="mapper"></param>
+        /// <returns></returns>
+        /// <exception cref="NotSupportedException"></exception>
+        /// <exception cref="NotImplementedException"></exception>
+        public static bool SatisfiesConstraint(this ValueConstraint constraint, object value, IValueMapper mapper)
         {
-
-
             if (value == null)
             {
                 return constraint.IsSatisfiedBy(value);
-            }
-
-            // Convert 2x3 Values to Ifc4 equivqlents. To minimise code
-            if(value is Ifc2x3.MeasureResource.IfcValue ifc2x3Value)
-            {
-                value = ifc2x3Value.ToIfc4();
             }
             
             var valueType = value.GetType();
@@ -165,48 +166,27 @@ namespace Xbim.IDS.Validator.Core.Extensions
             {
                 throw new NotSupportedException("Collections not supported");
             }
-            else if (value.GetType().IsEnum)
+            if (value.GetType().IsEnum)
             {
                 return constraint.IsSatisfiedBy(value?.ToString(), true);
             }
 
-            // Wrap simple navigation objects to use built-in equality operators
+            // Unpack objects to obtain a value - the ValueConstraint default implementation reverts to ToString() which may be inappropriate.
+           
+            if(mapper == null)
+            {
+                return false;
+            }
+            // We have a value mapper which provides an extensibility point for extension schemas. E.g COBie
+            if(mapper.MapValue(value, out var unpacked))
+            {
+                return constraint.IsSatisfiedBy(unpacked, true);
+            }
             else
             {
-                return value switch
-                {
-                    Ifc4.MeasureResource.IfcLabel label => constraint.IsSatisfiedBy(label.Value, true),
-                    Ifc4.MeasureResource.IfcIdentifier id => constraint.IsSatisfiedBy(id.Value, true),
-                    Ifc4.MeasureResource.IfcText text => constraint.IsSatisfiedBy(text.Value, true),
-                    Ifc4.MeasureResource.IfcBoolean boolean => constraint.IsSatisfiedBy(boolean.Value, true),
-                    Ifc4.MeasureResource.IfcInteger integer => constraint.IsSatisfiedBy(integer.Value, true),
-                    Ifc4.MeasureResource.IfcReal real => constraint.IsSatisfiedBy(real.Value, true),
-                    Ifc4.UtilityResource.IfcGloballyUniqueId guid => constraint.IsSatisfiedBy(guid.Value, true),
-                    Ifc2x3.UtilityResource.IfcGloballyUniqueId guid2x3 => constraint.IsSatisfiedBy(guid2x3.Value, true),
-                    Ifc4.MeasureResource.IfcCountMeasure cnt => constraint.IsSatisfiedBy(cnt.Value, true),
-                    Ifc4.MeasureResource.IfcLengthMeasure len => constraint.IsSatisfiedBy(len.Value, true),
-                    Ifc4.MeasureResource.IfcAreaMeasure area => constraint.IsSatisfiedBy(area.Value, true),
-                    Ifc4.MeasureResource.IfcVolumeMeasure vol => constraint.IsSatisfiedBy(vol.Value, true),
-                    Ifc4.DateTimeResource.IfcDate date => constraint.IsSatisfiedBy(date.Value, true),
-                    Ifc4.DateTimeResource.IfcDuration interval => constraint.IsSatisfiedBy(interval.Value, true),
-
-                    Xbim.CobieExpress.CobieRole cobieRole => constraint.IsSatisfiedBy(cobieRole.Value, true),
-                    Xbim.CobieExpress.CobieCategory cobie => constraint.IsSatisfiedBy(cobie.Value, true),
-                    Xbim.CobieExpress.DateTimeValue cobie => constraint.IsSatisfiedBy(cobie.Value),
-                    Xbim.CobieExpress.CobieExternalObject cobieExtObj => constraint.IsSatisfiedBy(cobieExtObj.Name, true),
-                    Xbim.CobieExpress.CobieExternalSystem cobieExtSys => constraint.IsSatisfiedBy(cobieExtSys.Name, true),
-                    Xbim.CobieExpress.CobieDurationUnit cobie => constraint.IsSatisfiedBy(cobie.Value, true),
-                    Xbim.CobieExpress.CobieContact cobie => constraint.IsSatisfiedBy(cobie.Email, true),
-                    Xbim.CobieExpress.CobieAsset cobie => constraint.IsSatisfiedBy(cobie.Name, true),
-
-                    bool nativebool => constraint.IsSatisfiedBy(nativebool),
-                    string strVal => constraint.IsSatisfiedBy(strVal, true),
-                    double val => constraint.IsSatisfiedBy(val),
-
-                    _ => throw new NotImplementedException($"Filtering on Ifc type {value?.GetType()?.Name} not implemented")
-                };
+                throw new NotImplementedException($"Filtering on type {value?.GetType()?.Name} not implemented");
             }
-            
+
 
         }
 

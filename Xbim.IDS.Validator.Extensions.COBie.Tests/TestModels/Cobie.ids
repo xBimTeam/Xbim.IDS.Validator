@@ -52,7 +52,7 @@
       <requirements>
         <attribute minOccurs="1" maxOccurs="1">
           <name>
-            <simpleValue>CreatedOn</simpleValue>
+            <simpleValue>InstallationDate</simpleValue>
           </name>
           <value>
             <xs:restriction base="xs:string">

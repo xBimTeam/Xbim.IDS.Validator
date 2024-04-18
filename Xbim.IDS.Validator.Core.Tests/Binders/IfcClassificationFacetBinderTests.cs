@@ -8,7 +8,7 @@ using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
-    public class IfcClassificationFacetBinderTests : BaseModelTester
+    public class IfcClassificationFacetBinderTests : BaseBinderTests
     {
         public IfcClassificationFacetBinderTests(ITestOutputHelper output) : base(output)
         {

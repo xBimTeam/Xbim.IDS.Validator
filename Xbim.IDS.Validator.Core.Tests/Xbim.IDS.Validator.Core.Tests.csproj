@@ -8,11 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Divergic.Logging.Xunit" Version="4.3.0" />
-    <PackageReference Include="FluentAssertions" Version="6.12.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
-    <PackageReference Include="xunit" Version="2.7.0" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.7">
+    <PackageReference Include="xunit" Version="2.7.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.8">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -25,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Xbim.IDS.Validator.Core\Xbim.IDS.Validator.Core.csproj" />
+    <ProjectReference Include="..\Xbim.IDS.Validator.Tests.Common\Xbim.IDS.Validator.Tests.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,17 +34,8 @@
        <DependentUpon>%(Filename).ids</DependentUpon>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-     <None Update="TestCases\xbim\fail-ifc2x3-air_terminal_edge_case_with_predefined.ids">
-       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-     </None>
-     <None Update="TestCases\xbim\fail-ifc2x3-air_terminal_edge_case_with_predefined.ifc">
-       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-       <DependentUpon>%(Filename).ids</DependentUpon>
-     </None>
+
      <None Update="TestModels\BasicRequirements.ids">
-       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-     </None>
-     <None Update="TestModels\Cobie.ids">
        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
      </None>
      <None Update="TestModels\Dormitory-ARC.ifczip">
@@ -66,15 +56,13 @@
     <None Update="TestModels\SampleHouse4.ifc">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TestModels\SampleHouse4.xlsx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="TestModels\TestModel.ids">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="COBie\" />
     <Folder Include="TestCases\entity\" />
   </ItemGroup>
 

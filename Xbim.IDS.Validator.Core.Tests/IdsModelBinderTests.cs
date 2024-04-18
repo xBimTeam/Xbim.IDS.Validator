@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xbim.Common;
 using Xbim.IDS.Validator.Core.Interfaces;
-using Xbim.IDS.Validator.Core.Tests.TestModels;
+using Xbim.IDS.Validator.Tests.Common;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;

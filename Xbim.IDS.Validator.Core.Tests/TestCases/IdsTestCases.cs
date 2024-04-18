@@ -1,11 +1,10 @@
 ﻿using FluentAssertions;
 using Xbim.Common.Step21;
-using Xbim.Ifc4.RepresentationResource;
 using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.TestCases
 {
-    public class IdsTestCases : BaseTest
+    public class IdsTestCases : StandardTestCaseRunner
     {
         private const string TestCaseFolder = "ids";
         public IdsTestCases(ITestOutputHelper output) : base(output)

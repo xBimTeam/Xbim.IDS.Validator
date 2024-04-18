@@ -8,6 +8,9 @@ Powered by xbim Tookit, this library can be used to translate IDS files into an 
 which can be run against any IFC2x3, IFC4 or IFC4.3 model and provide a detailed breakdown of the results.
 It supports the latest full IDS specification and should fully support cloud and desktop applications across platforms.
 
+An experimental extension adds support for validating COBie using IDS. See the [Readme in Xbim.IDS.Validator.Extensions.COBie](Xbim.IDS.Validator.Extensions.COBie) 
+for more info.
+
 ## How do I install it?
 
 ```
@@ -16,13 +19,13 @@ dotnet add package Xbim.IDS.Validator.Core
 
 ## How do I use it?
 
-A fully functional Console application is included in this project in the __Xbim.IDS.Validator.Console__ project.
+Building the solution is easy, which includes a fully functional Console application in the __Xbim.IDS.Validator.Console__ project.
 
 ![XBIM IDS Console example](content/img/console-animation.gif)
 
-Given an IDS file such as [example.ids](Xbim.IDS.Validator.Core.Tests/TestModels/Example.ids) and an input IFC such as 
-[SampleHouse4.ifc](Xbim.IDS.Validator.Core.Tests/TestModels/SampleHouse4.ifc), a basic implementation might look like:
 
+To integrate in your own application is also simple. Given an IDS file such as [example.ids](Xbim.IDS.Validator.Core.Tests/TestModels/Example.ids) and an input IFC such as 
+[SampleHouse4.ifc](Xbim.IDS.Validator.Core.Tests/TestModels/SampleHouse4.ifc), a basic C# implementation might look like:
 
 ```csharp
 
@@ -40,7 +43,7 @@ var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
 
 // Open a model
 
-IModel model = IfcStore.Open("SampleFile.ifc"); // Or any other IModel implementation in place of IfcStore (including COBieModel)
+IModel model = IfcStore.Open("SampleFile.ifc"); // Or any other IModel implementation in place of IfcStore (including optionally a COBieModel)
 
 // optionally you can over-ride some behaviours
 var options = new VerificationOptions
@@ -124,7 +127,7 @@ It currently supports:
     - [x] IFC2x3
     - [x] IFC4 schemas
     - [x] IFC4x3-ADD2
-    - [x] COBie24 (Experimental - using CobieExpress and proprietary entity types)
+    - [x] COBie24 (Experimental - using an extension module: **Xbim.IDS.Validator.Extensions.COBie** and proprietary entity types)
 - Support for validating IDS schema validity using ids-lib
 - Support for upgrading older IDS schemas to latest Xml Schema
 - Custom Extensions (See [xbimEndToEnd TestCases](Xbim.IDS.Validator.Core.Tests/TestCases/xbimEndToEnd.cs) for example usage)

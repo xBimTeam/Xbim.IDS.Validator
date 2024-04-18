@@ -12,6 +12,7 @@ using Xbim.Flex.IO.Db.FlexDb;
 using Xbim.IDS.Validator.Common;
 using Xbim.IDS.Validator.Console;
 using Xbim.IDS.Validator.Core;
+using Xbim.IDS.Validator.Core.Configuration;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
@@ -46,7 +47,7 @@ class Program
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddLogging(/*o => o.AddConsole()*/);
 
-        serviceCollection.AddIdsValidation();
+        serviceCollection.AddIdsValidation(cfg => cfg.AddCOBie());
         serviceCollection.AddXbimToolkit(opt => opt.AddMemoryModel());
 
         var provider = serviceCollection.BuildServiceProvider();

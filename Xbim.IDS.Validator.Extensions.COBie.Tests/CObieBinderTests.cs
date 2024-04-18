@@ -5,18 +5,20 @@ using Xbim.CobieExpress;
 using Xbim.CobieExpress.Exchanger;
 using Xbim.CobieExpress.Exchanger.FilterHelper;
 using Xbim.Common;
+using Xbim.IDS.Validator.Core;
 using Xbim.IDS.Validator.Core.Binders;
 using Xbim.IDS.Validator.Core.Interfaces;
-using Xbim.IDS.Validator.Core.Tests.Binders;
+using Xbim.IDS.Validator.Extensions.COBie.Binders;
+using Xbim.IDS.Validator.Tests.Common;
 using Xbim.InformationSpecifications;
 using Xbim.IO.CobieExpress;
 using Xbim.IO.Memory;
 using Xbim.IO.Table;
 using Xunit.Abstractions;
 
-namespace Xbim.IDS.Validator.Core.Tests.COBie
+namespace Xbim.IDS.Validator.Extensions.COBie.Tests
 {
-    public class COBieBinderTests : BaseModelTester
+    public class COBieBinderTests : COBieBaseModelTester
     {
         private static ITestOutputHelper staticOutput;
         private readonly IServiceProvider provider;
@@ -25,7 +27,7 @@ namespace Xbim.IDS.Validator.Core.Tests.COBie
         public COBieBinderTests(ITestOutputHelper testOutput) : base(testOutput) 
         {
             staticOutput = testOutput;
-            provider = TestEnvironment.ServiceProvider;
+            provider = COBieTestEnvironment.ServiceProvider;
             facetBinderFactory = provider.GetRequiredService<IIdsFacetBinderFactory>();
         }
 
@@ -74,7 +76,7 @@ namespace Xbim.IDS.Validator.Core.Tests.COBie
         [Fact]
         public void CanQueryContacts()
         {
-            var binder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>()) { };
+            var binder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>(), GetValueMapper()) { };
             var types = new[] { typeof(CobieContact) };
             AssertIfcTypeFacetQuery(binder, "COBIECONTACT", 3, types);
         }
@@ -111,9 +113,9 @@ namespace Xbim.IDS.Validator.Core.Tests.COBie
                 AttributeValue = new ValueConstraint(attributeValue)
             };
 
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger, GetValueMapper());
 
-            var attrbinder = new AttributeFacetBinder(BinderContext, GetLogger<AttributeFacetBinder>());
+            var attrbinder = new COBieAttributeFacetBinder(BinderContext, GetLogger<COBieAttributeFacetBinder>(), GetValueMapper());
             attrbinder.SetOptions(new VerificationOptions { AllowDerivedAttributes = true, IncludeSubtypes = true }) ;
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
