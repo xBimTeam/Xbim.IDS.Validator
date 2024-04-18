@@ -1,7 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using System;
 using Xbim.Common.Step21;
+using Xbim.IDS.Validator.Common.Interfaces;
 using Xbim.IDS.Validator.Core.Binders;
+using Xbim.IDS.Validator.Core.Configuration;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.InformationSpecifications;
 
@@ -13,9 +16,21 @@ namespace Xbim.IDS.Validator.Core
         /// Registers xbim IDS with the application's Service collection
         /// </summary>
         /// <param name="services"></param>
-        /// <returns></returns>
+        /// <returns>The <see cref="IServiceCollection"/> so additional calls can be chained</returns>
         public static IServiceCollection AddIdsValidation(this IServiceCollection services)
         {
+            return services.AddIdsValidation(conf => { });
+        }
+
+        /// <summary>
+        /// Register and configure xbim IDS with the application's Service collection
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="configure"></param>
+        /// <returns>The <see cref="IServiceCollection"/> so additional calls can be chained</returns>
+        public static IServiceCollection AddIdsValidation(this IServiceCollection services, Action<IIdsConfigurationBuilder> configure)
+        {
+            var builder = new IdsConfigurationBuilder(services);
 
             services.AddTransient<IIdsModelBinder, IdsModelBinder>();
             services.AddTransient<IIdsModelValidator, IdsModelValidator>();
@@ -23,6 +38,8 @@ namespace Xbim.IDS.Validator.Core
             services.AddTransient<IIdsSchemaMigrator, IdsSchemaMigrator>();
             services.AddScoped<BinderContext>();
             services.AddSingleton<IIdsFacetBinderFactory, IdsFacetBinderFactory>();
+            services.AddSingleton<IValueMapper, IdsValueMapper>();
+            services.AddSingleton<IValueMapProvider, IdsValueMapProvider>();
 
             // Register the binders with the Factory
             services.RegisterIdsBinder<IfcTypeFacet, IfcTypeFacetBinder>();
@@ -32,11 +49,9 @@ namespace Xbim.IDS.Validator.Core
             services.RegisterIdsBinder<IfcPropertyFacet, PsetFacetBinder>();
             services.RegisterIdsBinder<PartOfFacet, PartOfFacetBinder>();
 
-            // TODO: Consider adding COBie as a Config builder option
-            services.RegisterIdsBinder<IfcClassificationFacet, NotSupportedBinder<IfcClassificationFacet>>(XbimSchemaVersion.Cobie2X4);
-            services.RegisterIdsBinder<IfcPropertyFacet, NotSupportedBinder<IfcPropertyFacet>>(XbimSchemaVersion.Cobie2X4);
-            services.RegisterIdsBinder<MaterialFacet, NotSupportedBinder<MaterialFacet>>(XbimSchemaVersion.Cobie2X4);
-            services.RegisterIdsBinder<PartOfFacet, NotSupportedBinder<PartOfFacet>>(XbimSchemaVersion.Cobie2X4);
+
+            configure(builder);
+
             return services;
         }
 

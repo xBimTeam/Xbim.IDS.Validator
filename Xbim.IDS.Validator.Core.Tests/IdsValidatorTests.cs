@@ -7,7 +7,7 @@ using static IdsLib.Audit;
 
 namespace Xbim.IDS.Validator.Core.Tests
 {
-    public class IdsValidatorTests : BaseModelTester
+    public class IdsValidatorTests : BaseBinderTests
     {
         public IdsValidatorTests(ITestOutputHelper output) : base(output)
         {

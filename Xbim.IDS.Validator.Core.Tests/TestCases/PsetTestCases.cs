@@ -4,7 +4,7 @@ using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.TestCases
 {
-    public class PsetTestCases : BaseTest
+    public class PsetTestCases : StandardTestCaseRunner
     {
         private const string TestCaseFolder = "property";
         public PsetTestCases(ITestOutputHelper output) : base(output)

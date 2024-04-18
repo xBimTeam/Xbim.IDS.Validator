@@ -2,6 +2,7 @@
 using Xbim.Common;
 using Xbim.Common.Enumerations;
 using Xbim.Common.Step21;
+using Xbim.IDS.Validator.Tests.Common;
 using Xbim.Ifc;
 using Xbim.IO.Memory;
 
@@ -20,7 +21,7 @@ namespace Xbim.IDS.Validator.Core.Tests
             ApplicationVersion = "1.0",
             ApplicationDevelopersName = "xbim"
         };
-#if IFC4x3
+#if XbimV6
         [Fact]
         public void CanCreateMinimalIfc4x3Model()
         {

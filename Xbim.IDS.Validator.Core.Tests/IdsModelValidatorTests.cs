@@ -3,10 +3,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xbim.Common;
 using Xbim.IDS.Validator.Core.Interfaces;
+using Xbim.IDS.Validator.Tests.Common;
 using Xbim.Ifc;
 using Xunit.Abstractions;
 
-namespace Xbim.IDS.Validator.Core.Tests.TestModels
+namespace Xbim.IDS.Validator.Core.Tests
 {
     [Collection(nameof(TestEnvironment))]
     public class IdsModelValidatorTests
@@ -18,7 +19,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestModels
         public IdsModelValidatorTests(ITestOutputHelper output)
         {
             this.output = output;
-            
+
             provider = TestEnvironment.ServiceProvider;
         }
 
@@ -35,7 +36,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestModels
 
             var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
 
-            var results = await idsValidator.ValidateAgainstIdsAsync(model, idsScript, logger, verificationOptions: new VerificationOptions { PermittedIdsAuditStatuses = VerificationOptions.Relaxed});
+            var results = await idsValidator.ValidateAgainstIdsAsync(model, idsScript, logger, verificationOptions: new VerificationOptions { PermittedIdsAuditStatuses = VerificationOptions.Relaxed });
 
             results.Should().NotBeNull();
 
@@ -44,7 +45,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestModels
 
             results.ExecutedRequirements.Count().Should().Be(4);
 
-            results.ExecutedRequirements[0].Status.Should().Be(ValidationStatus.Pass); 
+            results.ExecutedRequirements[0].Status.Should().Be(ValidationStatus.Pass);
             results.ExecutedRequirements[0].ApplicableResults.Should().NotBeEmpty();
 
 
@@ -66,7 +67,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestModels
             // Apply migrations
             idsMigrator.MigrateToIdsSchemaVersion(idsScript, out var upgraded);
 
-            var idsSpec = Xbim.InformationSpecifications.Xids.LoadBuildingSmartIDS(upgraded.Root, logger);
+            var idsSpec = InformationSpecifications.Xids.LoadBuildingSmartIDS(upgraded.Root, logger);
 
             var results = await idsValidator.ValidateAgainstXidsAsync(model, idsSpec, logger);
 

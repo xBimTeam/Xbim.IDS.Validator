@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
-    public class Ifc2x3BinderTests : BaseModelTester
+    public class Ifc2x3BinderTests : BaseBinderTests
     {
         public Ifc2x3BinderTests(ITestOutputHelper output) : base(output, XbimSchemaVersion.Ifc2X3)
         {
@@ -37,9 +37,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 AttributeName = attributeFieldName,
                 AttributeValue = new ValueConstraint(attributeValue)
             };
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>());
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>(), GetValueMapper());
 
-            var attrbinder = new AttributeFacetBinder(BinderContext, GetLogger<AttributeFacetBinder>());
+            var attrbinder = new AttributeFacetBinder(BinderContext, GetLogger<AttributeFacetBinder>(), GetValueMapper());
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -75,7 +75,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             propertyFacet.PropertyName.AddAccepted(new ExactConstraint(propName));
             if (value != null)
                 propertyFacet.PropertyValue.AddAccepted(new ExactConstraint(value?.ToString()));
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>());
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>(), GetValueMapper());
 
             var psetbinder = new PsetFacetBinder(BinderContext, GetLogger<PsetFacetBinder>());
 
@@ -154,7 +154,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 Value = new ValueConstraint(),
             };
             materialFacet.Value = material;
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>());
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>(), GetValueMapper());
 
             var materialbinder = new MaterialFacetBinder(BinderContext, GetLogger<MaterialFacetBinder>());
 

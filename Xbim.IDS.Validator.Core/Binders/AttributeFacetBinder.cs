@@ -11,7 +11,7 @@ using Xbim.IDS.Validator.Common.Interfaces;
 using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
-#if IFC4x3
+#if XbimV6
 using Xbim.Ifc4x3;  // To provide ToIfc4() extension method
 #endif
 using Xbim.InformationSpecifications;
@@ -22,12 +22,14 @@ namespace Xbim.IDS.Validator.Core.Binders
 {
     public class AttributeFacetBinder : FacetBinderBase<AttributeFacet>, ISupportOptions
     {
-        private readonly ILogger<AttributeFacetBinder> logger;
+        protected readonly ILogger<AttributeFacetBinder> logger;
+        protected readonly IValueMapper valueMapper;
         private VerificationOptions _options = new VerificationOptions();
 
-        public AttributeFacetBinder(BinderContext context, ILogger<AttributeFacetBinder> logger) : base(context, logger)
+        public AttributeFacetBinder(BinderContext context, ILogger<AttributeFacetBinder> logger, IValueMapper valueMapper) : base(context, logger)
         {
             this.logger = logger;
+            this.valueMapper = valueMapper;
         }
 
 
@@ -77,11 +79,11 @@ namespace Xbim.IDS.Validator.Core.Binders
                         case Xbim.Common.Step21.XbimSchemaVersion.Ifc2X3:
                             rootTypes = SchemaInfo.SchemaIfc2x3.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
                             break;
-
+#if XbimV6
                         case Xbim.Common.Step21.XbimSchemaVersion.Ifc4x3:
                             rootTypes = SchemaInfo.SchemaIfc4x3.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
                             break;
-
+#endif
                         //case Xbim.Common.Step21.XbimSchemaVersion.Cobie2X4:
                         //    //rootTypes = SchemaInfo.SchemaIfc4.GetAttributeClasses((string)attributeName, onlyTopClasses: true);
                         //    break;
@@ -208,7 +210,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                     {
                         attrvalue = ifc2x3Value.ToIfc4();
                     }
-#if IFC4x3
+#if XbimV6
                     else if (IsIfc4x3Model() && attrvalue is Xbim.Ifc4x3.MeasureResource.IfcValue ifc4x3Value)
                     {
                         attrvalue = ifc4x3Value.ToIfc4();
@@ -369,9 +371,9 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             if (propertyMeta.EnumerableType != null)
             {
-                return BindAnyAttributeSelection(expression, constraint, propertyMeta.PropertyInfo);
+                return BindAnyAttributeSelection(expression, constraint, valueMapper, propertyMeta.PropertyInfo);
             }
-            return BindAttributeSelection(expression, constraint, propertyMeta.PropertyInfo);
+            return BindAttributeSelection(expression, constraint, valueMapper, propertyMeta.PropertyInfo);
         }
 
         /// <summary>
@@ -379,10 +381,11 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// </summary>
         /// <param name="expression"></param>
         /// <param name="ifcAttributePropInfos"></param>
+        /// <param name="valueMapper"></param>
         /// <param name="constraint"></param>
         /// <returns></returns>
         private static Expression BindAttributeSelection(Expression expression,
-            ValueConstraint constraint, params PropertyInfo[] ifcAttributePropInfos)
+            ValueConstraint constraint, IValueMapper valueMapper, params PropertyInfo[] ifcAttributePropInfos)
         {
             // Get underlying collection type
             var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
@@ -406,9 +409,10 @@ namespace Xbim.IDS.Validator.Core.Binders
             {
                 // Ensure Attribute satisfies Value constraint
                 var constraintExpr = Expression.Constant(constraint, typeof(ValueConstraint));
+                var valueMapperExpr = Expression.Constant(valueMapper, typeof(IValueMapper));
 
                 // build t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName])
-                querybody = BuildAttributeQuery(ifcAttributePropInfos, ifcTypeParam, constraintExpr);
+                querybody = BuildAttributeQuery(ifcAttributePropInfos, ifcTypeParam, constraintExpr, valueMapperExpr);
 
             }
             else
@@ -430,10 +434,11 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// </summary>
         /// <param name="expression"></param>
         /// <param name="constraint"></param>
+        /// <param name="valueMapper"></param>
         /// <param name="ifcAttributePropInfos"></param>
         /// <returns></returns>
         private static Expression BindAnyAttributeSelection(Expression expression,
-            ValueConstraint constraint, params PropertyInfo[] ifcAttributePropInfos)
+            ValueConstraint constraint, IValueMapper valueMapper, params PropertyInfo[] ifcAttributePropInfos)
         {
             // Build IEnumerable<TEntity>().Where(ent => ent.[AttributeName].Any(p => ValueConstraintExtensions.SatisfiesConstraint(constraint, p)));
             // vs    IEnumerable<TEntity>().Where(ent => ValueConstraintExtensions.SatisfiesConstraint(constraint, ent.[AttributeName]))
@@ -457,9 +462,10 @@ namespace Xbim.IDS.Validator.Core.Binders
             {
                 // constraint Constant
                 var constraintExpr = Expression.Constant(constraint, typeof(ValueConstraint));
+                var valueMapperExpr = Expression.Constant(valueMapper, typeof(IValueMapper));
 
                 // build ent => ent.[AttributeName].Any(p => ValueConstraintExtensions.SatisfiesConstraint(constraint, p))
-                querybody = BuildAnyAttributeQuery(ifcAttributePropInfos, ifcTypeParam, constraintExpr);
+                querybody = BuildAnyAttributeQuery(ifcAttributePropInfos, ifcTypeParam, constraintExpr, valueMapperExpr);
 
             }
             else
@@ -478,7 +484,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             return Expression.Call(null, whereMethod, new[] { expression, filterExpression });
         }
 
-        internal static Expression BuildAttributeQuery(PropertyInfo[] ifcAttributePropInfo, ParameterExpression ifcTypeParam, ConstantExpression constraintExpr)
+        internal static Expression BuildAttributeQuery(PropertyInfo[] ifcAttributePropInfo, ParameterExpression ifcTypeParam, ConstantExpression constraintExpr, ConstantExpression valueMapExpr)
         {
             Expression body = Expression.Constant(false);   // default false
             foreach (var ifcAttribute in ifcAttributePropInfo)
@@ -489,8 +495,8 @@ namespace Xbim.IDS.Validator.Core.Binders
 
                 var valueExpr = Expression.Convert(nameProperty, typeof(object));
 
-                // build: t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName])
-                Expression querybody = Expression.Call(null, ExpressionHelperMethods.IdsSatisifiesConstraintMethod, constraintExpr, valueExpr);
+                // build: t => ValueConstraintExtensions.SatisfiesConstraint(constraint, t.[AttributeName], valueMapper)
+                Expression querybody = Expression.Call(null, ExpressionHelperMethods.IdsSatisifiesConstraintMethod, constraintExpr, valueExpr, valueMapExpr);
                 // Join into Or statement for multiple attributes - includes parenthesis
                 body = (body is ConstantExpression) ? querybody : Expression.OrElse(body, querybody);
             }
@@ -498,7 +504,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             return body;
         }
 
-        internal static Expression BuildAnyAttributeQuery(PropertyInfo[] ifcAttributePropInfo, ParameterExpression ifcTypeParam, ConstantExpression constraintExpr)
+        internal static Expression BuildAnyAttributeQuery(PropertyInfo[] ifcAttributePropInfo, ParameterExpression ifcTypeParam, ConstantExpression constraintExpr, ConstantExpression valueMapExpr)
         {
             // build ent => ent.[AttributeName].Any(p => ValueConstraintExtensions.SatisfiesConstraint(constraint, p)) || {another Attr}
 
@@ -518,7 +524,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                
 
                 // build: p => ValueConstraintExtensions.SatisfiesConstraint(constraint, p)
-                Expression querybody = Expression.Call(null, ExpressionHelperMethods.IdsSatisifiesConstraintMethod, constraintExpr, attrParam);
+                Expression querybody = Expression.Call(null, ExpressionHelperMethods.IdsSatisifiesConstraintMethod, constraintExpr, attrParam, valueMapExpr);
 
                 // Build Lambda expression for filter predicate (Func<T,bool>)
                 var filterExpression = Expression.Lambda(querybody, attrParam);

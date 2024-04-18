@@ -10,11 +10,11 @@ using static Xbim.InformationSpecifications.RequirementCardinalityOptions;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
 {
-    public class AttributeFacetBinderTests : BaseModelTester
+    public class AttributeFacetBinderTests : BaseBinderTests
     {
         public AttributeFacetBinderTests(ITestOutputHelper output) : base(output)
         {
-            Binder = new AttributeFacetBinder(BinderContext, Logger);
+            Binder = new AttributeFacetBinder(BinderContext, Logger, GetValueMapper());
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 AttributeName = attributeFieldName,
                 AttributeValue = new ValueConstraint("not relevant")
             };
-            var ifcBinder = new IfcTypeFacetBinder(new BinderContext { Model = Model}, GetLogger<IfcTypeFacetBinder>());
+            var ifcBinder = new IfcTypeFacetBinder(new BinderContext { Model = Model}, GetLogger<IfcTypeFacetBinder>(), GetValueMapper());
 
 
             var expression = ifcBinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
