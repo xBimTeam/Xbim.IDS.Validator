@@ -11,7 +11,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
     {
         public IfcTypeFacetBinderTests(ITestOutputHelper output) : base(output)
         {
-            Binder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>(), GetValueMapper());
+            Binder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>());
         }
 
         /// <summary>
@@ -90,15 +90,16 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         }
 
         [InlineData("IfcWall", "SOLIDWALL", 1, typeof(IIfcWall))]
-        [InlineData("IfcWallStandardCase", "NOTDEFINED", 1, typeof(IIfcWallStandardCase))]
+        [InlineData("IfcWallStandardCase", "PARTITIONING", 2, typeof(IIfcWallStandardCase))]
         [InlineData("IfcSpace", "INTERNAL", 1, typeof(IIfcSpace))]
         [InlineData("IfcFurnitureType", "CHAIR", 2, typeof(IIfcFurnitureType))]
         [InlineData("IfcFlowTerminal", "", 0, typeof(IIfcFlowTerminal))]
-        [InlineData("IfcWall", "SOLIDWALL,PARTITIONING", 2, typeof(IIfcWall))]
-        [InlineData("IfcWall,IfcWallType", "SOLIDWALL,PARTITIONING", 3, typeof(IIfcWall), typeof(IIfcWallType))]
-        [InlineData("IfcWallStandardCase,IfcWallType", "NOTDEFINED", 2, typeof(IIfcWallStandardCase), typeof(IIfcWallType))]
-        [InlineData("IfcDoor", "1810x2110mm", 1, typeof(IIfcDoor))]
+        [InlineData("IfcWall", "SOLIDWALL,PARTITIONING", 3, typeof(IIfcWall))]
+        [InlineData("IfcWall,IfcWallType", "SOLIDWALL,PARTITIONING", 4, typeof(IIfcWall), typeof(IIfcWallType))]
+        [InlineData("IfcWallStandardCase,IfcWallType", "NOTDEFINED", 1, typeof(IIfcWallStandardCase), typeof(IIfcWallType))]
+        [InlineData("IfcSlab", "FLOOR", 2, typeof(IIfcSlab))]
         [InlineData("IfcDoor", "DOOR", 3, typeof(IIfcDoor))]
+        [InlineData("IfcFurniture", "1525x762mm", 1, typeof(IIfcFurniture))]
         [Theory]
         public void Can_Query_Exact_IfcTypeWith_PredefinedType(string ifcType, string predefinedType, int expectedCount, params Type[] expectedTypes)
         {

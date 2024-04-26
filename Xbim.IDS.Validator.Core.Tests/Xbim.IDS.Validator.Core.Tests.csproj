@@ -8,6 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="COBie\**" />
+    <EmbeddedResource Remove="COBie\**" />
+    <None Remove="COBie\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageReference Include="xunit" Version="2.7.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.8">
@@ -62,7 +68,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="COBie\" />
     <Folder Include="TestCases\entity\" />
   </ItemGroup>
 

@@ -11,7 +11,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
     {
         public IfcTypeFacetBinder2x3Tests(ITestOutputHelper output) : base(output, Xbim.Common.Step21.XbimSchemaVersion.Ifc2X3)
         {
-            Binder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>(), GetValueMapper());
+            Binder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>());
         }
 
         /// <summary>
@@ -22,7 +22,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         [InlineData(20125, "IFCWINDOW", "744x1500_Steel")]
         [InlineData(325421, "IFCDOOR", "600x600_Metal")]
-        [InlineData(15129, "IFCWALLSTANDARDCASE", "Basic Wall:Wall_Ext25_MtlLathe5_CemPlstr20:81269")]  // Instance Preferred over Type
+        [InlineData(213766, "IFCFURNISHINGELEMENT", "750x450x1830_Wood")]   // from Instance ObjectType - no Type or PDT
+        [InlineData(15129, "IFCWALLSTANDARDCASE", "STANDARD")]  // Type Preferred over Instance
         [Theory]
         public void Can_Validate_Types(int entityLabel, string expectedType, string expectedPredefined, bool allowSubType = false, bool shouldPass = true)
         {

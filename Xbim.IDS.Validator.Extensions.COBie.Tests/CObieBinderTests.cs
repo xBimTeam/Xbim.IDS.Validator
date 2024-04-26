@@ -76,7 +76,7 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Tests
         [Fact]
         public void CanQueryContacts()
         {
-            var binder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>(), GetValueMapper()) { };
+            var binder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>()) { };
             var types = new[] { typeof(CobieContact) };
             AssertIfcTypeFacetQuery(binder, "COBIECONTACT", 3, types);
         }
@@ -113,7 +113,7 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Tests
                 AttributeValue = new ValueConstraint(attributeValue)
             };
 
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger, GetValueMapper());
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
 
             var attrbinder = new COBieAttributeFacetBinder(BinderContext, GetLogger<COBieAttributeFacetBinder>(), GetValueMapper());
             attrbinder.SetOptions(new VerificationOptions { AllowDerivedAttributes = true, IncludeSubtypes = true }) ;

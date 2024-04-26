@@ -34,7 +34,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 AttributeValue = new ValueConstraint(attributeValue)
             };
   
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger, GetValueMapper());
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
 
             var attrbinder = new AttributeFacetBinder(BinderContext, GetLogger<AttributeFacetBinder>(), GetValueMapper());
 
@@ -70,7 +70,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             attrFacet.AttributeValue.AddAccepted(new StructureConstraint() { MinLength = 1, MaxLength = 10 });
 
    
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger, GetValueMapper());
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
 
             var attrbinder = new AttributeFacetBinder(BinderContext, GetLogger<AttributeFacetBinder>(), GetValueMapper());
 
@@ -112,7 +112,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             {
                 classFacet.Identification = new ValueConstraint(ident);
             }
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger, GetValueMapper());
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
 
             var classbinder = new IfcClassificationFacetBinder(BinderContext, GetLogger<IfcClassificationFacetBinder>());
 
@@ -152,7 +152,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 Value = new ValueConstraint(),
             };
             materialFacet.Value = material;
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger, GetValueMapper());
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
 
             var materialbinder = new MaterialFacetBinder(BinderContext, GetLogger<MaterialFacetBinder>());
 
@@ -192,7 +192,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             propertyFacet.PropertyName.AddAccepted(new ExactConstraint(propName));
             if(value != null)
                 propertyFacet.PropertyValue.AddAccepted(new ExactConstraint(value?.ToString()));
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger, GetValueMapper());
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
 
             var psetbinder = new PsetFacetBinder(BinderContext, GetLogger<PsetFacetBinder>());
 
@@ -224,7 +224,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 DataType = "IFCLABEL"
             };
 
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger, GetValueMapper());
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
             var psetbinder = new PsetFacetBinder(BinderContext, GetLogger<PsetFacetBinder>());
 
             // Act
@@ -255,7 +255,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             partOfFacet.SetRelation(partOfRelation);
             
             
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger, GetValueMapper());
+            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
 
             var partOfbinder = new PartOfFacetBinder(BinderContext, GetLogger<PartOfFacetBinder>());
 
