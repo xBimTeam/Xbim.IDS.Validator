@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Text.RegularExpressions;
 using Xbim.Common;
 using Xbim.Common.Step21;
 using Xbim.IDS.Validator.Common;
@@ -96,7 +97,7 @@ namespace Xbim.IDS.Validator.Tests.Common
         {
             string testRoot = @$"TestCases/{facetFolder}";
             DirectoryInfo d = new DirectoryInfo(testRoot);
-            var idsFiles = d.GetFiles($"{testType}-*.ids", SearchOption.AllDirectories);
+            var idsFiles = d.GetFiles($"{testType}*.ids", SearchOption.AllDirectories);
             return idsFiles;
         }
 
