@@ -42,11 +42,13 @@ namespace Xbim.IDS.Validator.Core.Extensions
             {
                 return true;
             }
-
-            return facet.PredefinedType?.IsSatisfiedBy(GetPredefinedType(obj), true) == true;
+            var predefinedType = GetPredefinedType(obj, out bool isUserDefined);
+            
+            return facet.PredefinedType?.IsSatisfiedBy(predefinedType, true) == true ||
+                (isUserDefined && facet.PredefinedType?.IsSatisfiedBy("USEREDEFINED", true) == true);
         }
 
-        public static string? GetPredefinedType(IIfcObjectDefinition obj)
+        public static string? GetPredefinedType(IIfcObjectDefinition obj, out bool isUserdefined)
         {
             // Based on https://github.com/CBenghi/IDS/blob/development/Documentation/facet-configurations.md
             if (obj is IIfcObject o)
@@ -55,24 +57,24 @@ namespace Xbim.IDS.Validator.Core.Extensions
                 if (definingType != null)
                 {
                     // Type over-rides entities PDT
-                    var typeValue = GetSubType(definingType);
+                    var typeValue = GetSubType(definingType, out isUserdefined);
                     if (typeValue == null || typeValue == "USERDEFINED" || typeValue == "NOTDEFINED")
                     {
                         // Try the object if meaningless
-                        return GetSubType(o);
+                        return GetSubType(o, out isUserdefined);
                     }
                     return typeValue;
                 }
                 else
                 {
                     // No type - use object
-                    return GetSubType(o);
+                    return GetSubType(o, out isUserdefined);
                 }
             }
             else
             {
                 // Get for Type/Process etc
-                return GetSubType(obj);
+                return GetSubType(obj, out isUserdefined);
             }
         }
 
@@ -80,9 +82,11 @@ namespace Xbim.IDS.Validator.Core.Extensions
         /// Gets the subtype - either the PredefinedType value or the user-defined value when USERDEFINED
         /// </summary>
         /// <param name="definingType"></param>
+        /// <param name="isUserDefined">Indicates if the pre-defined type is USERDEFINED</param>
         /// <returns></returns>
-        private static string? GetSubType(IIfcObjectDefinition definingType)
+        private static string? GetSubType(IIfcObjectDefinition definingType, out bool isUserDefined)
         {
+            isUserDefined = false;
 #if XbimV6
             var pdt = definingType.GetPredefinedTypeValue();
 #else
@@ -90,6 +94,8 @@ namespace Xbim.IDS.Validator.Core.Extensions
 #endif
             if (pdt == null || pdt == "USERDEFINED")
             {
+                if (pdt == "USERDEFINED")
+                    isUserDefined = true;
                 return GetObjectType((IIfcObjectDefinition?)definingType) ?? pdt;
             }
             return pdt;

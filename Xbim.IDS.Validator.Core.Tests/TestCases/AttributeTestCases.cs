@@ -22,7 +22,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             { "pass-attributes_with_a_boolean_false_should_pass.ids", new [] { XbimSchemaVersion.Ifc4 } },
             { "pass-attributes_with_a_boolean_true_should_pass.ids", new [] { XbimSchemaVersion.Ifc4 } },
             { "pass-attributes_with_a_zero_duration_should_pass.ids", new [] { XbimSchemaVersion.Ifc4 } },
-            { "pass-booleans_must_be_specified_as_uppercase_strings_2_3.ids", new [] { XbimSchemaVersion.Ifc4 } },  // IfcTask changed in IFC4
+            { "pass-booleans_must_be_specified_as_lowercase_strings_2_3.ids", new [] { XbimSchemaVersion.Ifc4 } },  // IfcTask changed in IFC4
             { "pass-dates_are_treated_as_strings_1_2.ids", new [] { XbimSchemaVersion.Ifc4 } },
             { "pass-durations_are_treated_as_strings_1_2.ids", new [] { XbimSchemaVersion.Ifc4 } },
             { "pass-integers_follow_the_same_rules_as_numbers.ids", new [] { XbimSchemaVersion.Ifc4 } },        // StairFlight.NumberOfRiser[s] got renamed in IFC4

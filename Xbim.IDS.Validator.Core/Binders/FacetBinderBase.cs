@@ -412,8 +412,8 @@ namespace Xbim.IDS.Validator.Core.Binders
         {
             if (attrvalue is IExpressBooleanType ifcbool)
             {
-                // IDS Specs expect bools to be upper case
-                attrvalue = ifcbool.Value.ToString().ToUpperInvariant();
+                // IDS Specs expect bools to be lower case
+                attrvalue = ifcbool.Value.ToString().ToLowerInvariant();
             }
 
             return attrvalue;

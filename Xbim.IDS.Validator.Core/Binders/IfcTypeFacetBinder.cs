@@ -147,10 +147,16 @@ namespace Xbim.IDS.Validator.Core.Binders
            
             if (f?.PredefinedType?.HasAnyAcceptedValue() == true)
             {
-                var preDefValue = GetPredefinedType(item);
+                var preDefValue = GetPredefinedType(item, out bool isUserDefined);
+                var satisifiedByAnyUserDefined = isUserDefined && f!.PredefinedType.IsSatisfiedBy("USERDEFINED");
+
                 if (f!.PredefinedType.ExpectationIsSatisifedBy(preDefValue, ctx, logger))
                 {
                     result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PredefinedType!, preDefValue, "Correct Predefined Type", item));
+                }
+                else if(satisifiedByAnyUserDefined)
+                {
+                    result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PredefinedType!, "USERDEFINED", "Is Userdefined Type", item));
                 }
                 else
                 {
@@ -242,11 +248,12 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         }
 
-        private string? GetPredefinedType(IPersistEntity entity)
+        private string? GetPredefinedType(IPersistEntity entity, out bool isUserDefined)
         {
-            if(entity is IIfcObjectDefinition o)
+            isUserDefined = false;
+            if (entity is IIfcObjectDefinition o)
             {
-                return IfcEntityTypeExtensions.GetPredefinedType(o);
+                return IfcEntityTypeExtensions.GetPredefinedType(o, out isUserDefined);
             }
             return null;
         }
