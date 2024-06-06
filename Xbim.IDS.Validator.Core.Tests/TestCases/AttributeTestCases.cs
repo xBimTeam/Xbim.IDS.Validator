@@ -30,6 +30,8 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
             { "pass-dates_are_treated_as_strings_2_2.ids" , new [] { XbimSchemaVersion.Ifc4} },
 
+            { "invalid-integers_cannot_be_expressed_as_floating_point_numbers_2_2.ids" , new [] { XbimSchemaVersion.Ifc4} },
+            
             // Unsupported tests
             // None
         };
@@ -64,13 +66,16 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
         [MemberData(nameof(GetInvalidTestCases))]
         [Theory]
-        public async Task ExpectedInvalid(string idsFile, params XbimSchemaVersion[] schemas)
+        public async Task ExpectedInvalidFailing(string idsFile, params XbimSchemaVersion[] schemas)
         {
             foreach (var schema in GetSchemas(schemas))
             {
                 var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
+                var expectedStatus = ValidationStatus.Fail;
+                if(idsFile.Contains("invalid-integers_cannot_be_expressed_as_floating_point_numbers"))
+                    expectedStatus = ValidationStatus.Pass;
 
-                outcome.Status.Should().Be(ValidationStatus.Fail, schema.ToString());
+                outcome.Status.Should().Be(expectedStatus, schema.ToString());
             }
             ValidateIds(idsFile).Should().NotBe(IdsLib.Audit.Status.Ok);
         }

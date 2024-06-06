@@ -54,7 +54,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData(323, "DIMENSIONS", "Area", 15.41678125d)]
         [InlineData(323, "Dimensions", "Area", 15.41678125d, "IfcAreaMeasure")]
 
-        [InlineData(4705, "Pset_WallCommon", "IsExternal", "FALSE")]
+        [InlineData(4705, "Pset_WallCommon", "IsExternal", "false")]
         [InlineData(4705, "Pset_WallCommon", "IsExternal", false)]
         [InlineData(323, null, "Area", 15.41678125d)]   // Technically not valid-Pset is required
         [InlineData(323, "", "Area", 15.41678125d)]     // ""

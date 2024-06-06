@@ -189,7 +189,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                     if (propValue is bool)
                     {
                         // By convention bools are upper case. May need to review XIDS on this.
-                        propFacet.PropertyValue.AddAccepted(new ExactConstraint(propValue.ToString().ToUpperInvariant()));
+                        propFacet.PropertyValue.AddAccepted(new ExactConstraint(propValue.ToString().ToLowerInvariant()));
                         break;
                     }
                     propFacet.PropertyValue.AddAccepted(new ExactConstraint(propValue.ToString()));
