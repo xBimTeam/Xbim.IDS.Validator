@@ -28,8 +28,8 @@ namespace Xbim.IDS.Validator.Core.Tests
 
         [InlineData(@"TestModels\Example.ids", @"TestModels\SampleHouse4.ifc")]
         //[InlineData(@"TestModels\Example.ids", @"\\Mac\Home\Downloads\villa_tugenhat.ifc\villa_tugenhat_v1.ifc")]
-        //InlineData(@"TestModels\BasicRequirements.ids", @"\\Mac\Home\Downloads\villa_tugenhat.ifc\villa_tugenhat_v1.ifc")]
-        [InlineData(@"TestModels\BasicRequirements.ids", @"TestModels\SampleHouse4.ifc")]
+        //InlineData(@"TestModels\BasicRequirements0-97.ids", @"\\Mac\Home\Downloads\villa_tugenhat.ifc\villa_tugenhat_v1.ifc")]
+        [InlineData(@"TestModels\BasicRequirements0-97.ids", @"TestModels\SampleHouse4.ifc")]
         [Theory]
 
         public void Can_Bind_Specification_to_model(string idsFile, string ifcFile)

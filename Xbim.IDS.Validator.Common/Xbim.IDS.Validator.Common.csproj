@@ -18,9 +18,9 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="ids-lib" Version="1.0.74" />
+    <PackageReference Include="ids-lib" Version="1.0.77" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
-    <PackageReference Include="Xbim.InformationSpecifications" Version="0.97.11" />
+    <PackageReference Include="Xbim.InformationSpecifications" Version="0.97.12" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetXbimV6)' != 'true'">

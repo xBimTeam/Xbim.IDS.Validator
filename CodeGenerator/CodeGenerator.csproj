@@ -9,8 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ids-lib" Version="1.0.74" />
-    <PackageReference Include="Xbim.InformationSpecifications" Version="0.97.11" />
+    <PackageReference Include="ids-lib" Version="1.0.77" />
+    <PackageReference Include="Xbim.InformationSpecifications" Version="0.97.12" />
   </ItemGroup>
 
 </Project>

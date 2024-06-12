@@ -2,7 +2,7 @@
 HEADER;
 FILE_DESCRIPTION (('ViewDefinition [CoordinationView]'), '2;1');
 FILE_NAME ('file.ifc', '2022-12-23T22:25:16', ('Andy Ward'), ('xbim Ltd'), 'xbim Toolkit', 'xbim IDS Unit tests', 'n/a');
-FILE_SCHEMA (('IFC4X3_ADD1'));
+FILE_SCHEMA (('IFC4X3_ADD2'));
 ENDSEC;
 DATA;
 #1=IFCSPACETYPE('1TMTHY4ib7nf2JAB8DnOAh',#2,'Test',$,$,$,$,$,$,.SPACE.,'Long Name');

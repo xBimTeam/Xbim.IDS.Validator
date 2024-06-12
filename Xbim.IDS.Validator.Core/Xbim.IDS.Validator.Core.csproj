@@ -21,11 +21,11 @@
     <None Remove="Migration\IDS-Audit_migration.xslt" />
     <None Remove="Migration\IDS_v0.9.3-v0.9.6_migration.xsl" />
     <None Remove="Migration\IDS_v0.9.6-v0.9.7_migration.xsl" />
-    <None Remove="Migration\IDS_v0.9.7-v1.0.0_migration.xsl" />
+    <None Remove="Migration\IDS_v0.9.7-v1.0_migration.xsl" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Migration\IDS_v0.9.7-v1.0.0_migration.xsl" />
+    <EmbeddedResource Include="Migration\IDS_v0.9.7-v1.0_migration.xsl" />
     <EmbeddedResource Include="Migration\IDS_v0.9.6-v0.9.7_migration.xsl" />
     <EmbeddedResource Include="Migration\IDS_v0.9.3-v0.9.6_migration.xsl" />
     <EmbeddedResource Include="Migration\IDS-Audit_migration.xslt" />

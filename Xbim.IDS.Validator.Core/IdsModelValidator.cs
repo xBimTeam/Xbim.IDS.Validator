@@ -139,6 +139,7 @@ namespace Xbim.IDS.Validator.Core
 
             try
             {
+                verificationOptions ??= new VerificationOptions();
                 ModelBinder.SetOptions(verificationOptions);
 
                 if (!Xids.CanLoad(new FileInfo(idsFile)))
@@ -169,7 +170,7 @@ namespace Xbim.IDS.Validator.Core
             {
                 // Do an in place upgrade to latest schema
                 // Note: won't support zipped IDS upgrades, JSON etc.
-                var targetVersion = IdsVersion.Ids0_9_7;
+                var targetVersion = IdsVersion.Ids1_0;
                 var currentVersion = idsSchemaMigrator.GetIdsVersion(idsFile);
                 logger.LogWarning("IDS schema {oldVersion} is out of date for {file}. Applying in-place upgrade to latest {version} schema.",
                     currentVersion, idsFile, targetVersion);

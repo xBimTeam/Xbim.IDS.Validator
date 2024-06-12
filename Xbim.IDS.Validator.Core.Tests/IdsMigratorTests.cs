@@ -21,7 +21,7 @@ namespace Xbim.IDS.Validator.Core.Tests
             // Act
             migrator.HasMigrationsToApply(idsFile).Should().BeTrue("Old IDS file");
             migrator.GetIdsVersion(idsFile).Should().Be(IdsVersion.Invalid);
-            var result = migrator.MigrateToIdsSchemaVersion(idsFile, out var target, IdsLib.IdsSchema.IdsNodes.IdsVersion.Ids0_9_7);
+            var result = migrator.MigrateToIdsSchemaVersion(idsFile, out var target, IdsLib.IdsSchema.IdsNodes.IdsVersion.Ids1_0);
             result.Should().BeTrue("Expected to migrate");
             target.Should().NotBeNull("Expected a document");
 
@@ -36,11 +36,13 @@ namespace Xbim.IDS.Validator.Core.Tests
             ids.Should().NotBeNull("Expected to load");
 
             ids.AllSpecifications().Should().HaveCount(4);
+            ids.AllSpecifications().First().IfcVersion.Should().Contain(IfcSchemaVersion.IFC4X3);
 
         }
 
         [InlineData(@"TestModels/Example.ids", IdsVersion.Invalid)]
-        [InlineData(@"TestModels/BasicRequirements.ids", IdsVersion.Ids0_9_7)]
+        [InlineData(@"TestModels/BasicRequirements0-97.ids", IdsVersion.Ids0_9_7)]
+        [InlineData(@"TestModels/BasicRequirements1-0.ids", IdsVersion.Ids1_0)]
         [InlineData(@"TestModels/sample.ids", IdsVersion.Ids0_9_7)]
         [InlineData(@"Xbim.IDS.Validator.Core.xml", IdsVersion.Invalid)]    // Not IDS
         [Theory]
@@ -52,7 +54,8 @@ namespace Xbim.IDS.Validator.Core.Tests
         }
 
         [InlineData(@"TestModels/Example.ids", "0.0")]
-        [InlineData(@"TestModels/BasicRequirements.ids", "0.9.7")]
+        [InlineData(@"TestModels/BasicRequirements0-97.ids", "0.9.7")]
+        [InlineData(@"TestModels/BasicRequirements1-0.ids", "1.0")]
         [InlineData(@"TestModels/sample.ids", "0.9.7")]
         [InlineData(@"Xbim.IDS.Validator.Core.xml", "0.0")]    // Not IDS
         [Theory]
@@ -99,7 +102,7 @@ namespace Xbim.IDS.Validator.Core.Tests
         private static void AssertIdsSchemaLocation(XDocument target)
         {
             var location = target.ReadIdsSchemaLocation();
-            location.Should().Be("http://standards.buildingsmart.org/IDS http://standards.buildingsmart.org/IDS/0.9.7/ids.xsd");
+            location.Should().Be("http://standards.buildingsmart.org/IDS http://standards.buildingsmart.org/IDS/1.0/ids.xsd");
         }
 
         ILogger<IdsSchemaMigrator> MigrationLogger { get => GetLogger<IdsSchemaMigrator>(); }
