@@ -17,8 +17,8 @@ variables:
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
-  major: 0  # IDS Schema Major
-  minor: 97 # IDS Schema Minor
+  major: 1  # IDS Schema Major
+  minor: 0 # IDS Schema Minor
   majorMinor: $(major).$(minor)
   patch: $[counter(variables['majorMinor'], 108)]
   suffix: $[replace(variables['Build.SourceBranchName'], '_', '-')]

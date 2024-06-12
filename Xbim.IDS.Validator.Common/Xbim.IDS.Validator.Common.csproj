@@ -27,7 +27,7 @@
     <PackageReference Include="Xbim.Essentials" Version="5.1.341" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetXbimV6)' == 'true'">
-    <PackageReference Include="Xbim.Essentials" Version="6.0.445" />
+    <PackageReference Include="Xbim.Essentials" Version="6.0.475-develop" />
   </ItemGroup>
 
 </Project>
