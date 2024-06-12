@@ -1,6 +1,7 @@
-﻿using Divergic.Logging.Xunit;
+﻿using Neovolve.Logging.Xunit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 #if XbimV6
 using Xbim.Common.Configuration;
 #endif
@@ -80,7 +81,7 @@ namespace Xbim.IDS.Validator.Tests.Common
         {
             var services = new ServiceCollection()
                         .AddLogging((builder) => builder.AddXunit(output,
-                        new Divergic.Logging.Xunit.LoggingConfig { LogLevel = LogLevel.Debug }));
+                        new LoggingConfig { LogLevel = LogLevel.Debug }));
 
             IServiceProvider provider = services.BuildServiceProvider();
             var logger = provider.GetRequiredService<ILogger<T>>();
