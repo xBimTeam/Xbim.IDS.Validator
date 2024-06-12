@@ -1,26 +1,27 @@
-﻿<ids xmlns="http://standards.buildingsmart.org/IDS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://standards.buildingsmart.org/IDS/ids_05.xsd">
-    <info>
-        <title>IFC2x3 doesn't have AirTerminal instance, but does have AirTerminalType which can be used to infer instance</title>
-    </info>
-    <specifications>
-        <specification name="IFC2x3 doesn't have AirTerminal instance, but does have AirTerminalType which can be used to infer instance" ifcVersion="IFC2X3" minOccurs="1" maxOccurs="unbounded">
-            <applicability>
-                <entity>
-                    <name>
-                        <simpleValue>IFCAIRTERMINAL</simpleValue>
-                    </name>
-                    <predefinedType>
-                        <simpleValue>NOTVALID</simpleValue>
-                    </predefinedType>
-                </entity>
-            </applicability>
-            <requirements>
-                <entity>
-                    <name>
-                        <simpleValue>IFCFLOWTERMINAL</simpleValue>
-                    </name>
-                </entity>
-            </requirements>
-        </specification>
-    </specifications>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ids xsi:schemaLocation="http://standards.buildingsmart.org/IDS http://standards.buildingsmart.org/IDS/1.0/ids.xsd" xmlns="http://standards.buildingsmart.org/IDS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <info>
+    <title>IFC2x3 doesn't have AirTerminal instance, but does have AirTerminalType which can be used to infer instance</title>
+  </info>
+  <specifications>
+    <specification name="IFC2x3 doesn't have AirTerminal instance, but does have AirTerminalType which can be used to infer instance" ifcVersion="IFC2X3">
+      <applicability minOccurs="1" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCAIRTERMINAL</simpleValue>
+          </name>
+          <predefinedType>
+            <simpleValue>NOTVALID</simpleValue>
+          </predefinedType>
+        </entity>
+      </applicability>
+      <requirements>
+        <entity>
+          <name>
+            <simpleValue>IFCFLOWTERMINAL</simpleValue>
+          </name>
+        </entity>
+      </requirements>
+    </specification>
+  </specifications>
 </ids>

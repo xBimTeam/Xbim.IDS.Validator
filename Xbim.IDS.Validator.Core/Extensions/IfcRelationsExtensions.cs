@@ -113,7 +113,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
                     ? pr.IsContainedIn != null
                         ? new[] { pr.IsContainedIn }.UnionAncestry(relation) // Has Immediate link to SpatialElement
                                                                              // Check for indirect link
-                        : new[] { pr }.UnionAncestry(PartOfRelation.IfcRelAggregates).Cast<IIfcProduct>().Select(p => p.IsContainedIn).Where(c => c != null).UnionAncestry(relation)
+                        : new[] { pr }.UnionAncestry(PartOfRelation.IfcRelAggregates).OfType<IIfcProduct>().Select(p => p.IsContainedIn).Where(c => c != null).UnionAncestry(relation)
 
                     : Enumerable.Empty<IIfcObjectDefinition>(),
 

@@ -36,7 +36,7 @@ namespace Xbim.IDS.Validator.Core
         /// <param name="targetIdsVersion"></param>
         /// <param name="applyGlobalScripts"></param>
         /// <returns><c>true</c> if the migration succeeded; else <c>false</c></returns>
-        public bool MigrateToIdsSchemaVersion(string sourceFile, out XDocument target, IdsVersion targetIdsVersion = IdsVersion.Ids0_9_7, bool applyGlobalScripts = true)
+        public bool MigrateToIdsSchemaVersion(string sourceFile, out XDocument target, IdsVersion targetIdsVersion = IdsVersion.Ids1_0, bool applyGlobalScripts = true)
         {
             try
             {

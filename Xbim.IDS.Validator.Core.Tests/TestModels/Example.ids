@@ -7,7 +7,7 @@
     <ids:date>2022-11-30</ids:date>
   </ids:info>
   <ids:specifications>
-    <ids:specification ifcVersion="IFC2X3 IFC4" name="All Doors MUST provide Reference, Location properties and have Materials" minOccurs="1" maxOccurs="unbounded">
+    <ids:specification ifcVersion="IFC2X3 IFC4 IFC4X3" name="All Doors MUST provide Reference, Location properties and have Materials" minOccurs="1" maxOccurs="unbounded">
       <ids:applicability>
         <ids:entity>
           <ids:name>
