@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetXbimV6>true</TargetXbimV6> <!-- Set false to target 5.1 and omit IFC4x3 support -->
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <Version>0.97.0.0</Version>
+    <Version>1.0.0.0</Version>
     <Copyright>xbim Ltd</Copyright>
     <Authors>Andy Ward, xbim</Authors>
     <PackageIcon>XbimIcon.png</PackageIcon>
