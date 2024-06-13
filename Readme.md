@@ -24,7 +24,7 @@ Building the solution is easy, which includes a fully functional Console applica
 ![XBIM IDS Console example](content/img/console-animation.gif)
 
 
-To integrate in your own application is also simple. Given an IDS file such as [example.ids](Xbim.IDS.Validator.Core.Tests/TestModels/Example.ids) and an input IFC such as 
+To integrate in your own application is also simple. Given an IDS file such as [BasicRequirements.ids](Xbim.IDS.Validator.Core.Tests/TestModels/BasicRequirements1-0.ids) and an input IFC such as 
 [SampleHouse4.ifc](Xbim.IDS.Validator.Core.Tests/TestModels/SampleHouse4.ifc), a basic C# implementation might look like:
 
 ```csharp
@@ -57,7 +57,7 @@ var options = new VerificationOptions
 };
 
 // Invoke the validation checking asynchronously. Also supports cancellation and async progress updating.
-ValidationOutcome outcome = await idsValidator.ValidateAgainstIdsAsync(model, "example.ids", logger, verificationOptions: options);
+ValidationOutcome outcome = await idsValidator.ValidateAgainstIdsAsync(model, "BasicRequirements1-0.ids", logger, verificationOptions: options);
 
 // Present the results
 foreach (ValidationRequirement requirement in outcome.ExecutedRequirements)
@@ -90,8 +90,8 @@ foreach (ValidationRequirement requirement in outcome.ExecutedRequirements)
 
 ## How much of the IDS spec does this support?
 
-This is a comprehensive implementation of the latest IDS v1.0 standard, passing all current [TestCases](https://github.com/buildingSMART/IDS/blob/master/Documentation/testcases/scripts.md) 
-(with one esoteric edge-case not implemented). 
+This is a comprehensive implementation of the latest IDS v1.0 standard, with 100% pass rate all current [IDS TestCases](https://github.com/buildingSMART/IDS/blob/master/Documentation/testcases/scripts.md) 
+
 This library has been tested at scale with real-world models. It also supports some useful extensions that can be enabled through runtime options.
 
 It currently supports:
@@ -145,8 +145,8 @@ Currently only one minor test-case is unsupported. (See PropertySet skipped unit
 ## To-do list
 
 - [ ] Support for Xbim.XIDS extensions (Documents etc)
-- [ ] Testing Pre-defined Properties. e.g. IFCDOORPANELPROPERTIES.PanelOperation
-- [ ] Review support of latest PartOf relations in 0.96/0.97
+- [x] Testing Pre-defined Properties. e.g. IFCDOORPANELPROPERTIES.PanelOperation
+- [x] Review support of latest PartOf relations in 0.96/0.97
 - [ ] Further COBie specific enhancements (Attributes checking, Classification etc)
 - [ ] Refactoring to further unify selection and verification logic for consistency
 
