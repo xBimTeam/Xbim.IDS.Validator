@@ -148,13 +148,31 @@ namespace Xbim.IDS.Validator.Core
         {
             if(Status == ValidationStatus.Fail)
             {
-                return $"[{Status}] {Reason}: {Clause?.GetType().Name}.{ValidatedField} {Expectation} to be '{ExpectedResult}' - but actually found '{ActualResult}'";
+                if (Expectation == Cardinality.Prohibited)
+                {
+                    return $"[{Status}] {Reason}: {Expectation} - found {Entity}";
+                }
+                else
+                {
+                    return $"[{Status}] {Reason}: {Expectation} {FacetType}{ValidatedField} to be '{ExpectedResult}' - but found {FormatedActualResult}";
+                }
             }
             else
             {
-                return $"[{Status}] {Reason}: {Clause?.GetType().Name}.{ValidatedField} {Expectation} to be '{ExpectedResult}' and found '{ActualResult}'";
+                return $"[{Status}] {Reason}: {Expectation} {FacetType}{ValidatedField} to be '{ExpectedResult}' and found {FormatedActualResult}";
             }
         }
+
+        /// <summary>
+        /// Helper to ensure Facet field names are qualified to be less ambiguous
+        /// </summary>
+        /// <remarks>E.g. Material has a Value property, where Attribute has AttributeValue and Properties have PropertyValue</remarks>
+        private string FacetType => Clause switch
+        {
+            MaterialFacet prop => "Material",
+            PartOfFacet prop => "Releated",
+            _ => "",
+        };
 
         /// <summary>
         /// Builds a message representing a successful check
@@ -349,7 +367,7 @@ namespace Xbim.IDS.Validator.Core
         /// <summary>
         /// A formatted string presenting the actual result
         /// </summary>
-        public string FormatedActualResult => string.IsNullOrEmpty(ActualResult?.ToString()) ? "<nothing>" : ActualResult.ToString()
+        public string FormatedActualResult => string.IsNullOrEmpty(ActualResult?.ToString()) ? "nothing" : $"'{ActualResult}'"
 
 
 ;    }

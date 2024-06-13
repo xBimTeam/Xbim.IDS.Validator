@@ -48,7 +48,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             if (!psetFacet.IsValid())
             {
-                // IsValid checks against a known list of all IFC Attributes
+                // IsValid checks for mandatory fields
                 throw new InvalidOperationException($"IFC Property Facet '{psetFacet?.PropertySetName}'.{psetFacet?.PropertyName} is not valid");
             }
 
@@ -80,7 +80,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             if (!facet.IsValid())
             {
-                // IsValid checks against a known list of all IFC Attributes
+                // IsValid checks for mandatory fields
                 throw new InvalidOperationException($"IFC Property Facet '{facet?.PropertySetName}'.{facet?.PropertyName} is not valid");
             }
 
@@ -115,7 +115,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 foreach (var pset in psets)
                 {
 
-                    result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertySetName!, pset.Name, "Pset Matched", pset));
+                    result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertySetName!, pset.Name, "PropertySet Matched", pset));
                     
                     var props = GetPropertiesMatching<IIfcSimpleProperty>(item.EntityLabel, pset.Name, facet.PropertyName);
                     var quants = GetQuantitiesMatching(item.EntityLabel, pset.Name, facet.PropertyName);
@@ -164,12 +164,12 @@ namespace Xbim.IDS.Validator.Core.Binders
                             var vals = string.Join(',', values.Select(v=> GetNormalisedValue(v)));
                             if (satisfiedValue)
                             {
-                                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, vals, $"Value matched in {pset.Name}_{prop.Name}", prop));
+                                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, vals, $"Value matched in {pset.Name}.{prop.Name}", prop));
                                 success = true;
                             }
                             else
                             {
-                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyValue!, vals, $"Invalid Value in {pset.Name}_{prop.Name}", prop));
+                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyValue!, vals, $"Invalid Value in {pset.Name}.{prop.Name}", prop));
                                 failure = true;
                             }
 
@@ -198,12 +198,12 @@ namespace Xbim.IDS.Validator.Core.Binders
 
                             if (ValueSatifiesConstraint(facet, value, ctx))
                             {
-                                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, value, $"Quantity matched in {pset.Name}_{quant.Name}", propValue));
+                                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, value, $"Quantity matched in {pset.Name}.{quant.Name}", propValue));
                                 success = true;
                             }
                             else
                             {
-                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyValue!, value, $"Invalid quantity in {pset.Name}_{quant.Name}", propValue));
+                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyValue!, value, $"Invalid quantity in {pset.Name}.{quant.Name}", propValue));
                                 failure = true;
                             }
                         }
@@ -227,7 +227,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                         { 
                             if(cardinality == Cardinality.Expected)
                             {
-                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, "No properties matching in psets", pset));
+                                result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertyName!, null, $"No matching property in PropertySet '{pset.Name}'", pset));
                                 failure = true;
                             }
                             
@@ -254,22 +254,21 @@ namespace Xbim.IDS.Validator.Core.Binders
                     }
                 }
             }
-
-            else
+            else // No matching PropertySets found for this item
             {
-                // Not matching Pset
+                
                 switch (cardinality)
                 {
                     case Cardinality.Expected:
                         {
-                            result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertySetName!, null, "No Psets matching", item));
+                            result.Fail(ValidationMessage.Failure(ctx, fn => fn.PropertySetName!, null, "No PropertySet matching", item));
                             break;
                         }
 
                     case Cardinality.Optional:
                     case Cardinality.Prohibited:
                         {
-                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertySetName!, null, $"Pset not found", item));
+                            result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertySetName!, null, $"PropertySet not found", item));
                             break;
                         }
                 }

@@ -49,9 +49,16 @@ namespace Xbim.IDS.Validator.Core
         public async Task<ValidationOutcome> ValidateAgainstXidsAsync(IModel model, Xids idsSpec, ILogger logger, Func<ValidationRequirement, Task>? requirementCompleted, VerificationOptions? verificationOptions = null,
             CancellationToken token = default)
         {
+            
+
             if (logger is null)
             {
                 throw new ArgumentNullException(nameof(logger));
+            }
+
+            if (idsSpec is null)
+            {
+                throw new ArgumentNullException(nameof(idsSpec));
             }
 
             try
@@ -151,6 +158,12 @@ namespace Xbim.IDS.Validator.Core
                 }
 
                 Xids? idsSpec = LoadIdsFile(idsFile, logger, verificationOptions);
+
+                if(idsSpec == null)
+                {
+                    var schemaErrs = schemaValidator.ValidateIDS(idsFile);
+                    throw new Exception($"Invalid IDS file '{idsFile}': {schemaErrs} - check logs");
+                }
 
                 return await ValidateAgainstXidsAsync(model, idsSpec, logger, requirementCompleted, verificationOptions, token);
 

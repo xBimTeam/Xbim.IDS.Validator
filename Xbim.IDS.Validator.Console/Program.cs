@@ -201,7 +201,7 @@ class Program
                 foreach (var msg in itm.Messages.Where(m => m.Status != ValidationStatus.Pass))
                 {
                     WriteColored(ValidationStatus.Error, $": {msg?.Reason}\n");
-                    WriteColored($"               {msg?.Expectation} {msg?.Clause?.GetType().Name}.{msg?.ValidatedField} to be {msg?.ExpectedResult} - but actually found '{msg?.ActualResult}'\n", ConsoleColor.DarkGray);
+                    WriteColored($"               {msg}\n", ConsoleColor.DarkGray);
                 }
 
             }
@@ -212,7 +212,7 @@ class Program
                 WriteColored($": {itm.FullEntity}\n", ConsoleColor.White);
                 foreach (var msg in itm.Messages.Where(m => m.Status != ValidationStatus.Pass))
                 {
-                    WriteColored($"               {msg?.Expectation} {msg?.Clause?.GetType().Name}.{msg?.ValidatedField} to be {msg?.ExpectedResult} - but actually found '{msg?.ActualResult}' - {msg?.Reason}\n", ConsoleColor.DarkGray);
+                    WriteColored($"               {msg}\n", ConsoleColor.DarkGray);
                 }
             }
             //else
