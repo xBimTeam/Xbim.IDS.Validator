@@ -265,6 +265,22 @@ namespace Xbim.IDS.Validator.Core
         }
 
         /// <summary>
+        /// Builds a message representing a successfully matched entity for the specification
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public static ValidationMessage Success(IPersist entity)
+        {
+            return new ValidationMessage
+            {
+                Status = ValidationStatus.Pass,
+                Reason = "Applicable Entity found",
+                Expectation = Cardinality.Expected,
+                EntityAffected = entity
+            };
+        }
+
+        /// <summary>
         /// Default Constructor
         /// </summary>
         public ValidationMessage()

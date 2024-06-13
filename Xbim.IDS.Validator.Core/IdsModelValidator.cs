@@ -245,18 +245,33 @@ namespace Xbim.IDS.Validator.Core
                     else
                     {
                         // Test requirements are met
-                        var result = ModelBinder.ValidateRequirement(item, spec.Requirement, logger);
-                        GetLogLevel(result.ValidationStatus, out LogLevel level, out int pad);
-                        if (logger.IsEnabled(level))
-                            logger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '),
-                                result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Requirement?.Short() ?? "No requirement");
-                        foreach (var message in result.Messages)
+                        if(spec.Requirement != null)
                         {
-                            GetLogLevel(message.Status, out level, out pad, LogLevel.Debug);
+                            var result = ModelBinder.ValidateRequirement(item, spec.Requirement, logger);
+                            GetLogLevel(result.ValidationStatus, out LogLevel level, out int pad);
                             if (logger.IsEnabled(level))
-                                logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
+                                logger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '),
+                                    result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Requirement?.Short() ?? "No requirement");
+                            foreach (var message in result.Messages)
+                            {
+                                GetLogLevel(message.Status, out level, out pad, LogLevel.Debug);
+                                if (logger.IsEnabled(level))
+                                    logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
+                            }
+                            requirementResult.ApplicableResults.Add(result);
                         }
-                        requirementResult.ApplicableResults.Add(result);
+                        else
+                        {
+                            // We have no requirement, so just presence is enough
+                            var result = new IdsValidationResult(item, spec.Applicability);
+                            var message = ValidationMessage.Success(item);
+                            result.MarkSatisified(message);
+                            GetLogLevel(result.ValidationStatus, out LogLevel level, out int pad);
+                            if (logger.IsEnabled(level))
+                                logger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '),
+                                    result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Applicability?.Short() ?? "No applicability");
+                            requirementResult.ApplicableResults.Add(result);
+                        }
                     }
                     token.ThrowIfCancellationRequested();
                 }

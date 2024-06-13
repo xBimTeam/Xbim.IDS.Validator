@@ -84,6 +84,58 @@ namespace Xbim.IDS.Validator.Core.Tests
 
         }
 
+        [Fact]
+        public async Task Supports_Specs_Without_requirements()
+        {
+            string modelFile = @"TestModels\SampleHouse4.ifc";
+            string idsScript = @"TestModels\SpecWithoutRequirements.ids";
+
+            var model = BuildModel(modelFile);
+
+            var logger = TestEnvironment.GetXunitLogger<IdsModelValidatorTests>(output);
+
+            var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
+
+            var results = await idsValidator.ValidateAgainstIdsAsync(model, idsScript, logger, verificationOptions: new VerificationOptions { PermittedIdsAuditStatuses = VerificationOptions.Relaxed });
+
+            results.Should().NotBeNull();
+
+            results.Status.Should().Be(ValidationStatus.Pass);
+            results.ExecutedRequirements.Should().NotBeEmpty();
+
+            var firstReq = results.ExecutedRequirements.First();
+
+            firstReq.Status.Should().Be(ValidationStatus.Pass);
+            firstReq.PassedResults.Should().NotBeEmpty();
+            firstReq.FailedResults.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task Supports_Specs_Without_requirements_fails()
+        {
+            string modelFile = @"TestModels\SampleHouse4.ifc";
+            string idsScript = @"TestModels\SpecWithoutRequirements-Fail.ids";
+
+            var model = BuildModel(modelFile);
+
+            var logger = TestEnvironment.GetXunitLogger<IdsModelValidatorTests>(output);
+
+            var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
+
+            var results = await idsValidator.ValidateAgainstIdsAsync(model, idsScript, logger, verificationOptions: new VerificationOptions { PermittedIdsAuditStatuses = VerificationOptions.Relaxed });
+
+            results.Should().NotBeNull();
+
+            results.Status.Should().Be(ValidationStatus.Fail);
+            results.ExecutedRequirements.Should().NotBeEmpty();
+            var firstReq = results.ExecutedRequirements.First();
+
+            firstReq.Status.Should().Be(ValidationStatus.Fail);
+            firstReq.PassedResults.Should().BeEmpty();
+            firstReq.FailedResults.Should().BeEmpty();
+        }
+
+
 
         private static IModel BuildModel(string ifcFile)
         {
