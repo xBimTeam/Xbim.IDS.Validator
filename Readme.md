@@ -1,12 +1,12 @@
 # Xbim.IDS.Validator
 
 
-Xbim.IDS.Validator is a .net (core & framework) library tht validates IFC models against the latest 
+Xbim.IDS.Validator is a .net (core & framework) library tht verifies IFC models against the official 
 BuildingSMART [Information Delivery Specification](https://github.com/buildingSMART/IDS/blob/master/Documentation/README.md) (IDS) standard.
 
 Powered by xbim Tookit, this library can be used to translate IDS files into an executable specification, 
-which can be run against any IFC2x3, IFC4 or IFC4.3 model and provide a detailed breakdown of the results.
-It supports the latest full IDS specification and should fully support cloud and desktop applications across platforms.
+which can be run against any IFC2x3, IFC4 or IFC4.3 model and provide a detailed breakdown of the the test outcomes.
+It supports the latest full IDS1.0 specification and should fully support cloud and desktop applications across platforms.
 
 An experimental extension adds support for validating COBie using IDS. See the [Readme in Xbim.IDS.Validator.Extensions.COBie](Xbim.IDS.Validator.Extensions.COBie) 
 for more info.
@@ -90,7 +90,7 @@ foreach (ValidationRequirement requirement in outcome.ExecutedRequirements)
 
 ## How much of the IDS spec does this support?
 
-This is a comprehensive implementation of the latest IDS v0.97 standard, passing all current [TestCases](https://github.com/buildingSMART/IDS/blob/master/Documentation/testcases/scripts.md) 
+This is a comprehensive implementation of the latest IDS v1.0 standard, passing all current [TestCases](https://github.com/buildingSMART/IDS/blob/master/Documentation/testcases/scripts.md) 
 (with one esoteric edge-case not implemented). 
 This library has been tested at scale with real-world models. It also supports some useful extensions that can be enabled through runtime options.
 
@@ -119,8 +119,8 @@ It currently supports:
     - [x] Structure (Min/Max length)
 - Restrictions can be used in both Applicability filtering and Requirements verification
 - Reading of IDS 
-    - in v0.9-0.9.7 Schema in BuildingSmart Xml formats
-    - in v0.9.7 IDS JSON formats (XIDS proprietary)
+    - in v0.9-1.0 IDS Schema in BuildingSmart XML format
+    - in v1.0 IDS JSON formats (XIDS proprietary)
 - Required, Prohibited and Optional Facets
 - Cardinality of Specification (Expected, Prohibited, Optional)
 - Support for validating models in following IFC Schemas
