@@ -96,11 +96,11 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// Gets all properties on an ExpressType, including Derived properties.
         /// </summary>
         /// <param name="expressType"></param>
-        /// <param name="options"></param>
+        /// <param name="allowDerivedAttributes"></param>
         /// <returns></returns>
-        protected static IEnumerable<ExpressMetaProperty> GetAllProperties(ExpressType expressType, VerificationOptions options)
+        protected static IEnumerable<ExpressMetaProperty> GetAllProperties(ExpressType expressType, bool allowDerivedAttributes = false)
         {
-            if(options?.AllowDerivedAttributes == true)
+            if(allowDerivedAttributes == true)
             {
                 return expressType.Inverses.Union(
                     expressType.Derives.Union(
@@ -464,6 +464,90 @@ namespace Xbim.IDS.Validator.Core.Binders
         void IFacetBinder.ValidateEntity(IPersistEntity item, IFacet facet, Cardinality cardinality, IdsValidationResult result)
         {
             ValidateEntity(item, (T)facet, cardinality, result);
+        }
+
+        protected static bool IsEnum(ValueConstraint constraint)
+        {
+            return constraint.AcceptedValues.Count(av => av is ExactConstraint) > 1;
+        }
+
+        /// <summary>
+        /// Gets a dictionary of all matching attributes and values that are satisified by the name constraint
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="attributeName"></param>
+        /// <param name="allowDerivedAttributes"></param>
+        /// <returns></returns>
+        protected IDictionary<string, object?> GetMatchingAttributes(IPersistEntity entity, ValueConstraint? attributeName, bool allowDerivedAttributes = false)
+        {
+            var results = new Dictionary<string, object?>();
+
+            if (attributeName?.AcceptedValues?.Any() != true)
+                return results;
+
+            var expressType = Model.Metadata.ExpressType(entity);
+            var properties = GetAllProperties(expressType, allowDerivedAttributes);
+
+            if (attributeName.IsSingleExact(out string? attrName))
+            {
+                // Optimise for the typical scenario where one Attribute name is specified exactly
+
+                var propertyMeta = properties.FirstOrDefault(p => p.Name == attrName);
+                if (propertyMeta != null)
+                {
+                    var ifcAttributePropInfo = propertyMeta.PropertyInfo;
+                    var value = ifcAttributePropInfo.GetValue(entity);
+                    results.Add(attrName, value);
+                }
+            }
+            else
+            {
+                // It's an enum, Regex, Range or Structure
+                foreach (var prop in properties)
+                {
+                    if (attributeName?.IsSatisfiedBy(prop.Name, true) == true)
+                    {
+                        var value = prop.PropertyInfo.GetValue(entity);
+                        if (!(value == null && IsEnum(attributeName)))
+                        {
+                            results.Add(prop.Name, value);
+                        }
+                    }
+                }
+            }
+
+            return results;
+        }
+
+
+        /// <summary>
+        /// Fixes BaseTypes on Constraints for numeric comparison
+        /// </summary>
+        /// <remarks>BaseType setting correctly when dealing with numerics - causes issues with e.g RangeConstraints need BaseType set</remarks>
+        /// <param name="vc"></param>
+        /// <param name="value"></param>
+        protected void FixDataType(ValueConstraint vc, object value)
+        {
+            if (vc == null)
+                return;
+
+            if (vc.IsSingleExact(out _))
+                return;
+
+            if (value is IIfcValue v)
+            {
+                value = v.Value;    // Unpack again if required
+            }
+
+            if (value is double || value is IIfcMeasureValue)
+            {
+                vc.BaseType = NetTypeName.Double;
+            }
+            else if (value is int || value is long)
+            {
+                vc.BaseType = NetTypeName.Integer;
+            }
+
         }
 
     }

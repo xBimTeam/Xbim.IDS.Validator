@@ -29,9 +29,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
 
             // Unsupported tests
-            { "fail-predefined_properties_are_supported_but_discouraged_2_2.ids", new [] { XbimSchemaVersion.Unsupported } }, // To implement IFCDOORPANELPROPERTIES edgecase
-            { "pass-predefined_properties_are_supported_but_discouraged_1_2.ids", new [] { XbimSchemaVersion.Unsupported } }, // To implement IFCDOORPANELPROPERTIES edgecase
-            
+
 
         };
 
@@ -50,19 +48,6 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             
         }
 
-
-        [MemberData(nameof(GetUnsupportedPassTestCases))]
-        [SkippableTheory]
-        public async Task PassesToImplement(string idsFile)
-        {
-            var outcome = await VerifyIdsFile(idsFile);
-
-            Skip.If(outcome.Status != ValidationStatus.Pass, "DoorPanelsProperties etc & FP precision not yet supported");
-
-            outcome.Status.Should().Be(ValidationStatus.Pass, idsFile);
-        }
-
-
         
         [MemberData(nameof(GetFailureTestCases))]
         [Theory]
@@ -75,31 +60,6 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
                 outcome.Status.Should().Be(ValidationStatus.Fail, $"{idsFile} ({schema})");
             }
         }
-
-
-        [MemberData(nameof(GetUnsupportedFailTestCases))]
-        [SkippableTheory]
-        public async Task FailuresToImplement(string idsFile)
-        {
-            var outcome = await VerifyIdsFile(idsFile);
-
-            Skip.If(outcome.Status != ValidationStatus.Fail, "DoorPanelsPropertyies etc not yet supported");
-
-            outcome.Status.Should().Be(ValidationStatus.Fail);
-        }
-
-
-        //[MemberData(nameof(GetInvalidTestCases))]
-        //[Theory(Skip = "None to do")]
-        //public async Task ExpectedInvalid(string idsFile, params XbimSchemaVersion[] schemas)
-        //{
-        //    foreach (var schema in GetSchemas(schemas))
-        //    {
-        //        var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema, validateIds: true);
-
-        //        outcome.Status.Should().Be(ValidationStatus.Error, schema.ToString());
-        //    }
-        //}
 
         public static IEnumerable<object[]> GetInvalidTestCases()
         {

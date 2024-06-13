@@ -20,11 +20,6 @@ namespace Xbim.IDS.Validator.Core.Configuration
 
         private void InitialiseDefaults()
         {
-            //AddMap<IExpressValueType>(v => v.Value);
-
-            //AddMap<bool>(v => v);
-            //AddMap<string>(v => v);
-            //AddMap<double>(v => v);
             foreach(var provider in providers)
             {
                 provider.CreateMappings(this);

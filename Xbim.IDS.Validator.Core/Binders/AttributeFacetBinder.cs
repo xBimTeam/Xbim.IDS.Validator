@@ -195,9 +195,9 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             var ctx = CreateValidationContext(cardinality, af);
 
-            var candidates = GetAttributes(item, af);
+            var candidates = GetMatchingAttributes(item, af.AttributeName, _options?.AllowDerivedAttributes ?? false);
 
-            FixDataType(af, candidates.FirstOrDefault().Value);
+            FixDataType(af.AttributeValue, candidates.FirstOrDefault().Value);
             if (candidates.Any())
             {
 
@@ -224,6 +224,10 @@ namespace Xbim.IDS.Validator.Core.Binders
                         if (attrvalue is IIfcValue v)
                         {
                             attrvalue = v.Value;
+                        }
+                        if (attrvalue is Enum e)
+                        {
+                            attrvalue = e.ToString();
                         }
                         if (IsTypeAppropriateForConstraint(af.AttributeValue, attrvalue) && af.AttributeValue.ExpectationIsSatisifedBy(attrvalue, ctx, logger))
                             result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.AttributeValue!, attrvalue, "Attribute value OK", item));
@@ -283,87 +287,10 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
         }
 
-        // AttributeFacet needs BaseType setting correctly when dealing with numerics - causes issues with e.g RangeConstraints need BaseType set
-        private void FixDataType(AttributeFacet af, object value)
-        {
-            if (af.AttributeValue == null)
-                return;
-
-            if (af.AttributeValue.IsSingleExact(out _))
-                return;
-
-            if (value is IIfcValue v)
-            {
-                value = v.Value;    // Unpack again if required
-            }
-
-            if (value is double || value is IIfcMeasureValue)
-            {
-                af.AttributeValue.BaseType = NetTypeName.Double;
-            }
-            else if (value is int || value is long)
-            {
-                af.AttributeValue.BaseType = NetTypeName.Integer;
-            }
-
-        }
-
-        private IDictionary<string, object?> GetAttributes(IPersistEntity entity, AttributeFacet facet)
-        {
-            var results = new Dictionary<string, object?>();
-
-            if (facet.AttributeName?.AcceptedValues?.Any() != true)
-                return results;
-
-            var expressType = Model.Metadata.ExpressType(entity);
-            var properties = GetAllProperties(expressType, _options);
-
-            if (facet.AttributeName.IsSingleExact(out string? attrName))
-            {
-                // Optimise for the typical scenario where one Attribute name is specified exactly
-
-                
-
-                var propertyMeta = properties.FirstOrDefault(p => p.Name == attrName);
-                if (propertyMeta != null)
-                //{
-                //    results.Add(attrName, default);
-                //}
-                //else
-                {
-                    var ifcAttributePropInfo = propertyMeta.PropertyInfo;
-                    var value = ifcAttributePropInfo.GetValue(entity);
-                    results.Add(attrName, value);
-                }
-            }
-            else
-            {
-                // It's an enum, Regex, Range or Structure
-                foreach (var prop in properties)
-                {
-                    if (facet?.AttributeName?.IsSatisfiedBy(prop.Name, true) == true)
-                    {
-                        var value = prop.PropertyInfo.GetValue(entity);
-                        if (!(value == null && IsEnum(facet.AttributeName)))
-                        {
-                            results.Add(prop.Name, value);
-                        }
-                    }
-                }
-            }
-
-            return results;
-        }
-
-        private static bool IsEnum(ValueConstraint constraint)
-        {
-            return constraint.AcceptedValues.Count(av => av is ExactConstraint) > 1;
-        }
-
         private Expression BindAttributeSelection(Expression expression, ExpressType expressType,
             string ifcAttributeName, ValueConstraint constraint)
         {
-            var props = GetAllProperties(expressType, _options);
+            var props = GetAllProperties(expressType, _options.AllowDerivedAttributes);
             var propertyMeta = props.FirstOrDefault(p => p.Name == ifcAttributeName);
             if (propertyMeta == null)
             {
