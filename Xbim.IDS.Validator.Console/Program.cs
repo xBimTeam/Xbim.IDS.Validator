@@ -45,7 +45,10 @@ class Program
     private static ServiceProvider BuildServiceProvider()
     {
         var serviceCollection = new ServiceCollection();
-        serviceCollection.AddLogging(/*o => o.AddConsole()*/);
+        serviceCollection.AddLogging(o => o
+            .AddConsole()
+            .SetMinimumLevel(LogLevel.Warning)
+            );
 
         serviceCollection.AddIdsValidation(cfg => cfg.AddCOBie());
         serviceCollection.AddXbimToolkit(opt => opt.AddMemoryModel());
@@ -111,7 +114,7 @@ class Program
         var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
 
         Console.WriteLine("Validating...");
-        var options = new VerificationOptions { IncludeSubtypes = true, OutputFullEntity = true, AllowDerivedAttributes = true };
+        var options = new VerificationOptions { IncludeSubtypes = true, OutputFullEntity = true, AllowDerivedAttributes = true, PerformInPlaceSchemaUpgrade=true };
         var results = await idsValidator.ValidateAgainstIdsAsync(model, ids, logger, OutputRequirement, options);
 
         sw.Stop();

@@ -149,7 +149,7 @@ namespace Xbim.IDS.Validator.Core
                 verificationOptions ??= new VerificationOptions();
                 ModelBinder.SetOptions(verificationOptions);
 
-                if (!Xids.CanLoad(new FileInfo(idsFile)))
+                if (!Xids.CanLoad(new FileInfo(idsFile), logger))
                 {
                     var outcome = new ValidationOutcome(new Xids());
                     outcome.MarkCompletelyFailed($"Unable to open IDS file '{idsFile}'");
