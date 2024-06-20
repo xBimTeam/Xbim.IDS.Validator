@@ -21,8 +21,8 @@ namespace Xbim.IDS.Validator.Core.Tests
         [Theory]
         public void CanValidateIDS(string filename, Status expectedStatus)
         {
-            var validator = new IdsValidator(Logger);
-            var result = validator.ValidateIDS(filename);
+            var validator = new IdsValidator();
+            var result = validator.ValidateIDS(filename, logger);
 
             result.Should().Be(expectedStatus);
         }
@@ -30,8 +30,8 @@ namespace Xbim.IDS.Validator.Core.Tests
         [Fact]
         public void CanTestFolderInBatch()
         {
-            var validator = new IdsValidator(Logger);
-            var result = validator.ValidateIdsFolder(@"TestCases");
+            var validator = new IdsValidator();
+            var result = validator.ValidateIdsFolder(@"TestCases", Logger);
             result.Should().Be(Status.IdsStructureError | Status.IdsContentError);
         }
 

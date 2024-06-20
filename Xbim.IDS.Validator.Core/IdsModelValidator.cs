@@ -49,16 +49,9 @@ namespace Xbim.IDS.Validator.Core
         public async Task<ValidationOutcome> ValidateAgainstXidsAsync(IModel model, Xids idsSpec, ILogger logger, Func<ValidationRequirement, Task>? requirementCompleted, VerificationOptions? verificationOptions = null,
             CancellationToken token = default)
         {
-            
-
             if (logger is null)
             {
                 throw new ArgumentNullException(nameof(logger));
-            }
-
-            if (idsSpec is null)
-            {
-                throw new ArgumentNullException(nameof(idsSpec));
             }
 
             try
@@ -67,12 +60,12 @@ namespace Xbim.IDS.Validator.Core
                 ModelBinder.SetOptions(verificationOptions);
 
                 var outcome = new ValidationOutcome(idsSpec);
-                if(verificationOptions.PermittedIdsAuditStatuses != VerificationOptions.AnyState)
+                if (verificationOptions.PermittedIdsAuditStatuses != VerificationOptions.AnyState)
                 {
                     // Validate the IDS
-                    Audit.Status schemaStatus = ValidateIdsSchema(idsSpec);
+                    Audit.Status schemaStatus = ValidateIdsSchema(idsSpec, logger);
 
-                    if(!verificationOptions.PermittedIdsAuditStatuses.HasFlag(schemaStatus))
+                    if (!verificationOptions.PermittedIdsAuditStatuses.HasFlag(schemaStatus))
                     {
                         outcome.MarkCompletelyFailed($"IDS Validation failed: {schemaStatus}");
                         var name = idsSpec.AllSpecifications().Select(x => x.Name).FirstOrDefault();
@@ -125,13 +118,13 @@ namespace Xbim.IDS.Validator.Core
             }
         }
 
-        private Audit.Status ValidateIdsSchema(Xids idsSpec)
+        private Audit.Status ValidateIdsSchema(Xids idsSpec, ILogger logger)
         {
             using (var memStream = new MemoryStream())
             {
                 idsSpec.ExportBuildingSmartIDS(memStream);
                 memStream.Seek(0, SeekOrigin.Begin);
-                return schemaValidator.ValidateIDS(memStream);
+                return schemaValidator.ValidateIDS(memStream, logger);
             }
         }
 
@@ -146,10 +139,9 @@ namespace Xbim.IDS.Validator.Core
 
             try
             {
-                verificationOptions ??= new VerificationOptions();
                 ModelBinder.SetOptions(verificationOptions);
 
-                if (!Xids.CanLoad(new FileInfo(idsFile), logger))
+                if (!Xids.CanLoad(new FileInfo(idsFile)))
                 {
                     var outcome = new ValidationOutcome(new Xids());
                     outcome.MarkCompletelyFailed($"Unable to open IDS file '{idsFile}'");
@@ -158,12 +150,6 @@ namespace Xbim.IDS.Validator.Core
                 }
 
                 Xids? idsSpec = LoadIdsFile(idsFile, logger, verificationOptions);
-
-                if(idsSpec == null)
-                {
-                    var schemaErrs = schemaValidator.ValidateIDS(idsFile);
-                    throw new Exception($"Invalid IDS file '{idsFile}': {schemaErrs} - check logs");
-                }
 
                 return await ValidateAgainstXidsAsync(model, idsSpec, logger, requirementCompleted, verificationOptions, token);
 
@@ -183,7 +169,7 @@ namespace Xbim.IDS.Validator.Core
             {
                 // Do an in place upgrade to latest schema
                 // Note: won't support zipped IDS upgrades, JSON etc.
-                var targetVersion = IdsVersion.Ids1_0;
+                var targetVersion = IdsVersion.Ids0_9_7;
                 var currentVersion = idsSchemaMigrator.GetIdsVersion(idsFile);
                 logger.LogWarning("IDS schema {oldVersion} is out of date for {file}. Applying in-place upgrade to latest {version} schema.",
                     currentVersion, idsFile, targetVersion);
@@ -207,9 +193,9 @@ namespace Xbim.IDS.Validator.Core
             {
                 throw new ArgumentNullException(nameof(spec));
             }
-            
 
-            
+
+
             var requirementResult = new ValidationRequirement(spec);
 
             try
@@ -250,7 +236,7 @@ namespace Xbim.IDS.Validator.Core
                         var message = ValidationMessage.Prohibited(item);
                         result.Fail(message);
                         GetLogLevel(result.ValidationStatus, out LogLevel level, out int pad);
-                        if(logger.IsEnabled(level))
+                        if (logger.IsEnabled(level))
                             logger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '),
                                 result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Applicability?.Short() ?? "No applicability");
                         requirementResult.ApplicableResults.Add(result);
@@ -258,33 +244,18 @@ namespace Xbim.IDS.Validator.Core
                     else
                     {
                         // Test requirements are met
-                        if(spec.Requirement != null)
+                        var result = ModelBinder.ValidateRequirement(item, spec.Requirement, logger);
+                        GetLogLevel(result.ValidationStatus, out LogLevel level, out int pad);
+                        if (logger.IsEnabled(level))
+                            logger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '),
+                                result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Requirement?.Short() ?? "No requirement");
+                        foreach (var message in result.Messages)
                         {
-                            var result = ModelBinder.ValidateRequirement(item, spec.Requirement, logger);
-                            GetLogLevel(result.ValidationStatus, out LogLevel level, out int pad);
+                            GetLogLevel(message.Status, out level, out pad, LogLevel.Debug);
                             if (logger.IsEnabled(level))
-                                logger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '),
-                                    result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Requirement?.Short() ?? "No requirement");
-                            foreach (var message in result.Messages)
-                            {
-                                GetLogLevel(message.Status, out level, out pad, LogLevel.Debug);
-                                if (logger.IsEnabled(level))
-                                    logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
-                            }
-                            requirementResult.ApplicableResults.Add(result);
+                                logger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
                         }
-                        else
-                        {
-                            // We have no requirement, so just presence is enough
-                            var result = new IdsValidationResult(item, spec.Applicability);
-                            var message = ValidationMessage.Success(item);
-                            result.MarkSatisified(message);
-                            GetLogLevel(result.ValidationStatus, out LogLevel level, out int pad);
-                            if (logger.IsEnabled(level))
-                                logger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '),
-                                    result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Applicability?.Short() ?? "No applicability");
-                            requirementResult.ApplicableResults.Add(result);
-                        }
+                        requirementResult.ApplicableResults.Add(result);
                     }
                     token.ThrowIfCancellationRequested();
                 }
@@ -341,7 +312,7 @@ namespace Xbim.IDS.Validator.Core
 
         private static void SetResults(Specification specification, ValidationRequirement validation)
         {
-            
+
             var cardinality = specification.Cardinality;
             if (cardinality.NoMatchingEntities)  // Prohibited
             {
@@ -376,7 +347,7 @@ namespace Xbim.IDS.Validator.Core
                 }
 
             }
-            
+
         }
 
     }

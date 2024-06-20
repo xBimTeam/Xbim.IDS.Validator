@@ -11,40 +11,39 @@ namespace Xbim.IDS.Validator.Core
 {
     public class IdsValidator : IIdsValidator
     {
-        private readonly ILogger<IdsValidator> logger;
 
-        public IdsValidator(ILogger<IdsValidator> logger)
+        public IdsValidator()
         {
-            this.logger = logger;
+
         }
 
-        public Audit.Status ValidateIDS(string idsFile)
+        public Audit.Status ValidateIDS(string idsFile, ILogger logger)
         {
             if (File.Exists(idsFile))
             {
                 using (var fileStream = File.OpenRead(idsFile))
                 {
-                    return ValidateIDS(fileStream);
+                    return ValidateIDS(fileStream, logger);
                 }
             }
             logger.LogWarning("IDS file not found {filename}", idsFile);
             return Audit.Status.InvalidOptionsError;
         }
 
-        public Audit.Status ValidateIDS(Stream idsFileStream)
+        public Audit.Status ValidateIDS(Stream idsFileStream, ILogger logger)
         {
             var options = new SingleAuditOptions
             {
                 //OmitIdsContentAudit = true,
                 XmlWarningAction = AuditProcessOptions.XmlWarningBehaviour.ReportAsWarning,
                 IdsVersion = IdsLib.IdsSchema.IdsNodes.IdsVersion.Invalid,
-                SchemaProvider = new FixedVersionSchemaProvider(IdsLib.IdsSchema.IdsNodes.IdsVersion.Ids1_0)
+                SchemaProvider = new FixedVersionSchemaProvider(IdsLib.IdsSchema.IdsNodes.IdsVersion.Ids0_9_7)
 
             };
             return Audit.Run(idsFileStream, options, logger);
         }
 
-        public Audit.Status ValidateIdsFolder(string idsFolder, string? idsSchemaFile = default)
+        public Audit.Status ValidateIdsFolder(string idsFolder, ILogger logger, string? idsSchemaFile = default)
         {
             var batchOptions = new IdsFolderBatchOptions
             {
@@ -86,13 +85,13 @@ namespace Xbim.IDS.Validator.Core
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        
+
         public bool OmitIdsContentAudit { get; set; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        
+
         public string OmitIdsContentAuditPattern { get; set; } = string.Empty;
     }
 }

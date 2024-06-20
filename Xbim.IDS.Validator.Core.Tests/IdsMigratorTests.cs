@@ -90,11 +90,11 @@ namespace Xbim.IDS.Validator.Core.Tests
         private void AssertValidIdsSchema(XDocument target)
         {
             // validate with ids-lib
-            var validator = new IdsValidator(GetLogger<IdsValidator>());
+            var validator = new IdsValidator();
             using var newIdsStream = new MemoryStream();
             target.Save(newIdsStream);
             newIdsStream.Position = 0;
-            var status = validator.ValidateIDS(newIdsStream);
+            var status = validator.ValidateIDS(newIdsStream, logger);
 
             status.Should().Be(IdsLib.Audit.Status.Ok);
         }
