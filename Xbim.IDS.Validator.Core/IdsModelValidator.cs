@@ -136,12 +136,12 @@ namespace Xbim.IDS.Validator.Core
         }
 
         /// <inheritdoc/>
-        public async Task<ValidationOutcome> ValidateAgainstIdsAsync(IModel model, string idsFile, ILogger logger, Func<ValidationRequirement, Task>? requirementCompleted, VerificationOptions? verificationOptions = null,
+        public async Task<ValidationOutcome> ValidateAgainstIdsAsync(IModel model, string idsFile, ILogger userLogger, Func<ValidationRequirement, Task>? requirementCompleted, VerificationOptions? verificationOptions = null,
             CancellationToken token = default)
         {
-            if (logger is null)
+            if (userLogger is null)
             {
-                throw new ArgumentNullException(nameof(logger));
+                throw new ArgumentNullException(nameof(userLogger));
             }
 
             try
@@ -152,22 +152,23 @@ namespace Xbim.IDS.Validator.Core
                 {
                     var outcome = new ValidationOutcome(new Xids());
                     outcome.MarkCompletelyFailed($"Unable to open IDS file '{idsFile}'");
-                    logger.LogError("Unable to open IDS file '{idsFile}", idsFile);
+                    userLogger.LogError("Unable to open IDS file '{idsFile}", idsFile);
                     return outcome;
                 }
 
-                Xids? idsSpec = LoadIdsFile(idsFile, logger, verificationOptions);
+                Xids? idsSpec = LoadIdsFile(idsFile, userLogger, verificationOptions);
                 if (idsSpec == null)
                 {
-                    var schemaErrs = schemaValidator.ValidateIDS(idsFile);
+                    var schemaErrs = schemaValidator.ValidateIDS(idsFile,userLogger);
                     throw new Exception($"Invalid IDS file '{idsFile}': {schemaErrs} - check logs");
                 }
-                return await ValidateAgainstXidsAsync(model, idsSpec, logger, requirementCompleted, verificationOptions, token);
+                return await ValidateAgainstXidsAsync(model, idsSpec, userLogger, requirementCompleted, verificationOptions, token);
 
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to complete validation");
+                userLogger.LogError("Failed to complete validation");
                 var badOutcome = new ValidationOutcome(new Xids());
                 badOutcome.MarkCompletelyFailed(ex.Message);
                 return await Task.FromResult(badOutcome);
