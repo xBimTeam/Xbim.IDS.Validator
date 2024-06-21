@@ -31,7 +31,7 @@ namespace Xbim.IDS.Validator.Core
         /// <param name="idsSchemaMigrator"></param>
         /// <param name="schemaValidator"></param>
         /// <param name="logger"></param>
-        public IdsModelValidator(IIdsModelBinder modelBinder, IIdsSchemaMigrator idsSchemaMigrator, IIdsValidator schemaValidator,ILogger logger)
+        public IdsModelValidator(IIdsModelBinder modelBinder, IIdsSchemaMigrator idsSchemaMigrator, IIdsValidator schemaValidator, ILogger logger)
         {
             ModelBinder = modelBinder;
             this.idsSchemaMigrator = idsSchemaMigrator;
@@ -56,7 +56,10 @@ namespace Xbim.IDS.Validator.Core
             {
                 throw new ArgumentNullException(nameof(userLogger));
             }
-
+            if (idsSpec is null)
+            {
+                throw new ArgumentNullException(nameof(idsSpec));
+            }
             try
             {
                 verificationOptions ??= new VerificationOptions();
@@ -154,7 +157,11 @@ namespace Xbim.IDS.Validator.Core
                 }
 
                 Xids? idsSpec = LoadIdsFile(idsFile, logger, verificationOptions);
-
+                if (idsSpec == null)
+                {
+                    var schemaErrs = schemaValidator.ValidateIDS(idsFile);
+                    throw new Exception($"Invalid IDS file '{idsFile}': {schemaErrs} - check logs");
+                }
                 return await ValidateAgainstXidsAsync(model, idsSpec, logger, requirementCompleted, verificationOptions, token);
 
             }
@@ -173,7 +180,7 @@ namespace Xbim.IDS.Validator.Core
             {
                 // Do an in place upgrade to latest schema
                 // Note: won't support zipped IDS upgrades, JSON etc.
-                var targetVersion = IdsVersion.Ids0_9_7;
+                var targetVersion = IdsVersion.Ids1_0;
                 var currentVersion = idsSchemaMigrator.GetIdsVersion(idsFile);
                 logger.LogWarning("IDS schema {oldVersion} is out of date for {file}. Applying in-place upgrade to latest {version} schema.",
                     currentVersion, idsFile, targetVersion);
