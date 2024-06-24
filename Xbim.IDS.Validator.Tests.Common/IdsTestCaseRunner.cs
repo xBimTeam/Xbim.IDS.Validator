@@ -214,7 +214,7 @@ namespace Xbim.IDS.Validator.Tests.Common
         protected AuditStatus ValidateIds(string idsFile)
         {
             var fileValidator = provider.GetRequiredService<IIdsValidator>();
-            var fileValidity = fileValidator.ValidateIDS(idsFile);
+            var fileValidity = fileValidator.ValidateIDS(idsFile,logger);
             if (!AllowedStatuses.Contains(fileValidity))
             {
                 //outcome.MarkCompletelyFailed($"IDS Validation failure {fileValidity}");

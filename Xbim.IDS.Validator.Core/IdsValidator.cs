@@ -11,27 +11,26 @@ namespace Xbim.IDS.Validator.Core
 {
     public class IdsValidator : IIdsValidator
     {
-        private readonly ILogger<IdsValidator> logger;
 
-        public IdsValidator(ILogger<IdsValidator> logger)
+        public IdsValidator()
         {
-            this.logger = logger;
+
         }
 
-        public Audit.Status ValidateIDS(string idsFile)
+        public Audit.Status ValidateIDS(string idsFile, ILogger UserLogger)
         {
             if (File.Exists(idsFile))
             {
                 using (var fileStream = File.OpenRead(idsFile))
                 {
-                    return ValidateIDS(fileStream);
+                    return ValidateIDS(fileStream, UserLogger);
                 }
             }
-            logger.LogWarning("IDS file not found {filename}", idsFile);
+            UserLogger.LogWarning("IDS file not found {filename}", idsFile);
             return Audit.Status.InvalidOptionsError;
         }
 
-        public Audit.Status ValidateIDS(Stream idsFileStream)
+        public Audit.Status ValidateIDS(Stream idsFileStream, ILogger UserLogger)
         {
             var options = new SingleAuditOptions
             {
@@ -41,10 +40,10 @@ namespace Xbim.IDS.Validator.Core
                 SchemaProvider = new FixedVersionSchemaProvider(IdsLib.IdsSchema.IdsNodes.IdsVersion.Ids1_0)
 
             };
-            return Audit.Run(idsFileStream, options, logger);
+            return Audit.Run(idsFileStream, options, UserLogger);
         }
 
-        public Audit.Status ValidateIdsFolder(string idsFolder, string? idsSchemaFile = default)
+        public Audit.Status ValidateIdsFolder(string idsFolder, ILogger UserLogger, string? idsSchemaFile = default)
         {
             var batchOptions = new IdsFolderBatchOptions
             {
@@ -55,7 +54,7 @@ namespace Xbim.IDS.Validator.Core
             {
                 batchOptions.SchemaFiles = new List<string> { idsSchemaFile };
             }
-            return Audit.Run(batchOptions, logger);
+            return Audit.Run(batchOptions, UserLogger);
 
         }
     }
@@ -86,13 +85,13 @@ namespace Xbim.IDS.Validator.Core
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        
+
         public bool OmitIdsContentAudit { get; set; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        
+
         public string OmitIdsContentAuditPattern { get; set; } = string.Empty;
     }
 }

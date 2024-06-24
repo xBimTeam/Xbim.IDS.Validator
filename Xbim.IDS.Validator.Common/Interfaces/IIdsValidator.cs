@@ -1,4 +1,5 @@
 ﻿using IdsLib;
+using Microsoft.Extensions.Logging;
 using System.IO;
 
 namespace Xbim.IDS.Validator.Core.Interfaces
@@ -12,21 +13,24 @@ namespace Xbim.IDS.Validator.Core.Interfaces
         /// Validate an IDS file from the provided stream
         /// </summary>
         /// <param name="idsFileStream"></param>
+        /// <param name="logger"></param>
         /// <returns></returns>
-        Audit.Status ValidateIDS(Stream idsFileStream);
+        Audit.Status ValidateIDS(Stream idsFileStream, ILogger logger);
 
         /// <summary>
         /// Validate a specific IDS file
         /// </summary>
         /// <param name="idsFile"></param>
+        /// <param name="logger"></param>
         /// <returns></returns>
-        Audit.Status ValidateIDS(string idsFile);
+        Audit.Status ValidateIDS(string idsFile, ILogger logger);
         /// <summary>
         /// Validate all IDS files in the provided folder
         /// </summary>
         /// <param name="idsFolder"></param>
         /// <param name="idsSchemaFile"></param>
+        /// <param name="logger"></param>
         /// <returns></returns>
-        Audit.Status ValidateIdsFolder(string idsFolder, string? idsSchemaFile = null);
+        Audit.Status ValidateIdsFolder(string idsFolder, ILogger logger, string? idsSchemaFile = null);
     }
 }
