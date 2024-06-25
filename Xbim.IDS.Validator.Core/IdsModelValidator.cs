@@ -31,7 +31,7 @@ namespace Xbim.IDS.Validator.Core
         /// <param name="idsSchemaMigrator"></param>
         /// <param name="schemaValidator"></param>
         /// <param name="logger"></param>
-        public IdsModelValidator(IIdsModelBinder modelBinder, IIdsSchemaMigrator idsSchemaMigrator, IIdsValidator schemaValidator, ILogger logger)
+        public IdsModelValidator(IIdsModelBinder modelBinder, IIdsSchemaMigrator idsSchemaMigrator, IIdsValidator schemaValidator, ILogger<IdsModelValidator> logger)
         {
             ModelBinder = modelBinder;
             this.idsSchemaMigrator = idsSchemaMigrator;
