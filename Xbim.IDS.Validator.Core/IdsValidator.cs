@@ -17,20 +17,20 @@ namespace Xbim.IDS.Validator.Core
 
         }
 
-        public Audit.Status ValidateIDS(string idsFile, ILogger UserLogger)
+        public Audit.Status ValidateIDS(string idsFile, ILogger userLogger)
         {
             if (File.Exists(idsFile))
             {
                 using (var fileStream = File.OpenRead(idsFile))
                 {
-                    return ValidateIDS(fileStream, UserLogger);
+                    return ValidateIDS(fileStream, userLogger);
                 }
             }
-            UserLogger.LogWarning("IDS file not found {filename}", idsFile);
+            userLogger.LogWarning("IDS file not found {filename}", idsFile);
             return Audit.Status.InvalidOptionsError;
         }
 
-        public Audit.Status ValidateIDS(Stream idsFileStream, ILogger UserLogger)
+        public Audit.Status ValidateIDS(Stream idsFileStream, ILogger userLogger)
         {
             var options = new SingleAuditOptions
             {
@@ -40,10 +40,10 @@ namespace Xbim.IDS.Validator.Core
                 SchemaProvider = new FixedVersionSchemaProvider(IdsLib.IdsSchema.IdsNodes.IdsVersion.Ids1_0)
 
             };
-            return Audit.Run(idsFileStream, options, UserLogger);
+            return Audit.Run(idsFileStream, options, userLogger);
         }
 
-        public Audit.Status ValidateIdsFolder(string idsFolder, ILogger UserLogger, string? idsSchemaFile = default)
+        public Audit.Status ValidateIdsFolder(string idsFolder, ILogger userLogger, string? idsSchemaFile = default)
         {
             var batchOptions = new IdsFolderBatchOptions
             {
@@ -54,7 +54,7 @@ namespace Xbim.IDS.Validator.Core
             {
                 batchOptions.SchemaFiles = new List<string> { idsSchemaFile };
             }
-            return Audit.Run(batchOptions, UserLogger);
+            return Audit.Run(batchOptions, userLogger);
 
         }
     }
