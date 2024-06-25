@@ -82,7 +82,7 @@ namespace Xbim.IDS.Validator.Core
 
                 foreach (var group in idsSpec.SpecificationsGroups)
                 {
-                    userLogger.LogInformation("opening '{group}'", group.Name);
+                    logger.LogInformation("opening '{group}'", group.Name);
                     foreach (var spec in group.Specifications)
                     {
 
@@ -159,7 +159,7 @@ namespace Xbim.IDS.Validator.Core
                 Xids? idsSpec = LoadIdsFile(idsFile, userLogger, verificationOptions);
                 if (idsSpec == null)
                 {
-                    var schemaErrs = schemaValidator.ValidateIDS(idsFile,userLogger);
+                    var schemaErrs = schemaValidator.ValidateIDS(idsFile, userLogger);
                     throw new Exception($"Invalid IDS file '{idsFile}': {schemaErrs} - check logs");
                 }
                 return await ValidateAgainstXidsAsync(model, idsSpec, userLogger, requirementCompleted, verificationOptions, token);
@@ -183,11 +183,11 @@ namespace Xbim.IDS.Validator.Core
                 // Note: won't support zipped IDS upgrades, JSON etc.
                 var targetVersion = IdsVersion.Ids1_0;
                 var currentVersion = idsSchemaMigrator.GetIdsVersion(idsFile);
-                logger.LogWarning("IDS schema {oldVersion} is out of date for {file}. Applying in-place upgrade to latest {version} schema.",
-                    currentVersion, idsFile, targetVersion);
+                logger.LogWarning("IDS schema {oldVersion} is out of date. Applying in-place upgrade to latest {version} schema.",
+                    currentVersion, targetVersion);
                 if (idsSchemaMigrator.MigrateToIdsSchemaVersion(idsFile, out var upgraded, targetVersion))
                 {
-                    logger.LogInformation("IDS file {file} upgraded in-place to latest schema", idsFile);
+                    logger.LogInformation("IDS file upgraded in-place to latest schema");
                     return Xids.LoadBuildingSmartIDS(upgraded.Root, logger);
                 }
                 else
@@ -219,10 +219,10 @@ namespace Xbim.IDS.Validator.Core
                 if (!spec.IfcVersion.Any(s => s.ToString().Equals(modelSchema, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     var versions = spec.IfcVersion.Any() ? spec.IfcVersion.Select(s => s.ToString()).Aggregate((a, b) => $"{a},{b}") : "";
-                    userLogger.LogWarning("Specification may not be compatible for this model. Spec is for {versions}, while model is {modelVersion}", versions, modelSchema);
+                    userLogger.LogDebug("Specification may not be compatible for this model. Spec is for {versions}, while model is {modelVersion}", versions, modelSchema);
                 }
 
-                userLogger.LogInformation("    Applicable to : {applicable}", spec.Applicability.GetApplicabilityDescription());
+                userLogger.LogDebug("    Applicable to : {applicable}", spec.Applicability.GetApplicabilityDescription());
                 foreach (var applicableFacet in spec.Applicability.Facets)
                 {
                     userLogger.LogDebug("       - {facetType}: where {description} ", applicableFacet.GetType().Name, applicableFacet.Short());
@@ -231,7 +231,7 @@ namespace Xbim.IDS.Validator.Core
                 if (specCardinality.AllowsRequirements)
                 {
                     var facetReqs = spec.Requirement?.GetRequirementDescription();
-                    userLogger.LogInformation("    Requirements {reqCount}: {expectation}", spec.Requirement?.Facets.Count, facetReqs);
+                    userLogger.LogDebug("    Requirements {reqCount}: {expectation}", spec.Requirement?.Facets.Count, facetReqs);
                 }
 
 
@@ -247,10 +247,8 @@ namespace Xbim.IDS.Validator.Core
                         var result = new IdsValidationResult(item, spec.Applicability);
                         var message = ValidationMessage.Prohibited(item);
                         result.Fail(message);
-                        GetLogLevel(result.ValidationStatus, out LogLevel level, out int pad);
-                        if (userLogger.IsEnabled(level))
-                            userLogger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '),
-                                result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Applicability?.Short() ?? "No applicability");
+                        userLogger.LogDebug("{pad}           [{result}]: {entity} because {short}", "".PadLeft(0, ' '),
+                            result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Applicability?.Short() ?? "No applicability");
                         requirementResult.ApplicableResults.Add(result);
                     }
                     else
@@ -259,15 +257,11 @@ namespace Xbim.IDS.Validator.Core
                         if (spec.Requirement != null)
                         {
                             var result = ModelBinder.ValidateRequirement(item, spec.Requirement, userLogger);
-                            GetLogLevel(result.ValidationStatus, out LogLevel level, out int pad);
-                            if (userLogger.IsEnabled(level))
-                                userLogger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '),
-                                    result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Requirement?.Short() ?? "No requirement");
+                            userLogger.LogDebug("{pad}           [{result}]: {entity} because {short}", "".PadLeft(0, ' '),
+                                result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Requirement?.Short() ?? "No requirement");
                             foreach (var message in result.Messages)
                             {
-                                GetLogLevel(message.Status, out level, out pad, LogLevel.Debug);
-                                if (userLogger.IsEnabled(level))
-                                    userLogger.Log(level, "{pad}              #{entity} {message}", "".PadLeft(pad, ' '), item.EntityLabel, message.ToString());
+                                userLogger.LogDebug("{pad}              #{entity} {message}", "".PadLeft(0, ' '), item.EntityLabel, message.ToString());
                             }
                             requirementResult.ApplicableResults.Add(result);
                         }
@@ -277,10 +271,8 @@ namespace Xbim.IDS.Validator.Core
                             var result = new IdsValidationResult(item, spec.Applicability);
                             var message = ValidationMessage.Success(item);
                             result.MarkSatisified(message);
-                            GetLogLevel(result.ValidationStatus, out LogLevel level, out int pad);
-                            if (userLogger.IsEnabled(level))
-                                userLogger.Log(level, "{pad}           [{result}]: {entity} because {short}", "".PadLeft(pad, ' '),
-                                    result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Applicability?.Short() ?? "No applicability");
+                            userLogger.LogDebug("{pad}           [{result}]: {entity} because {short}", "".PadLeft(0, ' '),
+                                result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Applicability?.Short() ?? "No applicability");
                             requirementResult.ApplicableResults.Add(result);
                         }
                     }
