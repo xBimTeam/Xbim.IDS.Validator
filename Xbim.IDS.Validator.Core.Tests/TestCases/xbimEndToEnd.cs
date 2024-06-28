@@ -50,6 +50,9 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         [InlineData(@"TestCases/xbim/pass-ifc2x3-air_terminal_edge_case.ids", ValidationStatus.Pass)]
         [InlineData(@"TestCases/xbim/pass-ifc2x3-air_terminal_edge_case_with_predefined.ids", ValidationStatus.Pass)]
         [InlineData(@"TestCases/xbim/fail-ifc2x3-air_terminal_edge_case_with_predefined.ids", ValidationStatus.Fail)]
+        [InlineData(@"TestCases/xbim/pass-ifc2x3-type-substitution-complex_1_3.ids", ValidationStatus.Pass)]
+        [InlineData(@"TestCases/xbim/pass-ifc2x3-type-substitution-complex_2_3.ids", ValidationStatus.Pass)]
+        [InlineData(@"TestCases/xbim/fail-ifc2x3-type-substitution-complex_3_3.ids", ValidationStatus.Fail)]
         [Theory]
         public async Task CrossSchemaHandlingSupported(string idsFile, ValidationStatus expected)
         {

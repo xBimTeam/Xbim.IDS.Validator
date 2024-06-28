@@ -181,41 +181,29 @@ namespace Xbim.IDS.Validator.Core.Binders
             if(ifcFacet?.IfcType?.IsSingleExact(out string? ifcTypeName) == true)
             {
                 // Optimise for the typical scenario
-                var metaData = Model.Metadata.ExpressType(ifcTypeName.ToUpperInvariant());
-                if(metaData != null) 
+                foreach(var item in GetSelectionCriteriaForTypeAndSchema(ifcTypeName))
                 {
-                    // Found in Schema
-                    yield return new EntitySelectionCriteria(metaData);
+                    yield return item;
                 }
-                else
+            }
+            else if(ifcFacet?.IfcType?.AcceptedValues.All(a => a is ExactConstraint) == true)
+            {
+                // Enums also handle typically
+                foreach (var choice in ifcFacet!.IfcType!.AcceptedValues.OfType<ExactConstraint>())
                 {
-                    
-                    // Check for direct subtitutes E.g. IfcDoorStyle => IfcDoorType
-                    var equivalent = SchemaTypeMap.GetSchemaEquivalent(Model, ifcTypeName.ToUpperInvariant());
-                    if (equivalent != null)
+                    foreach (var item in GetSelectionCriteriaForTypeAndSchema(choice.Value))
                     {
-                        metaData = Model.Metadata.ExpressType(equivalent.Name.ToUpperInvariant());
-                        yield return new EntitySelectionCriteria(metaData);
-
-                    }
-
-                    // Attempt subtitution by inference. E.g. 2x3 IfcAirTerminal = FlowTerminals where defined AirTerminalType
-                    // E.g. Handle https://github.com/buildingSMART/IDS/issues/116
-                    var inferred = SchemaTypeMap.InferSchemaForEntity(Model, ifcTypeName.ToUpperInvariant());
-                    if (inferred != null)
-                    {
-                        var element = Model.Metadata.ExpressType(inferred.ElementType.Name.ToUpperInvariant());
-                        var type = Model.Metadata.ExpressType(inferred.DefiningType.Name.ToUpperInvariant());
-                        yield return new EntitySelectionCriteria(element, type);
+                        yield return item;
                     }
                 }
-               
             }
             else
             {
+                // It's an Regex, Range or Structure
+
                 if (Model?.Metadata?.Types() == null) yield break;
-                // It's an enum, Regex, Range or Structure
-                // We don't support inference for these more complex scenarios
+                // We don't support inference for these more complex scenarios.
+                // e.g. IFCTYPE matches IFCDUCT.* returning IFC2x3's IfcDuctSegment equivalent
                 var types = Model?.Metadata?.Types() ?? Enumerable.Empty<ExpressType>();
                 foreach (var type in types)
                 {
@@ -227,6 +215,47 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
         }
 
+        /// <summary>
+        /// Gets the means of querying for an IFC type including approaches that provide backward compatible equivalents when
+        /// newer schema types are be used. 
+        /// </summary>
+        /// <remarks>E.g. IfcDuctFitting in IFC2x3 = IfcFlowFitting AND DefinedBy(IfcDuctFittingType)</remarks>
+        /// <param name="ifcTypeName"></param>
+        /// <returns></returns>
+        private IEnumerable<EntitySelectionCriteria> GetSelectionCriteriaForTypeAndSchema(string ifcTypeName)
+        {
+
+            var typeName = ifcTypeName.ToUpperInvariant();
+            var metaData = Model.Metadata.ExpressType(typeName);
+            if (metaData != null)
+            {
+                // Found in Schema
+                yield return new EntitySelectionCriteria(metaData);
+            }
+            else
+            {
+                // Type not explicitly not in this schema. Look for another means of querying
+
+                // Attempt subtitution by inference. E.g. 2x3 IfcAirTerminal = FlowTerminals where defined AirTerminalType
+                // E.g. Handle https://github.com/buildingSMART/IDS/issues/116
+                var inferred = SchemaTypeMap.InferSchemaForEntity(Model, typeName);
+                if (inferred != null)
+                {
+                    var element = Model.Metadata.ExpressType(inferred.ElementType.Name.ToUpperInvariant());
+                    var type = Model.Metadata.ExpressType(inferred.DefiningType.Name.ToUpperInvariant());
+                    yield return new EntitySelectionCriteria(element, type);
+                }
+
+                // Check for direct subtitutes E.g. IfcDoorStyle => IfcDoorType, BuildingElement => BuiltElement
+                var equivalent = SchemaTypeMap.GetSchemaEquivalent(Model, typeName);
+                if (equivalent != null)
+                {
+                    metaData = Model.Metadata.ExpressType(equivalent.Name.ToUpperInvariant());
+                    yield return new EntitySelectionCriteria(metaData);
+
+                }
+            }
+        }
 
         private Expression BindPredefinedTypeFilter(IfcTypeFacet ifcFacet, Expression expression, EntitySelectionCriteria selection)
         {

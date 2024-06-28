@@ -1,0 +1,12 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION (('ViewDefinition [CoordinationView]'), '2;1');
+FILE_NAME ('pass-ifc2x3-type-substitution-complex.ifc', '2024-06-28T12:17:00', ('Andy Ward'), ('xbim Ltd'), 'xbim Toolkit', 'xbim IDS Unit tests', 'n/a');
+FILE_SCHEMA (('IFC2X3'));
+ENDSEC;
+DATA;
+#1=IFCDUCTFITTINGTYPE($,$,'DuctFittingType',$,$,$,$,$,$,$);
+#2=IFCFLOWFITTING($,$,'DuctItem',$,$,$,$,$);
+#3=IFCRELDEFINESBYTYPE($,$,$,$,(#2),#1);
+ENDSEC;
+END-ISO-10303-21;
