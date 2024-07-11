@@ -213,7 +213,7 @@ namespace Xbim.IDS.Validator.Core
             try
             {
                 var specCardinality = spec.Cardinality;
-                userLogger.LogInformation(" -- {cardinality} Spec '{spec}' : versions {ifcVersions}", specCardinality.Description, spec.Name, spec.IfcVersion);
+                userLogger.LogDebug(" -- {cardinality} Spec '{spec}' : versions {ifcVersions}", specCardinality.Description, spec.Name, spec.IfcVersion);
 
                 var modelSchema = model.SchemaVersion.ToString();
                 if (!spec.IfcVersion.Any(s => s.ToString().Equals(modelSchema, StringComparison.InvariantCultureIgnoreCase)))
@@ -238,7 +238,7 @@ namespace Xbim.IDS.Validator.Core
 
                 // Get the applicable items
                 IEnumerable<IPersistEntity> items = ModelBinder.SelectApplicableEntities(model, spec);
-                userLogger.LogInformation("          Found {count} applicable items", items.Count());
+                userLogger.LogDebug("          Found {count} applicable items", items.Count());
 
                 foreach (var item in items)
                 {
