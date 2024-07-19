@@ -26,10 +26,10 @@ namespace Xbim.IDS.Validator.Core
         public IIdsFacetBinderFactory FacetBinderFactory { get; }
 
 
-        public IdsModelBinder(IIdsFacetBinderFactory facetBinderFactory, BinderContext binderContext)
+        public IdsModelBinder(IIdsFacetBinderFactory facetBinderFactory)
         {
             FacetBinderFactory = facetBinderFactory;
-            this.binderContext = binderContext;
+            this.binderContext = binderContext = new BinderContext();
         }
 
 
@@ -145,7 +145,7 @@ namespace Xbim.IDS.Validator.Core
 
             foreach (var facet in requirement.Facets)
             {
-                var binder = FacetBinderFactory.Create(facet, Schema);
+                var binder = FacetBinderFactory.Create(facet, binderContext, Schema);
 
                 if(binder is ISupportOptions opts)
                 {
@@ -168,14 +168,14 @@ namespace Xbim.IDS.Validator.Core
         /// <exception cref="NotImplementedException"></exception>
         private Expression BindSelection(Expression baseExpression, IFacet facet)
         {
-            var binder = FacetBinderFactory.Create(facet, Schema);
+            var binder = FacetBinderFactory.Create(facet, binderContext, Schema);
             return binder.BindSelectionExpression(baseExpression, facet); 
            
         }
 
         private Expression BindFilters(Expression baseExpression, IFacet facet)
         {
-            var binder = FacetBinderFactory.Create(facet, Schema);
+            var binder = FacetBinderFactory.Create(facet, binderContext, Schema);
             return binder.BindWhereExpression(baseExpression, facet);
         }
 

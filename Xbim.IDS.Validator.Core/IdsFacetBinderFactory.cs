@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Xbim.Common.Step21;
+using Xbim.IDS.Validator.Core.Binders;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.InformationSpecifications;
 
@@ -65,20 +66,24 @@ namespace Xbim.IDS.Validator.Core
         protected IDictionary<Type, Type> DefaultBinderMappings => _factoryOptions.DefaultBinderMappings;
         protected IDictionary<XbimSchemaVersion, IDictionary<Type, Type>> SchemaOverrideMappings => _factoryOptions.SchemaOverrideMappings;
 
-        public IFacetBinder Create(IFacet facet, XbimSchemaVersion schema)
+        public IFacetBinder Create(IFacet facet, IBinderContext context, XbimSchemaVersion schema)
         {
             if (TryGetBinderType(schema, facet, out Type type))
             {
-                return (IFacetBinder)_provider.GetRequiredService(type);
+                var binder = (IFacetBinder)_provider.GetRequiredService(type);
+                binder.Initialise(context);
+                return binder;
             }
             throw new NotImplementedException(facet.GetType().Name);
         }
 
-        public IFacetBinder<TFacet> Create<TFacet>(TFacet facet, XbimSchemaVersion schema) where TFacet : IFacet
+        public IFacetBinder<TFacet> Create<TFacet>(TFacet facet, IBinderContext context, XbimSchemaVersion schema) where TFacet : IFacet
         {
             if (TryGetBinderType(schema, facet, out Type type))
             {
-                return (IFacetBinder<TFacet>)_provider.GetRequiredService(type);
+                var binder = (IFacetBinder<TFacet>)_provider.GetRequiredService(type);
+                binder.Initialise(context);
+                return binder;
             }
             _logger.LogError("Did not find a binder registered for facet type {tyneName}", facet.GetType().Name);
             throw new NotImplementedException(facet.GetType().Name);

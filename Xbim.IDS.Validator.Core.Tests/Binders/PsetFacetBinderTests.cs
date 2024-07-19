@@ -12,7 +12,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         public PsetFacetBinderTests(ITestOutputHelper output) : base(output)
         {
-            Binder = new PsetFacetBinder(BinderContext, Logger);
+            Binder = new PsetFacetBinder(Logger);
+            Binder.Initialise(BinderContext);
         }
 
         /// <summary>

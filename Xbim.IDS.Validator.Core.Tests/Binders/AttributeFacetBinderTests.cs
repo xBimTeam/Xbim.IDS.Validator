@@ -14,7 +14,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
     {
         public AttributeFacetBinderTests(ITestOutputHelper output) : base(output)
         {
-            Binder = new AttributeFacetBinder(BinderContext, Logger, GetValueMapper());
+            Binder = new AttributeFacetBinder(Logger, GetValueMapper());
+            Binder.Initialise(BinderContext);
         }
 
         /// <summary>
@@ -95,8 +96,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 AttributeName = attributeFieldName,
                 AttributeValue = new ValueConstraint("not relevant")
             };
-            var ifcBinder = new IfcTypeFacetBinder(new BinderContext { Model = Model}, GetLogger<IfcTypeFacetBinder>());
-
+            var ifcBinder = new IfcTypeFacetBinder(GetLogger<IfcTypeFacetBinder>());
+            ifcBinder.Initialise(BinderContext);
 
             var expression = ifcBinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
             // Act

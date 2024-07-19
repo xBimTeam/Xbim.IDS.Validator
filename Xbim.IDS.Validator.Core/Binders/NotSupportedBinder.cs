@@ -15,7 +15,7 @@ namespace Xbim.IDS.Validator.Core.Binders
     {
         private readonly ILogger<FacetBinderBase<TFacet>> logger;
 
-        public NotSupportedBinder(BinderContext binderContext, ILogger<NotSupportedBinder<TFacet>> logger) : base(binderContext, logger)
+        public NotSupportedBinder(ILogger<NotSupportedBinder<TFacet>> logger) : base(logger)
         {
             this.logger = logger;
         }

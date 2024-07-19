@@ -12,7 +12,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
     {
         public IfcClassificationFacetBinderTests(ITestOutputHelper output) : base(output)
         {
-            Binder = new IfcClassificationFacetBinder(BinderContext, GetLogger<IfcClassificationFacetBinder>());
+            Binder = new IfcClassificationFacetBinder(GetLogger<IfcClassificationFacetBinder>());
+            Binder.Initialise(BinderContext);
         }
 
         /// <summary>

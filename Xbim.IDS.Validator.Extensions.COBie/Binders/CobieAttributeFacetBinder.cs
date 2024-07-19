@@ -7,7 +7,7 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Binders
     public class COBieAttributeFacetBinder: AttributeFacetBinder
     {
 
-        public COBieAttributeFacetBinder(BinderContext context, ILogger<COBieAttributeFacetBinder> logger, IValueMapper valueMapper) : base(context, logger, valueMapper)
+        public COBieAttributeFacetBinder(ILogger<COBieAttributeFacetBinder> logger, IValueMapper valueMapper) : base(logger, valueMapper)
         {
         }
 
