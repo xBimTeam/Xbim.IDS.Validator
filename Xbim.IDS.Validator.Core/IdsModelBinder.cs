@@ -69,7 +69,7 @@ namespace Xbim.IDS.Validator.Core
 
             //no facets specified, return empty entities list
             if (facets.Count == 0)
-                return new List<IPersistEntity>();
+                return Enumerable.Empty<IPersistEntity>();
 
             var ifcFacet = facets.OfType<IfcTypeFacet>().FirstOrDefault();
             Expression expression;
