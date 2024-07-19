@@ -13,7 +13,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
     {
         public PartOfBinderTests(ITestOutputHelper output) : base(output)
         {
-            Binder = new PartOfFacetBinder(BinderContext, Logger);
+            Binder = new PartOfFacetBinder(Logger);
+            Binder.Initialise(BinderContext);
         }
 
         /// <summary>

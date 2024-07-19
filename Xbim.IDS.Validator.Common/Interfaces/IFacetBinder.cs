@@ -10,6 +10,11 @@ namespace Xbim.IDS.Validator.Core.Interfaces
     /// </summary>
     public interface IFacetBinder
     {
+        /// <summary>
+        /// Initialise the FacetBinder
+        /// </summary>
+        /// <param name="context"></param>
+        void Initialise(IBinderContext context);
 
         /// <summary>
         /// Binds the appropriate model filters to satisify the initial <paramref name="facet"/>'s criteria

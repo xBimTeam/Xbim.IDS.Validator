@@ -18,7 +18,7 @@ namespace Xbim.IDS.Validator.Core.Binders
     {
         private readonly ILogger<IfcTypeFacetBinder> logger;
 
-        public IfcTypeFacetBinder(BinderContext binderContext, ILogger<IfcTypeFacetBinder> logger) : base(binderContext, logger)
+        public IfcTypeFacetBinder(ILogger<IfcTypeFacetBinder> logger) : base(logger)
         {
             this.logger = logger;
         }

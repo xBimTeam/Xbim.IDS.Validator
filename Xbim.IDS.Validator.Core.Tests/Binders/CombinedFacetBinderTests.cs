@@ -34,9 +34,11 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 AttributeValue = new ValueConstraint(attributeValue)
             };
   
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
+            var ifcbinder = new IfcTypeFacetBinder(IfcTypeLogger);
+            ifcbinder.Initialise(BinderContext);
 
-            var attrbinder = new AttributeFacetBinder(BinderContext, GetLogger<AttributeFacetBinder>(), GetValueMapper());
+            var attrbinder = new AttributeFacetBinder(GetLogger<AttributeFacetBinder>(), GetValueMapper());
+            attrbinder.Initialise(BinderContext);
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -70,9 +72,11 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             attrFacet.AttributeValue.AddAccepted(new StructureConstraint() { MinLength = 1, MaxLength = 10 });
 
    
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
+            var ifcbinder = new IfcTypeFacetBinder(IfcTypeLogger);
+            ifcbinder.Initialise(BinderContext);
 
-            var attrbinder = new AttributeFacetBinder(BinderContext, GetLogger<AttributeFacetBinder>(), GetValueMapper());
+            var attrbinder = new AttributeFacetBinder(GetLogger<AttributeFacetBinder>(), GetValueMapper());
+            attrbinder.Initialise(BinderContext);
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -112,10 +116,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             {
                 classFacet.Identification = new ValueConstraint(ident);
             }
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
-
-            var classbinder = new IfcClassificationFacetBinder(BinderContext, GetLogger<IfcClassificationFacetBinder>());
-
+            var ifcbinder = new IfcTypeFacetBinder(IfcTypeLogger);
+            ifcbinder.Initialise(BinderContext);
+            var classbinder = new IfcClassificationFacetBinder(GetLogger<IfcClassificationFacetBinder>());
+            classbinder.Initialise(BinderContext);
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
             expression = classbinder.BindWhereExpression(expression, classFacet);
@@ -152,10 +156,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 Value = new ValueConstraint(),
             };
             materialFacet.Value = material;
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
-
-            var materialbinder = new MaterialFacetBinder(BinderContext, GetLogger<MaterialFacetBinder>());
-
+            var ifcbinder = new IfcTypeFacetBinder(IfcTypeLogger);
+            ifcbinder.Initialise(BinderContext);
+            var materialbinder = new MaterialFacetBinder(GetLogger<MaterialFacetBinder>());
+            materialbinder.Initialise(BinderContext);
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
             expression = materialbinder.BindWhereExpression(expression, materialFacet);
@@ -192,9 +196,11 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             propertyFacet.PropertyName.AddAccepted(new ExactConstraint(propName));
             if(value != null)
                 propertyFacet.PropertyValue.AddAccepted(new ExactConstraint(value?.ToString()));
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
+            var ifcbinder = new IfcTypeFacetBinder(IfcTypeLogger);
+            ifcbinder.Initialise(BinderContext);
 
-            var psetbinder = new PsetFacetBinder(BinderContext, GetLogger<PsetFacetBinder>());
+            var psetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>());
+            psetbinder.Initialise(BinderContext);
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -224,8 +230,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 DataType = "IFCLABEL"
             };
 
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
-            var psetbinder = new PsetFacetBinder(BinderContext, GetLogger<PsetFacetBinder>());
+            var ifcbinder = new IfcTypeFacetBinder(IfcTypeLogger);
+            ifcbinder.Initialise(BinderContext);
+            var psetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>());
+            psetbinder.Initialise(BinderContext);
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -255,10 +263,11 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             partOfFacet.SetRelation(partOfRelation);
             
             
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
+            var ifcbinder = new IfcTypeFacetBinder(IfcTypeLogger);
+            ifcbinder.Initialise(BinderContext);
 
-            var partOfbinder = new PartOfFacetBinder(BinderContext, GetLogger<PartOfFacetBinder>());
-
+            var partOfbinder = new PartOfFacetBinder(GetLogger<PartOfFacetBinder>());
+            partOfbinder.Initialise(BinderContext);
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
             expression = partOfbinder.BindWhereExpression(expression, partOfFacet);

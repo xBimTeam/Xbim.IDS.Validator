@@ -37,10 +37,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 AttributeName = attributeFieldName,
                 AttributeValue = new ValueConstraint(attributeValue)
             };
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>());
-
-            var attrbinder = new AttributeFacetBinder(BinderContext, GetLogger<AttributeFacetBinder>(), GetValueMapper());
-
+            var ifcbinder = new IfcTypeFacetBinder(GetLogger<IfcTypeFacetBinder>());
+            ifcbinder.Initialise(BinderContext);
+            var attrbinder = new AttributeFacetBinder(GetLogger<AttributeFacetBinder>(), GetValueMapper());
+            attrbinder.Initialise(BinderContext);
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
             expression = attrbinder.BindWhereExpression(expression, attrFacet);
@@ -75,10 +75,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             propertyFacet.PropertyName.AddAccepted(new ExactConstraint(propName));
             if (value != null)
                 propertyFacet.PropertyValue.AddAccepted(new ExactConstraint(value?.ToString()));
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>());
-
-            var psetbinder = new PsetFacetBinder(BinderContext, GetLogger<PsetFacetBinder>());
-
+            var ifcbinder = new IfcTypeFacetBinder(GetLogger<IfcTypeFacetBinder>());
+            ifcbinder.Initialise(BinderContext);
+            var psetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>());
+            psetbinder.Initialise(BinderContext);
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
             expression = psetbinder.BindWhereExpression(expression, propertyFacet);
@@ -123,9 +123,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             if (value2 != null)
                 propertyFacet2.PropertyValue.AddAccepted(new ExactConstraint(value2?.ToString()));
 
-            var psetbinder = new PsetFacetBinder(BinderContext, GetLogger<PsetFacetBinder>());
-            var psetbinder2 = new PsetFacetBinder(BinderContext, GetLogger<PsetFacetBinder>());
-
+            var psetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>());
+            psetbinder.Initialise(BinderContext);
+            var psetbinder2 = new PsetFacetBinder(GetLogger<PsetFacetBinder>());
+            psetbinder2.Initialise(BinderContext);
             // Act
             var expression = psetbinder.BindSelectionExpression(query.InstancesExpression, propertyFacet);
             expression = psetbinder2.BindWhereExpression(expression, propertyFacet2);
@@ -154,10 +155,10 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 Value = new ValueConstraint(),
             };
             materialFacet.Value = material;
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>());
-
-            var materialbinder = new MaterialFacetBinder(BinderContext, GetLogger<MaterialFacetBinder>());
-
+            var ifcbinder = new IfcTypeFacetBinder( GetLogger<IfcTypeFacetBinder>());
+            ifcbinder.Initialise(BinderContext);
+            var materialbinder = new MaterialFacetBinder(GetLogger<MaterialFacetBinder>());
+            materialbinder.Initialise(BinderContext);
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
             expression = materialbinder.BindWhereExpression(expression, materialFacet);
@@ -179,7 +180,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
            ConstraintType valueConstraint = ConstraintType.Exact
            )
         {
-            var psetbinder = new PsetFacetBinder(BinderContext, GetLogger<PsetFacetBinder>());
+            var psetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>());
+            psetbinder.Initialise(BinderContext);
             AssertIfcPropertyFacetQuery(psetbinder, psetName, propName, propValue, expectedCount, psetConstraint, propConstraint, valueConstraint);
 
         }

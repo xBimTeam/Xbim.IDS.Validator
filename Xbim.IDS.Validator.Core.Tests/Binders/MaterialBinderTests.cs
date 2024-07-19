@@ -12,7 +12,8 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
     {
         public MaterialBinderTests(ITestOutputHelper output) : base(output)
         {
-            Binder = new MaterialFacetBinder(BinderContext, GetLogger<MaterialFacetBinder>());
+            Binder = new MaterialFacetBinder(GetLogger<MaterialFacetBinder>());
+            Binder.Initialise(BinderContext);
         }
 
         /// <summary>

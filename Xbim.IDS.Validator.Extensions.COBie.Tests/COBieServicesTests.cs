@@ -31,8 +31,9 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Tests
             // Arrange
             var factory = provider.GetRequiredService<IIdsFacetBinderFactory>();
             var facet = (IFacet)Activator.CreateInstance(facetType);
+            var context = new BinderContext();
             // Act
-            var result = factory.Create(facet, Xbim.Common.Step21.XbimSchemaVersion.Cobie2X4);
+            var result = factory.Create(facet, context, Xbim.Common.Step21.XbimSchemaVersion.Cobie2X4);
             result.Should().NotBeNull().And.BeOfType(expectedType);
         }
 

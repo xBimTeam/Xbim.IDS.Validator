@@ -2,7 +2,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using Xbim.Common;
@@ -30,20 +29,27 @@ namespace Xbim.IDS.Validator.Core.Binders
         /// <summary>
         /// Constructs a new <see cref="FacetBinderBase{T}"/>
         /// </summary>
-        /// <param name="binderContext"></param>
         /// <param name="logger"></param>
-        public FacetBinderBase(BinderContext binderContext, ILogger<FacetBinderBase<T>> logger)
+        public FacetBinderBase(ILogger<FacetBinderBase<T>> logger)
         {
-            BinderContext = binderContext ?? throw new ArgumentNullException(nameof(binderContext));
             this.logger = logger;
         }
 
-        public BinderContext BinderContext { get; }
+        /// <summary>
+        /// Initialise the Binder with the model context
+        /// </summary>
+        /// <param name="context"></param>
+        public void Initialise(IBinderContext context)
+        {
+            BinderContext = context;
+        }
+
+        public IBinderContext? BinderContext { get; private set; }
 
         /// <summary>
         /// The model being queried
         /// </summary>
-        public IModel Model { get => BinderContext.Model ?? throw new ArgumentNullException(); }
+        public IModel Model { get => BinderContext?.Model ?? throw new InvalidOperationException("Incorrectly Initialised"); }
 
         /// <summary>
         /// Applies a Selection and Filter predicate to the supplied <paramref name="baseExpression"/> from the <paramref name="facet"/>

@@ -38,8 +38,9 @@ namespace Xbim.IDS.Validator.Core.Tests
             // Arrange
             var factory = provider.GetRequiredService<IIdsFacetBinderFactory>();
             var facet = (IFacet)Activator.CreateInstance(facetType);
+            var context = new BinderContext();
             // Act
-            var result = factory.Create(facet);
+            var result = factory.Create(facet, context);
             result.Should().NotBeNull().And.BeOfType(expectedType);
         }
 

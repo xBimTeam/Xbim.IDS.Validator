@@ -23,7 +23,7 @@ namespace Xbim.IDS.Validator.Core.Binders
     {
         private readonly ILogger<PsetFacetBinder> logger;
 
-        public PsetFacetBinder(BinderContext context, ILogger<PsetFacetBinder> logger) : base(context, logger)
+        public PsetFacetBinder(ILogger<PsetFacetBinder> logger) : base(logger)
         {
             this.logger = logger;
         }

@@ -11,7 +11,7 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Binders
     /// IFCPRODUCT broadly equivalent to COBIECOMPONENT, IFCACTOR => COBIECONTACT table</remarks>
     public class COBieTableFacetBinder : IfcTypeFacetBinder
     {
-        public COBieTableFacetBinder(BinderContext binderContext, ILogger<IfcTypeFacetBinder> logger) : base(binderContext, logger)
+        public COBieTableFacetBinder(ILogger<IfcTypeFacetBinder> logger) : base(logger)
         {
         }
         // Provided for future use/expansion. E.g. mapping frm IFC Types

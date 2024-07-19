@@ -76,7 +76,8 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Tests
         [Fact]
         public void CanQueryContacts()
         {
-            var binder = new IfcTypeFacetBinder(BinderContext, GetLogger<IfcTypeFacetBinder>()) { };
+            var binder = new IfcTypeFacetBinder(GetLogger<IfcTypeFacetBinder>()) { };
+            binder.Initialise(BinderContext);
             var types = new[] { typeof(CobieContact) };
             AssertIfcTypeFacetQuery(binder, "COBIECONTACT", 3, types);
         }
@@ -113,9 +114,10 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Tests
                 AttributeValue = new ValueConstraint(attributeValue)
             };
 
-            var ifcbinder = new IfcTypeFacetBinder(BinderContext, IfcTypeLogger);
-
-            var attrbinder = new COBieAttributeFacetBinder(BinderContext, GetLogger<COBieAttributeFacetBinder>(), GetValueMapper());
+            var ifcbinder = new IfcTypeFacetBinder(IfcTypeLogger);
+            ifcbinder.Initialise(BinderContext);
+            var attrbinder = new COBieAttributeFacetBinder(GetLogger<COBieAttributeFacetBinder>(), GetValueMapper());
+            attrbinder.Initialise(BinderContext);
             attrbinder.SetOptions(new VerificationOptions { AllowDerivedAttributes = true, IncludeSubtypes = true }) ;
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -136,7 +138,6 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Tests
         [Theory]
         public void Cobie_Cannot_Query_By_Unsupported_Facets(Type facetType)
         {
-            SetContext();
             IfcTypeFacet ifcFacet = new IfcTypeFacet
             {
                 IfcType = new ValueConstraint("CobieComponent"),
@@ -145,8 +146,8 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Tests
             var targetFacet = (IFacet)Activator.CreateInstance(facetType);
             PopulateDummyData(targetFacet);
 
-            var ifcbinder = facetBinderFactory.Create(ifcFacet, Model.SchemaVersion);
-            var targetBinder = facetBinderFactory.Create(targetFacet, Model.SchemaVersion);
+            var ifcbinder = facetBinderFactory.Create(ifcFacet, BinderContext, Model.SchemaVersion);
+            var targetBinder = facetBinderFactory.Create(targetFacet, BinderContext, Model.SchemaVersion);
 
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -254,12 +255,6 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Tests
             };
         }
 
-        
-        private void SetContext()
-        {
-            var context = provider.GetRequiredService<BinderContext>();
-            context.Model = BinderContext.Model;
-        }
 
         public override IModel Model
         {

@@ -26,7 +26,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         protected readonly IValueMapper valueMapper;
         private VerificationOptions _options = new VerificationOptions();
 
-        public AttributeFacetBinder(BinderContext context, ILogger<AttributeFacetBinder> logger, IValueMapper valueMapper) : base(context, logger)
+        public AttributeFacetBinder(ILogger<AttributeFacetBinder> logger, IValueMapper valueMapper) : base(logger)
         {
             this.logger = logger;
             this.valueMapper = valueMapper;
