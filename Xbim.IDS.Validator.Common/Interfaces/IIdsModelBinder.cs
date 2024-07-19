@@ -21,8 +21,9 @@ namespace Xbim.IDS.Validator.Core.Interfaces
         /// </summary>
         /// <param name="model"></param>
         /// <param name="spec"></param>
+        /// <param name="logger"></param>
         /// <returns></returns>
-        IEnumerable<IPersistEntity> SelectApplicableEntities(IModel model, Specification spec);
+        IEnumerable<IPersistEntity> SelectApplicableEntities(IModel model, Specification spec, ILogger logger);
 
         /// <summary>
         /// Verifies a specific xbim <see cref="IPersistEntity"/> against the IDS requirements

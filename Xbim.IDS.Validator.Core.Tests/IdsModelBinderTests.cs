@@ -65,7 +65,7 @@ namespace Xbim.IDS.Validator.Core.Tests
                             logger.LogInformation("       [{i}] {facetType}: check {description} ", idx++, reqFacet.GetType().Name, reqFacet.Short());
                         }
                     }
-                    IEnumerable <IPersistEntity> items = modelBinder.SelectApplicableEntities(model, spec);
+                    IEnumerable <IPersistEntity> items = modelBinder.SelectApplicableEntities(model, spec, logger);
                     logger.LogInformation("          Checking {count} applicable items", items.Count());
                     foreach (var item in items)
                     {
@@ -110,7 +110,7 @@ namespace Xbim.IDS.Validator.Core.Tests
             modelBinder.SetOptions(options);
 
             // Act
-            var results = modelBinder.SelectApplicableEntities(model, spec);
+            var results = modelBinder.SelectApplicableEntities(model, spec, logger);
 
             // Assert
             results.Should().NotBeNull();

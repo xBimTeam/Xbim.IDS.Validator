@@ -46,9 +46,10 @@ namespace Xbim.IDS.Validator.Core
         /// </summary>
         /// <param name="model"></param>
         /// <param name="spec"></param>
+        /// <param name="logger"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public IEnumerable<IPersistEntity> SelectApplicableEntities(IModel model, Specification spec)
+        public IEnumerable<IPersistEntity> SelectApplicableEntities(IModel model, Specification spec,ILogger logger)
         {
             if (model is null)
             {
@@ -69,7 +70,10 @@ namespace Xbim.IDS.Validator.Core
 
             //no facets specified, return empty entities list
             if (facets.Count == 0)
+            {
+                logger.LogWarning("Specification contains no applicablity facets. Returning empty entities list, specification status will be recorded as failure");
                 return Enumerable.Empty<IPersistEntity>();
+            }
 
             var ifcFacet = facets.OfType<IfcTypeFacet>().FirstOrDefault();
             Expression expression;
