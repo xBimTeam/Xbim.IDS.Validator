@@ -122,7 +122,7 @@ dotnet add package Xbim.IDS.Validator.Core.Extensions.COBie
 
 ### Integrating with your software services
 
-Given an IDS file such as [example.ids](../Xbim.IDS.Validator.Extensions.COBie.Tests/TestModels/cobie.ids) and an input COBie Excel file such as 
+Given an IDS file such as [example.ids](../Xbim.IDS.Validator.Extensions.COBie.Tests/TestModels/Cobie.ids) and an input COBie Excel file such as 
 [SampleHouse4.xlsx](../Xbim.IDS.Validator.Extensions.COBie.Tests/TestModels/SampleHouse4.xlsx), a basic implementation might look like:
 
 
@@ -149,7 +149,7 @@ IModel model = OpenCOBie("SampleFile.xlsx");
 // optionally you can over-ride some behaviours
 var options = new VerificationOptions
 {
-    OutputFullEntity = true,            // Returns the full IFC entity in results, not just key
+    OutputFullEntity = true,            // Returns the full COBie entity in results, not just key
     PerformInPlaceSchemaUpgrade = true, // Update old IDS schemas to latest version
     PermittedIdsAuditStatuses = VerificationOptions.Relaxed,    // Silently ignore some IDS schema errors - just log the fault
     AllowDerivedAttributes = true,   // Allow Derived attributes to be tested - IMPORTANT for COBie navigation between tables
@@ -211,7 +211,7 @@ This is experimental addon module. It currently support just two of the six IDS 
 ## To-do list
 
 - [ ] CObie support Pset, Classification and PartOf Facets
-- [ ] Consider supporting IfcEntity Type (via ExternalObjecType)
+- [ ] Consider supporting IfcEntity Type (via ExternalObjectType)
 - [ ] Review possibility of uniqueness checks/aggregates
 - [ ] Review with IDS team if this extension has merit for standardising
 
