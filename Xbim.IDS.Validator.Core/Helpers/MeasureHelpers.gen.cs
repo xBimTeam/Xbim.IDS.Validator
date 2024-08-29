@@ -236,17 +236,6 @@ namespace Xbim.IDS.Validator.Core.Helpers
                     };
                 }
 
-                case IfcMagneticFluxMeasure amount:
-                {
-                    var unit = units.GetUnit(IfcUnitEnum.MAGNETICFLUXUNIT);
-                    return unit switch
-                    {
-                        IIfcSIUnit si => new IfcMagneticFluxMeasure(amount * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcMagneticFluxMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)amount,
-                    };
-                }
-
                 case IfcMassMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.MASSUNIT);
@@ -259,7 +248,15 @@ namespace Xbim.IDS.Validator.Core.Helpers
                 }
 
                 case IfcNonNegativeLengthMeasure amount:
-                    return amount;
+                {
+                    var unit = units.GetUnit(IfcUnitEnum.LENGTHUNIT);
+                    return unit switch
+                    {
+                        IIfcSIUnit si => new IfcNonNegativeLengthMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcNonNegativeLengthMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
+                    };
+                }
 
                 case IfcPlaneAngleMeasure amount:
                 {
@@ -273,10 +270,26 @@ namespace Xbim.IDS.Validator.Core.Helpers
                 }
 
                 case IfcPositiveLengthMeasure amount:
-                    return amount;
+                {
+                    var unit = units.GetUnit(IfcUnitEnum.LENGTHUNIT);
+                    return unit switch
+                    {
+                        IIfcSIUnit si => new IfcPositiveLengthMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcPositiveLengthMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
+                    };
+                }
 
                 case IfcPositivePlaneAngleMeasure amount:
-                    return amount;
+                {
+                    var unit = units.GetUnit(IfcUnitEnum.PLANEANGLEUNIT);
+                    return unit switch
+                    {
+                        IIfcSIUnit si => new IfcPositivePlaneAngleMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcPositivePlaneAngleMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
+                    };
+                }
 
                 case IfcPowerMeasure amount:
                 {
@@ -311,9 +324,6 @@ namespace Xbim.IDS.Validator.Core.Helpers
                     };
                 }
 
-                case IfcSectionalAreaIntegralMeasure amount:
-                    return amount;
-
                 case IfcSolidAngleMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.SOLIDANGLEUNIT);
@@ -324,9 +334,6 @@ namespace Xbim.IDS.Validator.Core.Helpers
                         _ => (IIfcValue)amount,
                     };
                 }
-
-                case IfcThermalConductivityMeasure amount:
-                    return amount;
 
                 case IfcThermodynamicTemperatureMeasure amount:
                 {

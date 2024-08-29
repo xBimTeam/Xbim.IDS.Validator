@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using IdsLib.IfcSchema;
+using System.Text;
+using Xbim.Common.Metadata;
 
 namespace CodeGenerator
 {
@@ -11,18 +13,11 @@ namespace CodeGenerator
             string searchKw = $"<PlaceHolder>\r\n";
             var sb = new StringBuilder();
 
+            var measures = IdsLib.IfcSchema.SchemaInfo.AllMeasureInformation;
 
-#pragma warning disable CS0618 // Type or member is obsolete - not yet implemented in idslib
-            // We can't yet generate code from IdsLib.IfcSchema.IfcMeasureInformation since it doesn't provide the xbim typename or any means 
-            // to go from IFCLENGTHMEASURE to IfcLengthMeasure. XIDS provides the ConcreteClasses which can be used to ID
-            // an xbim IfcMeasure type from the Ifc4.Interfaces namespace
-            var measures = Xbim.InformationSpecifications.Helpers.SchemaInfo.IfcMeasures;
-#pragma warning restore CS0618 // Type or member is obsolete
-
-            foreach (var key in measures.Keys)
+            foreach (var item in measures)
             {
 
-                var item = measures[key];
                 if (!item.IfcMeasure.EndsWith("MEASURE"))
                 {
                     continue;
@@ -35,7 +30,7 @@ namespace CodeGenerator
                     continue;
                 }
                 var unitSwitchBlock = string.IsNullOrEmpty(item.UnitTypeEnum) ? unitLess : namedUnitCase;
-                var ifcTypeName = item.ConcreteClasses.FirstOrDefault()!.Split('.').Last();
+                var ifcTypeName = GetTypeName(item.IfcMeasure);
                 unitSwitchBlock = unitSwitchBlock.Replace("<measure>", ifcTypeName);
                 unitSwitchBlock = unitSwitchBlock.Replace("<unit>", item.UnitTypeEnum);
 
@@ -45,6 +40,21 @@ namespace CodeGenerator
             source = source.Replace(searchKw, sb.ToString());
             source = source.Replace("<version>", Xbim.InformationSpecifications.Xids.AssemblyVersion);
             return source;
+        }
+
+        private static readonly ExpressMetaData ifc4Schema = ExpressMetaData.GetMetadata(typeof(Xbim.Ifc4.EntityFactoryIfc4x1).Module);
+
+        // Converts the uppercase Measure name to xbim Class name in IFC4 Interfaces namespace
+        private static string GetTypeName(string ifcMeasure)
+        {
+            if(IdsLib.IfcSchema.SchemaInfo.TryParseIfcDataType(ifcMeasure, out var ifcType))
+            {
+                // Because IFC4 is the main Interfaces schema it should contain all the measures regardless if 2x3 or 4x3
+                return ifc4Schema.ExpressType(ifcMeasure).Name;
+            }
+            // Fallback (will typically break as Uppercase)
+            return ifcMeasure;
+            
         }
 
         private const string namedUnitCase = @"
