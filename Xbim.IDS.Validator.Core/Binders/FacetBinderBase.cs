@@ -370,7 +370,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             if (result is IIfcMeasureValue measure)
             {
                 var units = GetUnits();
-                result = measure.NormaliseUnits(units);
+                result = measure.NormaliseUnits(units, logger);
             }
 
             // TODO: Review if we have to do anything with derived

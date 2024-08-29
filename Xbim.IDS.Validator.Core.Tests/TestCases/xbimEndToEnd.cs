@@ -62,6 +62,15 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         }
 
 
+        [InlineData(@"TestCases/xbim/pass-ifc4-measures-supported.ids")]
+        [Theory]
+        public async Task Xbim_Ifc4_Measures_supported(string idsFile)
+        {
+            var outcome = await VerifyIdsFile(idsFile, false, XbimSchemaVersion.Ifc4, new VerificationOptions { IncludeSubtypes = true, PermittedIdsAuditStatuses = VerificationOptions.AnyState });
+
+            outcome.Status.Should().Be(ValidationStatus.Pass);
+        }
+
 
     }
 }
