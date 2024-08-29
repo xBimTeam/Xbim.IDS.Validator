@@ -5,7 +5,7 @@
     <description></description>
   </info>
   <specifications>
-    <specification name="Any matching value in a list property will pass 3/3" ifcVersion="IFC4X3_ADD2">
+    <specification name="Can use IFC4+ measures" ifcVersion="IFC4">
       <applicability maxOccurs="unbounded">
         <entity>
           <name>

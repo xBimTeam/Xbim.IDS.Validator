@@ -724,11 +724,11 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             if (string.IsNullOrEmpty(expectedDataType)) return true;
 
-            string measure = propValue.GetType().Name;
+            string measure = propValue.GetType().Name.ToUpperInvariant();
 
             if (measure.Equals(expectedDataType, StringComparison.InvariantCultureIgnoreCase))
             {
-                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.DataType!, measure, "DataType matches", propValue));
+                result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.DataType!, measure, "DataType matched", propValue));
                 return true;
             }
             else

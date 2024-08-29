@@ -80,8 +80,11 @@ namespace Xbim.IDS.Validator.Tests.Common
         public static ILogger<T> GetXunitLogger<T>(ITestOutputHelper output)
         {
             var services = new ServiceCollection()
-                        .AddLogging((builder) => builder.AddXunit(output,
-                        new LoggingConfig { LogLevel = LogLevel.Debug }));
+                        .AddLogging((builder) =>
+                        {
+                            builder.AddXunit(output, new LoggingConfig { LogLevel = LogLevel.Debug });
+                            builder.SetMinimumLevel(LogLevel.Debug);
+                        });
 
             IServiceProvider provider = services.BuildServiceProvider();
             var logger = provider.GetRequiredService<ILogger<T>>();
