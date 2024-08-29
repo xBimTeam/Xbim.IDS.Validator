@@ -1,4 +1,6 @@
 // generated code, any changes made directly here will be lost
+// Generated using Xids: 1.0.1
+using Microsoft.Extensions.Logging;
 using System;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4.MeasureResource;
@@ -13,9 +15,10 @@ namespace Xbim.IDS.Validator.Core.Helpers
         /// <remarks>Implemented solely against IFC4 since all other schemas use this interface internally</remarks>
         /// <param name="measure"></param>
         /// <param name="units"></param>
+        /// <param name="logger"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        internal static IIfcValue NormaliseUnits(this IIfcValue measure, IIfcUnitAssignment? units)
+        internal static IIfcValue NormaliseUnits(this IIfcValue measure, IIfcUnitAssignment? units, ILogger logger)
         {
             switch (measure)
             {
@@ -24,260 +27,342 @@ namespace Xbim.IDS.Validator.Core.Helpers
                 case IfcRatioMeasure ratio:
                     return ratio;
                 
-                case IfcAmountOfSubstanceMeasure amountofsubstancemeasure:
+                case IfcAbsorbedDoseMeasure amount:
+                {
+                    var unit = units.GetUnit(IfcUnitEnum.ABSORBEDDOSEUNIT);
+                    return unit switch
+                    {
+                        IIfcSIUnit si => new IfcAbsorbedDoseMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcAbsorbedDoseMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
+                    };
+                }
+
+                case IfcAmountOfSubstanceMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.AMOUNTOFSUBSTANCEUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcAmountOfSubstanceMeasure(amountofsubstancemeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcAmountOfSubstanceMeasure(amountofsubstancemeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)amountofsubstancemeasure,
+                        IIfcSIUnit si => new IfcAmountOfSubstanceMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcAmountOfSubstanceMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcAreaMeasure areameasure:
+                case IfcAreaMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.AREAUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcAreaMeasure(areameasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcAreaMeasure(areameasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)areameasure,
+                        IIfcSIUnit si => new IfcAreaMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcAreaMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcElectricCapacitanceMeasure electriccapacitancemeasure:
+                case IfcDoseEquivalentMeasure amount:
+                {
+                    var unit = units.GetUnit(IfcUnitEnum.DOSEEQUIVALENTUNIT);
+                    return unit switch
+                    {
+                        IIfcSIUnit si => new IfcDoseEquivalentMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcDoseEquivalentMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
+                    };
+                }
+
+                case IfcElectricCapacitanceMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.ELECTRICCAPACITANCEUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcElectricCapacitanceMeasure(electriccapacitancemeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcElectricCapacitanceMeasure(electriccapacitancemeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)electriccapacitancemeasure,
+                        IIfcSIUnit si => new IfcElectricCapacitanceMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcElectricCapacitanceMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcElectricChargeMeasure electricchargemeasure:
+                case IfcElectricChargeMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.ELECTRICCHARGEUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcElectricChargeMeasure(electricchargemeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcElectricChargeMeasure(electricchargemeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)electricchargemeasure,
+                        IIfcSIUnit si => new IfcElectricChargeMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcElectricChargeMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcElectricConductanceMeasure electricconductancemeasure:
+                case IfcElectricConductanceMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.ELECTRICCONDUCTANCEUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcElectricConductanceMeasure(electricconductancemeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcElectricConductanceMeasure(electricconductancemeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)electricconductancemeasure,
+                        IIfcSIUnit si => new IfcElectricConductanceMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcElectricConductanceMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcElectricCurrentMeasure electriccurrentmeasure:
+                case IfcElectricCurrentMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.ELECTRICCURRENTUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcElectricCurrentMeasure(electriccurrentmeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcElectricCurrentMeasure(electriccurrentmeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)electriccurrentmeasure,
+                        IIfcSIUnit si => new IfcElectricCurrentMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcElectricCurrentMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcElectricResistanceMeasure electricresistancemeasure:
+                case IfcElectricResistanceMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.ELECTRICRESISTANCEUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcElectricResistanceMeasure(electricresistancemeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcElectricResistanceMeasure(electricresistancemeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)electricresistancemeasure,
+                        IIfcSIUnit si => new IfcElectricResistanceMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcElectricResistanceMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcElectricVoltageMeasure electricvoltagemeasure:
+                case IfcElectricVoltageMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.ELECTRICVOLTAGEUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcElectricVoltageMeasure(electricvoltagemeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcElectricVoltageMeasure(electricvoltagemeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)electricvoltagemeasure,
+                        IIfcSIUnit si => new IfcElectricVoltageMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcElectricVoltageMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcEnergyMeasure energymeasure:
+                case IfcEnergyMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.ENERGYUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcEnergyMeasure(energymeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcEnergyMeasure(energymeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)energymeasure,
+                        IIfcSIUnit si => new IfcEnergyMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcEnergyMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcForceMeasure forcemeasure:
+                case IfcForceMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.FORCEUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcForceMeasure(forcemeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcForceMeasure(forcemeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)forcemeasure,
+                        IIfcSIUnit si => new IfcForceMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcForceMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcFrequencyMeasure frequencymeasure:
+                case IfcFrequencyMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.FREQUENCYUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcFrequencyMeasure(frequencymeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcFrequencyMeasure(frequencymeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)frequencymeasure,
+                        IIfcSIUnit si => new IfcFrequencyMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcFrequencyMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcIlluminanceMeasure illuminancemeasure:
+                case IfcIlluminanceMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.ILLUMINANCEUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcIlluminanceMeasure(illuminancemeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcIlluminanceMeasure(illuminancemeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)illuminancemeasure,
+                        IIfcSIUnit si => new IfcIlluminanceMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcIlluminanceMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcLengthMeasure lengthmeasure:
+                case IfcInductanceMeasure amount:
+                {
+                    var unit = units.GetUnit(IfcUnitEnum.INDUCTANCEUNIT);
+                    return unit switch
+                    {
+                        IIfcSIUnit si => new IfcInductanceMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcInductanceMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
+                    };
+                }
+
+                case IfcLengthMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.LENGTHUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcLengthMeasure(lengthmeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcLengthMeasure(lengthmeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)lengthmeasure,
+                        IIfcSIUnit si => new IfcLengthMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcLengthMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcLuminousFluxMeasure luminousfluxmeasure:
+                case IfcLuminousFluxMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.LUMINOUSFLUXUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcLuminousFluxMeasure(luminousfluxmeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcLuminousFluxMeasure(luminousfluxmeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)luminousfluxmeasure,
+                        IIfcSIUnit si => new IfcLuminousFluxMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcLuminousFluxMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcLuminousIntensityMeasure luminousintensitymeasure:
+                case IfcLuminousIntensityMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.LUMINOUSINTENSITYUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcLuminousIntensityMeasure(luminousintensitymeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcLuminousIntensityMeasure(luminousintensitymeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)luminousintensitymeasure,
+                        IIfcSIUnit si => new IfcLuminousIntensityMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcLuminousIntensityMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcMassMeasure massmeasure:
+                case IfcMagneticFluxDensityMeasure amount:
+                {
+                    var unit = units.GetUnit(IfcUnitEnum.MAGNETICFLUXDENSITYUNIT);
+                    return unit switch
+                    {
+                        IIfcSIUnit si => new IfcMagneticFluxDensityMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcMagneticFluxDensityMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
+                    };
+                }
+
+                case IfcMagneticFluxMeasure amount:
+                {
+                    var unit = units.GetUnit(IfcUnitEnum.MAGNETICFLUXUNIT);
+                    return unit switch
+                    {
+                        IIfcSIUnit si => new IfcMagneticFluxMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcMagneticFluxMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
+                    };
+                }
+
+                case IfcMassMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.MASSUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcMassMeasure(massmeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcMassMeasure(massmeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)massmeasure,
+                        IIfcSIUnit si => new IfcMassMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcMassMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcPlaneAngleMeasure planeanglemeasure:
+                case IfcNonNegativeLengthMeasure amount:
+                    return amount;
+
+                case IfcPlaneAngleMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.PLANEANGLEUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcPlaneAngleMeasure(planeanglemeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcPlaneAngleMeasure(planeanglemeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)planeanglemeasure,
+                        IIfcSIUnit si => new IfcPlaneAngleMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcPlaneAngleMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcPowerMeasure powermeasure:
+                case IfcPositiveLengthMeasure amount:
+                    return amount;
+
+                case IfcPositivePlaneAngleMeasure amount:
+                    return amount;
+
+                case IfcPowerMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.POWERUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcPowerMeasure(powermeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcPowerMeasure(powermeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)powermeasure,
+                        IIfcSIUnit si => new IfcPowerMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcPowerMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcPressureMeasure pressuremeasure:
+                case IfcPressureMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.PRESSUREUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcPressureMeasure(pressuremeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcPressureMeasure(pressuremeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)pressuremeasure,
+                        IIfcSIUnit si => new IfcPressureMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcPressureMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcRadioActivityMeasure radioactivitymeasure:
+                case IfcRadioActivityMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.RADIOACTIVITYUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcRadioActivityMeasure(radioactivitymeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcRadioActivityMeasure(radioactivitymeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)radioactivitymeasure,
+                        IIfcSIUnit si => new IfcRadioActivityMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcRadioActivityMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcThermodynamicTemperatureMeasure thermodynamictemperaturemeasure:
+                case IfcSectionalAreaIntegralMeasure amount:
+                    return amount;
+
+                case IfcSolidAngleMeasure amount:
+                {
+                    var unit = units.GetUnit(IfcUnitEnum.SOLIDANGLEUNIT);
+                    return unit switch
+                    {
+                        IIfcSIUnit si => new IfcSolidAngleMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcSolidAngleMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
+                    };
+                }
+
+                case IfcThermalConductivityMeasure amount:
+                    return amount;
+
+                case IfcThermodynamicTemperatureMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.THERMODYNAMICTEMPERATUREUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcThermodynamicTemperatureMeasure(thermodynamictemperaturemeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcThermodynamicTemperatureMeasure(thermodynamictemperaturemeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)thermodynamictemperaturemeasure,
+                        IIfcSIUnit si => new IfcThermodynamicTemperatureMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcThermodynamicTemperatureMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcTimeMeasure timemeasure:
+                case IfcTimeMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.TIMEUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcTimeMeasure(timemeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcTimeMeasure(timemeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)timemeasure,
+                        IIfcSIUnit si => new IfcTimeMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcTimeMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
 
-                case IfcVolumeMeasure volumemeasure:
+                case IfcVolumeMeasure amount:
                 {
                     var unit = units.GetUnit(IfcUnitEnum.VOLUMEUNIT);
                     return unit switch
                     {
-                        IIfcSIUnit si => new IfcVolumeMeasure(volumemeasure * si.Power),
-                        IIfcConversionBasedUnit cu => new IfcVolumeMeasure(volumemeasure * (double)cu.ConversionFactor.ValueComponent.Value),
-                        _ => (IIfcValue)volumemeasure,
+                        IIfcSIUnit si => new IfcVolumeMeasure(amount * si.Power),
+                        IIfcConversionBasedUnit cu => new IfcVolumeMeasure(amount * (double)cu.ConversionFactor.ValueComponent.Value),
+                        _ => (IIfcValue)amount,
                     };
                 }
                 default:
-                    throw new NotImplementedException($"Measure not implemented: {measure}");
+                    logger.LogWarning("Measure {measure} is unsupported for normalisation.", measure.GetType().Name);
+                    return measure;
             }
             
         }
