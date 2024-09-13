@@ -49,6 +49,11 @@ namespace Xbim.IDS.Validator.Core
         /// Determines if the service will attempt to upgrade the IDS schema during the validation
         /// </summary>
         public bool PerformInPlaceSchemaUpgrade { get; set; } = true;
+
+        /// <summary>
+        /// Determines if verification will skip over specifications when the model schema is not compatible with the ifcVersion
+        /// </summary>
+        public bool SkipIncompatibleSpecification { get; set; } = false;
     }
 
     

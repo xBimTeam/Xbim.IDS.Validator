@@ -386,13 +386,17 @@ namespace Xbim.IDS.Validator.Core
         /// </summary>
         Fail,
         /// <summary>
-        /// A result could not be determined
+        /// A result has not been determined
         /// </summary>
         Inconclusive,
         /// <summary>
         /// A system or configuration failure prevented the specification from being checked
         /// </summary>
-        Error
+        Error,
+        /// <summary>
+        /// The specification was not run
+        /// </summary>
+        Skipped
     }
     
 

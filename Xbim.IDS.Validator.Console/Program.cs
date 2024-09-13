@@ -114,7 +114,15 @@ class Program
         var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
 
         Console.WriteLine("Validating...");
-        var options = new VerificationOptions { IncludeSubtypes = true, OutputFullEntity = true, AllowDerivedAttributes = true, PerformInPlaceSchemaUpgrade=true };
+        var options = new VerificationOptions
+        {
+            IncludeSubtypes = false,
+            OutputFullEntity = true,
+            AllowDerivedAttributes = true,
+            PerformInPlaceSchemaUpgrade = true,
+            PermittedIdsAuditStatuses = VerificationOptions.AnyState,
+            SkipIncompatibleSpecification = true,
+        };
         var results = await idsValidator.ValidateAgainstIdsAsync(model, ids, logger, OutputRequirement, options);
 
         sw.Stop();
@@ -141,10 +149,11 @@ class Program
         var totalRun = results.ExecutedRequirements.Count;
         var totalPass = results.ExecutedRequirements.Count(r => r.Status == ValidationStatus.Pass);
         var totalInconclusive = results.ExecutedRequirements.Count(r => r.Status == ValidationStatus.Inconclusive);
+        var totalSkipped = results.ExecutedRequirements.Count(r => r.Status == ValidationStatus.Skipped);
         var totalFail = results.ExecutedRequirements.Count(r => r.Status == ValidationStatus.Fail);
         var totalError = results.ExecutedRequirements.Count(r => r.Status == ValidationStatus.Error);
 
-        var totalElementsTested = results.ExecutedRequirements.Sum(r => r.ApplicableResults.Count());
+        var totalElementsTested = results.ExecutedRequirements.Sum(r => r.ApplicableResults.Count(r => r.ValidationStatus != ValidationStatus.Error));
         var totalPassedResults = results.ExecutedRequirements.Sum(r => r.PassedResults.Count());
         var totalFailedResults = results.ExecutedRequirements.Sum(r => r.FailedResults.Count());
         var totalPercent = totalElementsTested > 0 ? ((float)totalPassedResults) / totalElementsTested * 100 : 0;
@@ -155,10 +164,14 @@ class Program
             var passed = req.PassedResults.Count();
             var failed = req.FailedResults.Count();
             var percent = req.ApplicableResults.Count() > 0 ? ((float)passed) / req.ApplicableResults.Count() * 100 : 0;
+            if(req.Status == ValidationStatus.Pass && req.ApplicableResults.Count() == 0)
+            {
+                continue;   // Skip the noise
+            }
             WriteColored(req.Status, StatusIcon(req.Status));
             WriteColored($" {passed,5}", ConsoleColor.White);
             WriteColored($" /", ConsoleColor.Gray);
-            WriteColored($"{req.ApplicableResults.Count,5}", ConsoleColor.White);
+            WriteColored($"{req.ApplicableResults.Count(r => r.ValidationStatus != ValidationStatus.Error),5}", ConsoleColor.White);
             WriteColored($" passed ", ConsoleColor.Gray);
             WriteColored($"{failed,5}", ConsoleColor.Red);
             WriteColored($" failed ", ConsoleColor.Gray);
@@ -180,6 +193,7 @@ class Program
         WriteColored($"Specifications Tested: {totalRun} ", ConsoleColor.White);
         WriteColored($"Pass: {totalPass} ", ConsoleColor.Green);
         WriteColored($"Fail: {totalFail} ", ConsoleColor.Red);
+        WriteColored($"Not Run: {totalSkipped} ", ConsoleColor.Cyan);
         WriteColored($"Incomplete: {totalInconclusive} ", ConsoleColor.Yellow);
         WriteColored($"Error: {totalError} \n\n", ConsoleColor.DarkRed);
 
@@ -244,6 +258,7 @@ class Program
             ValidationStatus.Inconclusive => "❓",
             ValidationStatus.Fail => "❌",
             ValidationStatus.Error => "⚠️",
+            ValidationStatus.Skipped => "💤",
             _ => throw new NotImplementedException(),
         };
     }

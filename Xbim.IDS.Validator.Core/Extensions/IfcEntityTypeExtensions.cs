@@ -109,11 +109,11 @@ namespace Xbim.IDS.Validator.Core.Extensions
         private static string? GetObjectType(IIfcObjectDefinition entity)
         {
             if (entity is IIfcObject obj)
-                return obj.ObjectType?.Value.ToString();
+                return obj.ObjectType?.Value?.ToString();
             else if (entity is IIfcElementType type)
-                return type.ElementType?.Value.ToString();
+                return type.ElementType?.Value?.ToString();
             else if (entity is IIfcTypeProcess process)
-                return process.ProcessType?.Value.ToString();
+                return process.ProcessType?.Value?.ToString();
             else
                 return null;
         }

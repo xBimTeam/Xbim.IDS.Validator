@@ -86,12 +86,10 @@ namespace Xbim.IDS.Validator.Core
                     foreach (var spec in group.Specifications)
                     {
 
-                        var requirementResult = ValidateRequirement(spec, model, userLogger, token);
+                        var requirementResult = ValidateRequirement(spec, model, userLogger, token, verificationOptions);
 
-                        if (requirementResult.Status != ValidationStatus.Error)
-                        {
-                            SetResults(spec, requirementResult);
-                        }
+                        SetResults(spec, requirementResult);
+                        
                         // else inconclusive
 
                         if (requirementCompleted != null)
@@ -199,7 +197,7 @@ namespace Xbim.IDS.Validator.Core
             return Xids.LoadBuildingSmartIDS(idsFile, logger);
         }
 
-        private ValidationRequirement ValidateRequirement(Specification spec, IModel model, ILogger userLogger, CancellationToken token)
+        private ValidationRequirement ValidateRequirement(Specification spec, IModel model, ILogger userLogger, CancellationToken token, VerificationOptions options)
         {
             if (spec is null)
             {
@@ -209,6 +207,13 @@ namespace Xbim.IDS.Validator.Core
 
 
             var requirementResult = new ValidationRequirement(spec);
+            
+            if (options.SkipIncompatibleSpecification && !SpecIsCompatibleWithModel(spec, model))
+            {
+                requirementResult.Status = ValidationStatus.Skipped;
+                
+                return requirementResult;
+            }
 
             try
             {
@@ -295,6 +300,31 @@ namespace Xbim.IDS.Validator.Core
             return requirementResult;
         }
 
+        private bool SpecIsCompatibleWithModel(Specification spec, IModel model)
+        {
+            
+            var specVersions = spec.IfcVersion;
+            if (specVersions == null || specVersions.Count == 0)
+            {
+                return true;
+            }
+            foreach(var version in specVersions)
+            {
+                var compatible = model.SchemaVersion switch
+                {
+                    Xbim.Common.Step21.XbimSchemaVersion.Ifc4 => version == IfcSchemaVersion.IFC4,
+                    Xbim.Common.Step21.XbimSchemaVersion.Ifc4x1 => version == IfcSchemaVersion.IFC4,
+                    Xbim.Common.Step21.XbimSchemaVersion.Ifc2X3 => version == IfcSchemaVersion.IFC2X3,
+                    Xbim.Common.Step21.XbimSchemaVersion.Ifc4x3 => version == IfcSchemaVersion.IFC4X3,
+                    Xbim.Common.Step21.XbimSchemaVersion.Cobie2X4 => true,
+                    _ => false,
+                };
+                if(compatible)
+                    return true;
+            }
+            return false;
+        }
+
         private static void PostProcessAssembliesAndVoids(IModel model, ValidationRequirement requirementResult)
         {
             // Optimisations to help elements thart may not have representation to a parent that can be visualised
@@ -332,8 +362,11 @@ namespace Xbim.IDS.Validator.Core
 
         private static void SetResults(Specification specification, ValidationRequirement validation)
         {
-
-            var cardinality = specification.Cardinality;
+            if (validation.Status == ValidationStatus.Error || validation.Status == ValidationStatus.Skipped)
+            {
+                return;
+            }
+                var cardinality = specification.Cardinality;
             if (cardinality.NoMatchingEntities)  // Prohibited
             {
                 if (validation.ApplicableResults.Any())
