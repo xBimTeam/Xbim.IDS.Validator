@@ -3,10 +3,13 @@ using IdsLib.IdsSchema.IdsNodes;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
 using Xbim.Common;
 using Xbim.IDS.Validator.Common;
 using Xbim.IDS.Validator.Core.Interfaces;
@@ -80,10 +83,12 @@ namespace Xbim.IDS.Validator.Core
                     }
                 }
 
+                var specFilter = verificationOptions.SpecExecutionFilter;
+
                 foreach (var group in idsSpec.SpecificationsGroups)
                 {
                     logger.LogInformation("opening '{group}'", group.Name);
-                    foreach (var spec in group.Specifications)
+                    foreach (var spec in group.Specifications.Where(specFilter))
                     {
 
                         var requirementResult = ValidateRequirement(spec, model, userLogger, token, verificationOptions);
@@ -153,7 +158,7 @@ namespace Xbim.IDS.Validator.Core
                     userLogger.LogError("Unable to open IDS file '{idsFile}", idsFile);
                     return outcome;
                 }
-
+                
                 Xids? idsSpec = LoadIdsFile(idsFile, userLogger, verificationOptions);
                 if (idsSpec == null)
                 {
@@ -177,7 +182,7 @@ namespace Xbim.IDS.Validator.Core
         {
             if (verificationOptions?.PerformInPlaceSchemaUpgrade == true && idsSchemaMigrator.HasMigrationsToApply(idsFile))
             {
-                // Do an in place upgrade to latest schema
+                // Do an in-place upgrade to latest schema
                 // Note: won't support zipped IDS upgrades, JSON etc.
                 var targetVersion = IdsVersion.Ids1_0;
                 var currentVersion = idsSchemaMigrator.GetIdsVersion(idsFile);
@@ -186,6 +191,11 @@ namespace Xbim.IDS.Validator.Core
                 if (idsSchemaMigrator.MigrateToIdsSchemaVersion(idsFile, out var upgraded, targetVersion))
                 {
                     logger.LogInformation("IDS file upgraded in-place to latest schema");
+
+                    if (verificationOptions?.RuntimeTokens?.Any() == true)
+                    {
+                        upgraded = ReplaceTokens(upgraded, verificationOptions.RuntimeTokens);
+                    }
                     return Xids.LoadBuildingSmartIDS(upgraded.Root, logger);
                 }
                 else
@@ -194,7 +204,33 @@ namespace Xbim.IDS.Validator.Core
                 }
 
             }
+            if (verificationOptions?.RuntimeTokens?.Any() == true)
+            {
+                XDocument doc = ReplaceTokens(idsFile, verificationOptions.RuntimeTokens);
+                return Xids.LoadBuildingSmartIDS(doc.Root, logger);
+            }
             return Xids.LoadBuildingSmartIDS(idsFile, logger);
+        }
+
+        private XDocument ReplaceTokens(string idsFile, IDictionary<string,string> tokens) 
+        {
+            XDocument ids = XDocument.Load(idsFile);
+            return ReplaceTokens(ids, tokens);
+        }
+
+        private XDocument ReplaceTokens(XDocument doc, IDictionary<string, string> tokens) 
+        {
+            var tokenKeys = tokens.Keys;
+            logger.LogInformation("Replacing IDS tokens: {tokenKeys}", tokenKeys);
+            var content = doc.ToString();
+            // Naive token replacement. We could be using something like HandleBars.net if we want to optimise or employ control flow concepts etc.
+            foreach (var pair in tokens) 
+            {
+                var key = "{{" + pair.Key + "}}";
+                content = content.Replace(key, pair.Value);
+            }
+            
+            return XDocument.Parse(content);
         }
 
         private ValidationRequirement ValidateRequirement(Specification spec, IModel model, ILogger userLogger, CancellationToken token, VerificationOptions options)
