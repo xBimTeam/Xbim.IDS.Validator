@@ -53,6 +53,9 @@
      <None Update="TestModels\DuplicatedElements.ids">
        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
      </None>
+     <None Update="TestModels\TokenisedSpec.ids">
+       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+     </None>
      <None Update="TestModels\SpecWithoutRequirements-Fail.ids">
        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
      </None>

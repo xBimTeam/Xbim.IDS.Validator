@@ -1,4 +1,10 @@
-﻿using static IdsLib.Audit;
+﻿using System;
+using System.Collections;
+using System.Linq;
+using Xbim.InformationSpecifications;
+using static IdsLib.Audit;
+
+using TokenDictionary = System.Collections.Generic.Dictionary<string, string>;
 
 namespace Xbim.IDS.Validator.Core
 {
@@ -16,7 +22,7 @@ namespace Xbim.IDS.Validator.Core
         /// <summary>
         /// IDS Audit States for relaxed validation
         /// </summary>
-        public const Status Relaxed =  Status.Ok | Status.IdsContentError | Status.IdsStructureWarning;
+        public const Status Relaxed = Status.Ok | Status.IdsContentError | Status.IdsStructureWarning;
 
         /// <summary>
         /// IDS Audit States for Strict validation
@@ -54,6 +60,35 @@ namespace Xbim.IDS.Validator.Core
         /// Determines if verification will skip over specifications when the model schema is not compatible with the ifcVersion
         /// </summary>
         public bool SkipIncompatibleSpecification { get; set; } = false;
+
+        /// <summary>
+        /// Provides a dictionary of tokens that can be replace design-time tokens in the supplied IDS
+        /// </summary>
+        /// <remarks>This may be used to customise project-specific requirements while retaining a project agnostic.
+        ///  Given an IDS file containing an Facet such as:
+        ///  <code>
+        /// <![CDATA[<attribute cardinality="required">
+		///   <name>
+		///     <simpleValue>Name</simpleValue>
+		///   </name>
+		///   <value>
+		///     <simpleValue>{{ProjectName}}</simpleValue>
+        ///   </value>
+        /// </attribute>
+        /// ]]>
+        /// </code>
+        /// the token <c>{{ProjectName}}</c> will be replaced with the string value from the <see cref="TokenDictionary"/>
+        /// </remarks>
+        /// <example>
+        ///
+        /// </example>
+        public TokenDictionary RuntimeTokens { get; set; } = new TokenDictionary();
+
+
+        /// <summary>
+        /// A predicate that allows specifications to be filtered from execution
+        /// </summary>
+        public Func<Specification, bool> SpecExecutionFilter { get; set; } = (_ => true);
     }
 
     

@@ -135,6 +135,36 @@ namespace Xbim.IDS.Validator.Core.Tests
             firstReq.FailedResults.Should().BeEmpty();
         }
 
+        [Fact]
+        public async Task Can_Detokenise()
+        {
+            string modelFile = @"TestModels\SampleHouse4.ifc";
+            string idsScript = @"TestModels\TokenisedSpec.ids";
+
+            var model = BuildModel(modelFile);
+
+            var logger = TestEnvironment.GetXunitLogger<IdsModelValidatorTests>(output);
+
+            var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
+            var options = new VerificationOptions { PermittedIdsAuditStatuses = VerificationOptions.AnyState };
+            var results = await idsValidator.ValidateAgainstIdsAsync(model, idsScript, logger, verificationOptions: options);
+
+            results.Status.Should().Be(ValidationStatus.Fail, "Project name won't match");
+            results.IdsDocument.SpecificationsGroups.First().Author.Should().Match("{{*}}", "Author is tokenised");
+
+            // Act
+            options.RuntimeTokens["ProjectName"] = "Project Number";
+            options.RuntimeTokens["Author"] = "info@xbim.net";
+
+            results = await idsValidator.ValidateAgainstIdsAsync(model, idsScript, logger, verificationOptions: options);
+            //Asssert
+            results.Status.Should().Be(ValidationStatus.Pass, "Token value replaced to match Model");
+            results.IdsDocument.SpecificationsGroups.First().Author.Should().Be("info@xbim.net");
+
+            results.IdsDocument.SpecificationsGroups.First().Milestone.Should().Be("{{Milestone}}", "Not token provided");
+
+        }
+
 
 
         private static IModel BuildModel(string ifcFile)
