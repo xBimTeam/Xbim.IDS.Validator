@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using System.Diagnostics.CodeAnalysis;
 using Xbim.Common.Configuration;
 using Xbim.IDS.Validator.Console;
 using Xbim.IDS.Validator.Core;
@@ -30,6 +31,7 @@ partial class Program
         return result;
     }
 
+    [RequiresUnreferencedCode("Calls Microsoft.Extensions.DependencyInjection.OptionsBuilderConfigurationExtensions.Bind<TOptions>(IConfiguration)")]
     public static HostApplicationBuilder CreateHostBuilder(string[] args)
     {
         var host = Host.CreateApplicationBuilder(args);
