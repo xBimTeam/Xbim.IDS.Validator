@@ -7,6 +7,7 @@ using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using Xbim.Common.Configuration;
 using Xbim.IDS.Validator.Console;
+using Xbim.IDS.Validator.Console.Commands;
 using Xbim.IDS.Validator.Core;
 using Xbim.IDS.Validator.Core.Configuration;
 
@@ -15,7 +16,7 @@ partial class Program
 
     static ILogger? logger;
 
-
+    [RequiresUnreferencedCode("Calls Program.CreateHostBuilder(String[])")]
     static async Task<int> Main(string[] args)
     {
         var host = CreateHostBuilder(args).Build();
@@ -43,6 +44,7 @@ partial class Program
             .AddTransient<VerifyIfcCommand>()
             .AddTransient<IdsAuditCommand>()
             .AddTransient<IdsMigratorCommand>()
+            .AddTransient<IdsDetokeniseCommand>()
 
             .AddOptions<IdsConfig>()
             .Bind(host.Configuration.GetSection(IdsConfig.SectionName));

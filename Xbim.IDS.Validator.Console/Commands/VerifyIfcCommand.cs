@@ -9,13 +9,15 @@ using Xbim.IO.Memory;
 using Xbim.InformationSpecifications;
 using static System.ConsoleColor;
 using Microsoft.Extensions.Options;
+using static Xbim.IDS.Validator.Console.CliOptions;
+using Xbim.IDS.Validator.Console.Internal;
 
-namespace Xbim.IDS.Validator.Console
+namespace Xbim.IDS.Validator.Console.Commands
 {
     /// <summary>
     /// Verifies IFC and COBie models against a set of IDS files.
     /// </summary>
-    internal class VerifyIfcCommand: ICommand
+    internal class VerifyIfcCommand : ICommand
     {
         private readonly IIdsModelValidator idsValidator;
         private readonly ILogger<VerifyIfcCommand> logger;
@@ -30,18 +32,18 @@ namespace Xbim.IDS.Validator.Console
         /// <param name="config"></param>
         public VerifyIfcCommand(IIdsModelValidator validator, ILogger<VerifyIfcCommand> logger, IOptions<IdsConfig> config)
         {
-            this.idsValidator = validator;
+            idsValidator = validator;
             this.logger = logger;
             this.config = config.Value;
         }
 
         public async Task<int> ExecuteAsync(InvocationContext ctx)
         {
-            var idsFiles = ctx.ParseResult.GetValueForOption(CliOptions.IdsFilesOption);
-            var modelFiles = ctx.ParseResult.GetValueForOption(CliOptions.ModelFilesOption);
-            var verbosity = ctx.ParseResult.GetValueForOption(CliOptions.VerbosityOption);
-            var specNameFilter = ctx.ParseResult.GetValueForOption(CliOptions.IdsFilterOption);
-            
+            var idsFiles = ctx.ParseResult.GetValueForOption(VerifyCommand.IdsFilesOption);
+            var modelFiles = ctx.ParseResult.GetValueForArgument(VerifyCommand.ModelFilesArgument);
+            var verbosity = ctx.ParseResult.GetValueForOption(VerbosityOption);
+            var specNameFilter = ctx.ParseResult.GetValueForOption(VerifyCommand.IdsFilterOption);
+
             return await Execute(idsFiles, modelFiles, verbosity, specNameFilter);
         }
 
@@ -83,14 +85,14 @@ namespace Xbim.IDS.Validator.Console
                         console.WriteImportantLine("IDS File: {0}", ids);
                         console.WriteInfoLine("Validating...");
                         var options = new VerificationOptions
-                        {   
+                        {
                             IncludeSubtypes = false,
                             OutputFullEntity = true,
                             AllowDerivedAttributes = true,
                             PerformInPlaceSchemaUpgrade = true,
                             PermittedIdsAuditStatuses = VerificationOptions.AnyState,
                             SkipIncompatibleSpecification = true,
-                            SpecExecutionFilter = (s => string.IsNullOrEmpty(specNameFilter) || s?.Name?.Contains(specNameFilter, StringComparison.InvariantCultureIgnoreCase) != false),
+                            SpecExecutionFilter = s => string.IsNullOrEmpty(specNameFilter) || s?.Name?.Contains(specNameFilter, StringComparison.InvariantCultureIgnoreCase) != false,
                             RuntimeTokens = config.Detokenise ? config.Tokens : new(),
                         };
 
@@ -117,7 +119,7 @@ namespace Xbim.IDS.Validator.Console
             return failedSpecs;
         }
 
-        
+
 
 
         private void WriteSummary(ValidationOutcome results, Stopwatch sw, string ifcFile, string idsFile)
@@ -140,7 +142,7 @@ namespace Xbim.IDS.Validator.Console
             var totalElementsTested = results.ExecutedRequirements.Sum(r => r.ApplicableResults.Count(r => r.ValidationStatus != ValidationStatus.Error));
             var totalPassedResults = results.ExecutedRequirements.Sum(r => r.PassedResults.Count());
             var totalFailedResults = results.ExecutedRequirements.Sum(r => r.FailedResults.Count());
-            var totalPercent = totalElementsTested > 0 ? ((float)totalPassedResults) / totalElementsTested * 100 : 0;
+            var totalPercent = totalElementsTested > 0 ? (float)totalPassedResults / totalElementsTested * 100 : 0;
             console?.WriteInfoLine(White, $"Detailed Results:");
             console?.WriteImportantLine(Gray, " no      Pass /Total  %age   #Fail  Specification");
             console?.WriteImportantLine(Gray, "------ -------------- ------ -----  ---------------------------------------------");
@@ -153,8 +155,8 @@ namespace Xbim.IDS.Validator.Console
                 int? failed = req.FailedResults.Count();
                 failed = failed == 0 ? null : failed;
                 var total = req.ApplicableResults.Count(r => r.ValidationStatus != ValidationStatus.Error);
-                float? percent = req.ApplicableResults.Count() > 0 ? ((float)(passed ?? 0)) / req.ApplicableResults.Count() * 100 : 0;
-                if ((req.Status == ValidationStatus.Pass && req.ApplicableResults.Count() == 0) || req.Status == ValidationStatus.Skipped)
+                float? percent = req.ApplicableResults.Count() > 0 ? (float)(passed ?? 0) / req.ApplicableResults.Count() * 100 : 0;
+                if (req.Status == ValidationStatus.Pass && req.ApplicableResults.Count() == 0 || req.Status == ValidationStatus.Skipped)
                 {
                     percent = null;
                 }
@@ -182,7 +184,7 @@ namespace Xbim.IDS.Validator.Console
                 //.WriteInfo(Gray, $" failed ")
                 ;
 
-            console?    
+            console?
             .WriteImportant(White, $"Specifications Run: {totalRun} ")
             .WriteImportant(Green, $"Pass: {totalPass} ")
             .WriteImportant(Red, $"Fail: {totalFail} ")
@@ -191,7 +193,7 @@ namespace Xbim.IDS.Validator.Console
             .WriteImportant(DarkRed, $"Error: {totalError}")
             .WriteImportant(DarkGreen, $" in {sw.Elapsed.TotalSeconds} secs\n");
             console?.WriteImportantLine(White, "===========================================================================\n");
-            console?.WriteImportantLine(White, $"{ifcFile} against {idsFile}" );
+            console?.WriteImportantLine(White, $"{ifcFile} against {idsFile}");
         }
 
         private Task OutputRequirement(ValidationRequirement req)
@@ -199,7 +201,7 @@ namespace Xbim.IDS.Validator.Console
             var passed = req.PassedResults.Count();
             console.WriteColored(req.Status, req.Status.ToString());
 
-            if(req.Status == ValidationStatus.Fail || req.Status == ValidationStatus.Error)
+            if (req.Status == ValidationStatus.Fail || req.Status == ValidationStatus.Error)
             {
                 console
                     .WriteWarning(Gray, $" : {req.Specification.Name} [{passed} passed from {req.ApplicableResults.Count}]")
@@ -216,7 +218,7 @@ namespace Xbim.IDS.Validator.Console
             if (req.Specification.Cardinality.AllowsRequirements)
                 console?.WriteDetailLine(DarkGreen, $"  📏  It is {req.Specification.Cardinality.Description} that elements {req.Specification.Requirement?.GetRequirementDescription().SplitClauses()}\n");
 
-            
+
             foreach (var itm in req.ApplicableResults)
             {
                 if (req.Status == ValidationStatus.Error)
@@ -302,7 +304,7 @@ namespace Xbim.IDS.Validator.Console
 
         private static IModel OpenCOBie(string file)
         {
-            var mapping = Xbim.IO.CobieExpress.CobieModel.GetMapping();
+            var mapping = IO.CobieExpress.CobieModel.GetMapping();
             mapping.ClassMappings.RemoveAll(m => m.Class == "System");
             mapping.ClassMappings.RemoveAll(m => m.Class.StartsWith("Attribute"));
             mapping.ClassMappings.RemoveAll(m => m.Class.StartsWith("Zone"));
@@ -310,12 +312,12 @@ namespace Xbim.IDS.Validator.Console
             //{
             //    Console.WriteLine(map.Class);
             //}
-            var model = Xbim.IO.CobieExpress.CobieModel.ImportFromTable(file, out string report, mapping);
+            var model = IO.CobieExpress.CobieModel.ImportFromTable(file, out string report, mapping);
 
             return model;
         }
 
-        
+
 
 
 #if SQLite

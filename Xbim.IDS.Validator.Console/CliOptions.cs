@@ -1,30 +1,19 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System.CommandLine;
+﻿using System.CommandLine;
+using Xbim.IDS.Validator.Console.Commands;
+using Xbim.IDS.Validator.Console.Internal;
 
 namespace Xbim.IDS.Validator.Console
 {
     /// <summary>
     /// Defines the CLI options based on System.Commandline conventions
     /// </summary>
-    public class CliOptions
+    public partial class CliOptions
     {
-        public static readonly Option<string[]> IdsFilesOption = new Option<string[]>
-            (aliases: new[] { "--idsFiles", "-ids" },
-            description: "Path to one or more IDS files (*.ids|*.xml)")
-            {
-                Arity = ArgumentArity.OneOrMore,
-                IsRequired = true,
-                AllowMultipleArgumentsPerToken = true
-            };
 
-        public static readonly Option<string[]> ModelFilesOption = new Option<string[]>
-            (aliases: new[] { "--modelFiles", "-m" },
-            description: "Path to one or model files in IFC-SPF format [or experimentally COBie in xls format] (*.ifc|*.ifczip|*.ifcxml)")
-            {
-                Arity = ArgumentArity.OneOrMore,
-                IsRequired = true,
-                AllowMultipleArgumentsPerToken = true
-            };
+        public static readonly Argument<FileInfo[]> IdsFilesArgument = new Argument<FileInfo[]>("idsFiles", "Path to one or more IDS files (*.ids|*.xml)")
+        {
+            Arity = ArgumentArity.OneOrMore,
+        };
 
         public static readonly Option<Verbosity> VerbosityOption = new Option<Verbosity>
             (aliases: new[] { "--vebosity", "-v" },
@@ -33,72 +22,103 @@ namespace Xbim.IDS.Validator.Console
                 Arity = ArgumentArity.ZeroOrOne,
                 IsRequired = false,
             };
+        
+        public static RootCommand SetupCommands(IServiceProvider provider)
+        {
+            VerbosityOption.SetDefaultValue(Verbosity.Detailed);
+            var rootCommand = new RootCommand("Tools for verifying information deliverables in BIM models using IDS")
+            {
+                new VerifyCommand(provider),
+                new AuditCommand(provider),
+                new MigrateCommand(provider),
+                new DetokeniseCommand(provider),
+            };
 
-        public static readonly Option<string> IdsFilterOption = new Option<string>
-            (aliases: new[] { "--filter", "-f" },
-            description: "Only IDS specs matching this filter")
+            rootCommand.AddGlobalOption(VerbosityOption);
+
+            return rootCommand;
+        }
+
+
+        /// <summary>
+        /// Defines the 'verify' SubCommand
+        /// </summary>
+        public class VerifyCommand : BaseCommand
+        {
+            public static readonly Argument<string[]> ModelFilesArgument = new Argument<string[]>
+            ("models", "Path to one or model files in IFC-SPF format [or experimentally COBie in xls format] (*.ifc|*.ifczip|*.ifcxml)")
+            {
+                Arity = ArgumentArity.OneOrMore,
+            };
+
+            public static readonly Option<string[]> IdsFilesOption = new Option<string[]>
+            (aliases: new[] { "--idsFiles", "-ids" },
+            description: "Path to one or more IDS files (*.ids|*.xml)")
+            {
+                Arity = ArgumentArity.OneOrMore,
+                IsRequired = true,
+                AllowMultipleArgumentsPerToken = true
+            };
+
+            public static readonly Option<string> IdsFilterOption = new Option<string>
+                (aliases: new[] { "--filter", "-f" },
+                description: "Only IDS specs matching this filter")
             {
                 Arity = ArgumentArity.ZeroOrOne,
                 IsRequired = false,
             };
 
+            public VerifyCommand(IServiceProvider provider) : base(provider, "verify", "Verify IFC and COBie models using BuildingSMART IDS")
+            {
+                this.AddArgument(ModelFilesArgument);
+                this.AddOption(IdsFilesOption);
+                this.AddOption(IdsFilterOption);
 
-        public static RootCommand SetupCommands(IServiceProvider provider)
+                SetCommandHandler<VerifyIfcCommand>();
+            }
+        }
+
+        /// <summary>
+        /// Defines the 'audit' sub-command
+        /// </summary>
+        public class AuditCommand : BaseCommand
         {
-            var rootCommand = new RootCommand()
+            public AuditCommand(IServiceProvider provider) : base(provider, "audit", "Check IDS files adhere to the latest standards")
             {
-                Description = "Tools for verifying information deliverables in BIM models using IDS",
-            };
+                this.AddArgument(CliOptions.IdsFilesArgument);
+                SetCommandHandler<IdsAuditCommand>();
+            }
+        }
 
-            VerbosityOption.SetDefaultValue(Verbosity.Detailed);
-           
-            var modelVerifyCommand = new Command("verify", "Verify IFC and COBie models using BuildingSMART IDS")
+        /// <summary>
+        /// Defines the 'migrate' sub-command
+        /// </summary>
+        public class MigrateCommand : BaseCommand
+        {
+            public MigrateCommand(IServiceProvider provider) : base(provider,"migrate", "Migrate IDS files from older schemas to IDS1.0")
             {
-                IdsFilesOption,
-                ModelFilesOption,
-                VerbosityOption,
-                IdsFilterOption
-            };
+                this.AddArgument(CliOptions.IdsFilesArgument);
 
-            modelVerifyCommand.SetHandler(async (ctx) =>
+                SetCommandHandler<IdsMigratorCommand>();
+            }
+        }
+
+        /// <summary>
+        /// Defines the 'detokenise' sub-command
+        /// </summary>
+        public class DetokeniseCommand : BaseCommand
+        {
+            public static readonly Argument<FileInfo> IdsTemplateFileArgument = new Argument<FileInfo>("template", "An IDS template file (*.ids|*.xml)");
+            public static readonly Argument<FileInfo> IdsOutputFileArgument = new Argument<FileInfo>("template", "An IDS template file (*.ids|*.xml)");
+
+            public DetokeniseCommand(IServiceProvider provider) : base(provider, "detokenise", "Detokenise IDS files replacing tokens (e.g. {{ProjectCode}} ) in an IDS template with values of your choosing")
+
             {
-                var command = provider.GetRequiredService<VerifyIfcCommand>();
-                var result = await command.ExecuteAsync(ctx);
-                ctx.ExitCode = result;
-            });
+                this.AddArgument(IdsTemplateFileArgument);
+                this.AddArgument(IdsOutputFileArgument);
 
-            var idsAuditCommand = new Command("audit", "Check IDS files adhere to the latest standards")
-            {
-                IdsFilesOption,
-                VerbosityOption
-            };
-
-            idsAuditCommand.SetHandler(async (ctx) =>
-            {
-                var command = provider.GetRequiredService<IdsAuditCommand>();
-                var result = await command.ExecuteAsync(ctx);
-                ctx.ExitCode = result;
-            });
-
-            var idsMigrateCommand = new Command("migrate", "Migrate IDS files from older schemas to IDS1.0")
-            {
-                IdsFilesOption,
-                VerbosityOption
-            };
-
-            idsMigrateCommand.SetHandler(async (ctx) =>
-            {
-                var command = provider.GetRequiredService<IdsMigratorCommand>();
-                var result = await command.ExecuteAsync(ctx);
-                ctx.ExitCode = result;
-            });
-
-
-            rootCommand.Add(modelVerifyCommand);
-            rootCommand.Add(idsAuditCommand);
-            rootCommand.Add(idsMigrateCommand);
-
-            return rootCommand;
+                SetCommandHandler<IdsDetokeniseCommand>();
+            }
         }
     }
 }

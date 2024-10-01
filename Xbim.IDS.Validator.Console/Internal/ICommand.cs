@@ -1,6 +1,6 @@
 ﻿using System.CommandLine.Invocation;
 
-namespace Xbim.IDS.Validator.Console
+namespace Xbim.IDS.Validator.Console.Internal
 {
     internal interface ICommand
     {
