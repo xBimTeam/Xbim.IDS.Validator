@@ -10,6 +10,12 @@
     <!-- Set True to use Flex SQLite IModel implementation inn Console app-->
     <SupportSQLite>False</SupportSQLite>
     <AssemblyName>ids-verify</AssemblyName>
+
+    <PublishSingleFile>true</PublishSingleFile>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>partial</TrimMode>
 	</PropertyGroup>
 
   <PropertyGroup Condition="'$(SupportSQLite)' == 'True'">

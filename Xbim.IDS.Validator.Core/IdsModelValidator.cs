@@ -12,6 +12,7 @@ using System.Xml;
 using System.Xml.Linq;
 using Xbim.Common;
 using Xbim.IDS.Validator.Common;
+using Xbim.IDS.Validator.Common.Interfaces;
 using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
@@ -25,6 +26,7 @@ namespace Xbim.IDS.Validator.Core
     {
         private readonly IIdsSchemaMigrator idsSchemaMigrator;
         private readonly IIdsValidator schemaValidator;
+        private readonly IIdsDetokeniser detokeniser;
         private readonly ILogger logger;
 
         /// <summary>
@@ -33,12 +35,14 @@ namespace Xbim.IDS.Validator.Core
         /// <param name="modelBinder"></param>
         /// <param name="idsSchemaMigrator"></param>
         /// <param name="schemaValidator"></param>
+        /// <param name="detokeniser"></param>
         /// <param name="logger"></param>
-        public IdsModelValidator(IIdsModelBinder modelBinder, IIdsSchemaMigrator idsSchemaMigrator, IIdsValidator schemaValidator, ILogger<IdsModelValidator> logger)
+        public IdsModelValidator(IIdsModelBinder modelBinder, IIdsSchemaMigrator idsSchemaMigrator, IIdsValidator schemaValidator, IIdsDetokeniser detokeniser, ILogger<IdsModelValidator> logger)
         {
             ModelBinder = modelBinder;
             this.idsSchemaMigrator = idsSchemaMigrator;
             this.schemaValidator = schemaValidator;
+            this.detokeniser = detokeniser;
             this.logger = logger;
         }
 
@@ -194,7 +198,7 @@ namespace Xbim.IDS.Validator.Core
 
                     if (verificationOptions?.RuntimeTokens?.Any() == true)
                     {
-                        upgraded = ReplaceTokens(upgraded, verificationOptions.RuntimeTokens);
+                        upgraded = detokeniser.ReplaceTokens(upgraded, verificationOptions.RuntimeTokens);
                     }
                     return Xids.LoadBuildingSmartIDS(upgraded.Root, logger);
                 }
@@ -206,31 +210,10 @@ namespace Xbim.IDS.Validator.Core
             }
             if (verificationOptions?.RuntimeTokens?.Any() == true)
             {
-                XDocument doc = ReplaceTokens(idsFile, verificationOptions.RuntimeTokens);
+                XDocument doc = detokeniser.ReplaceTokens(new FileInfo(idsFile), verificationOptions.RuntimeTokens);
                 return Xids.LoadBuildingSmartIDS(doc.Root, logger);
             }
             return Xids.LoadBuildingSmartIDS(idsFile, logger);
-        }
-
-        private XDocument ReplaceTokens(string idsFile, IDictionary<string,string> tokens) 
-        {
-            XDocument ids = XDocument.Load(idsFile);
-            return ReplaceTokens(ids, tokens);
-        }
-
-        private XDocument ReplaceTokens(XDocument doc, IDictionary<string, string> tokens) 
-        {
-            var tokenKeys = tokens.Keys;
-            logger.LogInformation("Replacing IDS tokens: {tokenKeys}", tokenKeys);
-            var content = doc.ToString();
-            // Naive token replacement. We could be using something like HandleBars.net if we want to optimise or employ control flow concepts etc.
-            foreach (var pair in tokens) 
-            {
-                var key = "{{" + pair.Key + "}}";
-                content = content.Replace(key, pair.Value);
-            }
-            
-            return XDocument.Parse(content);
         }
 
         private ValidationRequirement ValidateRequirement(Specification spec, IModel model, ILogger userLogger, CancellationToken token, VerificationOptions options)

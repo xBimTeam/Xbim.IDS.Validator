@@ -4,8 +4,10 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using System.Diagnostics.CodeAnalysis;
 using Xbim.Common.Configuration;
 using Xbim.IDS.Validator.Console;
+using Xbim.IDS.Validator.Console.Commands;
 using Xbim.IDS.Validator.Core;
 using Xbim.IDS.Validator.Core.Configuration;
 
@@ -14,7 +16,7 @@ partial class Program
 
     static ILogger? logger;
 
-
+    [RequiresUnreferencedCode("Calls Program.CreateHostBuilder(String[])")]
     static async Task<int> Main(string[] args)
     {
         var host = CreateHostBuilder(args).Build();
@@ -30,6 +32,7 @@ partial class Program
         return result;
     }
 
+    [RequiresUnreferencedCode("Calls Microsoft.Extensions.DependencyInjection.OptionsBuilderConfigurationExtensions.Bind<TOptions>(IConfiguration)")]
     public static HostApplicationBuilder CreateHostBuilder(string[] args)
     {
         var host = Host.CreateApplicationBuilder(args);
@@ -41,6 +44,7 @@ partial class Program
             .AddTransient<VerifyIfcCommand>()
             .AddTransient<IdsAuditCommand>()
             .AddTransient<IdsMigratorCommand>()
+            .AddTransient<IdsDetokeniseCommand>()
 
             .AddOptions<IdsConfig>()
             .Bind(host.Configuration.GetSection(IdsConfig.SectionName));

@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.CommandLine.Invocation;
+using Xbim.IDS.Validator.Console.Internal;
 using Xbim.IDS.Validator.Core.Interfaces;
 
-namespace Xbim.IDS.Validator.Console
+namespace Xbim.IDS.Validator.Console.Commands
 {
 
     /// <summary>
@@ -18,22 +19,23 @@ namespace Xbim.IDS.Validator.Console
             this.migrator = migrator;
             this.logger = logger;
         }
-        
+
 
         public async Task<int> ExecuteAsync(InvocationContext context)
         {
-            var ids = context.ParseResult.GetValueForOption(CliOptions.IdsFilesOption);
+            var ids = context.ParseResult.GetValueForArgument(CliOptions.IdsFilesArgument);
             var verbosity = context.ParseResult.GetValueForOption(CliOptions.VerbosityOption);
 
             return await Execute(ids, verbosity);
         }
 
-        public Task<int> Execute(string[] idsFiles, Verbosity verbosity)
+        public Task<int> Execute(FileInfo[] idsFiles, Verbosity verbosity)
         {
             var console = new ConsoleLogger(verbosity);
             int filesUpdated = 0;
-            foreach (var idsFile in idsFiles)
+            foreach (var idsFileInfo in idsFiles)
             {
+                var idsFile = idsFileInfo.FullName;
                 console.WriteInfoLine(ConsoleColor.White, "Migrating IDS file {0}", idsFile);
                 if (migrator.HasMigrationsToApply(idsFile))
                 {
@@ -49,8 +51,8 @@ namespace Xbim.IDS.Validator.Console
                 {
                     console.WriteInfoLine("IDS {0} is already on the latest schema", idsFile);
                 }
-                
-                
+
+
             }
 
             return Task.FromResult(filesUpdated);

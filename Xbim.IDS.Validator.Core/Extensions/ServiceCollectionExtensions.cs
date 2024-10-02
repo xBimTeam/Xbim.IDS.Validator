@@ -36,7 +36,8 @@ namespace Xbim.IDS.Validator.Core
             services.AddTransient<IIdsModelValidator, IdsModelValidator>();
             services.AddTransient<IIdsValidator, IdsValidator>();
             services.AddTransient<IIdsSchemaMigrator, IdsSchemaMigrator>();
-            
+            services.AddTransient<IIdsDetokeniser, IdsDetokeniser>();
+
             services.AddSingleton<IIdsFacetBinderFactory, IdsFacetBinderFactory>();
             services.AddSingleton<IValueMapper, IdsValueMapper>();
             services.AddSingleton<IValueMapProvider, IdsValueMapProvider>();
