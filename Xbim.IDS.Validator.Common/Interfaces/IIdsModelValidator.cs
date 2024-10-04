@@ -35,7 +35,7 @@ namespace Xbim.IDS.Validator.Core.Interfaces
         /// <param name="verificationOptions"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        Task<ValidationOutcome> ValidateAgainstIdsAsync(IModel model, string idsFile, ILogger logger, Func<ValidationRequirement, Task>? requirementCompleted = default, VerificationOptions? verificationOptions = default, CancellationToken token = default);
+        Task<ValidationOutcome> ValidateAgainstIdsAsync(IModel model, string idsFile, ILogger logger, Func<ValidationRequirement, SpecificationsGroup, Task>? requirementCompleted = default, VerificationOptions? verificationOptions = default, CancellationToken token = default);
         /// <summary>
         /// Runs the IDS validation asynchronously against the supplied model
         /// </summary>
@@ -46,7 +46,7 @@ namespace Xbim.IDS.Validator.Core.Interfaces
         /// <param name="verificationOptions"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        Task<ValidationOutcome> ValidateAgainstXidsAsync(IModel model, Xids idsSpec, ILogger logger, Func<ValidationRequirement, Task>? requirementCompleted = default, VerificationOptions? verificationOptions = null,
+        Task<ValidationOutcome> ValidateAgainstXidsAsync(IModel model, Xids idsSpec, ILogger logger, Func<ValidationRequirement, SpecificationsGroup, Task>? requirementCompleted = default, VerificationOptions? verificationOptions = null,
             CancellationToken token = default);
     }
 }
