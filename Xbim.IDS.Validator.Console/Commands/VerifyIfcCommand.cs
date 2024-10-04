@@ -196,7 +196,7 @@ namespace Xbim.IDS.Validator.Console.Commands
             console?.WriteImportantLine(White, $"{ifcFile} against {idsFile}");
         }
 
-        private Task OutputRequirement(ValidationRequirement req)
+        private Task OutputRequirement(ValidationRequirement req,SpecificationsGroup specificationsGroup)
         {
             var passed = req.PassedResults.Count();
             console.WriteColored(req.Status, req.Status.ToString());

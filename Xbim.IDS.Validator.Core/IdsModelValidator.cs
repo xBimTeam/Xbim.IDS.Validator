@@ -56,7 +56,7 @@ namespace Xbim.IDS.Validator.Core
         }
 
         /// <inheritdoc/>
-        public async Task<ValidationOutcome> ValidateAgainstXidsAsync(IModel model, Xids idsSpec, ILogger userLogger, Func<ValidationRequirement, Task>? requirementCompleted, VerificationOptions? verificationOptions = null,
+        public async Task<ValidationOutcome> ValidateAgainstXidsAsync(IModel model, Xids idsSpec, ILogger userLogger, Func<ValidationRequirement, SpecificationsGroup, Task>? requirementCompleted, VerificationOptions? verificationOptions = null,
             CancellationToken token = default)
         {
             if (userLogger is null)
@@ -104,7 +104,7 @@ namespace Xbim.IDS.Validator.Core
                         if (requirementCompleted != null)
                         {
                             // report progress
-                            await requirementCompleted(requirementResult);
+                            await requirementCompleted(requirementResult, group);
                         }
                         outcome.ExecutedRequirements.Add(requirementResult);
 
@@ -143,7 +143,7 @@ namespace Xbim.IDS.Validator.Core
         }
 
         /// <inheritdoc/>
-        public async Task<ValidationOutcome> ValidateAgainstIdsAsync(IModel model, string idsFile, ILogger userLogger, Func<ValidationRequirement, Task>? requirementCompleted, VerificationOptions? verificationOptions = null,
+        public async Task<ValidationOutcome> ValidateAgainstIdsAsync(IModel model, string idsFile, ILogger userLogger, Func<ValidationRequirement, SpecificationsGroup, Task>? requirementCompleted, VerificationOptions? verificationOptions = null,
             CancellationToken token = default)
         {
             if (userLogger is null)
