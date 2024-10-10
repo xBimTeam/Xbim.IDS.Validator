@@ -57,11 +57,11 @@ namespace Xbim.IDS.Validator.Core.Binders
 
 
             var expression = baseExpression;
-            // When an Ifc Type has not yet been specified, we start with the RelDefinesByProperties
+            // When an Ifc Type has not yet been specified, we start with the IIfcPropertySetDefinition
 
             if (expression.Type.IsInterface && typeof(IEntityCollection).IsAssignableFrom(expression.Type))
             {
-                expression = BindIfcExpressType(expression, Model.Metadata.GetExpressType(typeof(IIfcRelDefinesByProperties)), false);
+                expression = BindIfcExpressType(expression, Model.Metadata.GetExpressType(typeof(IIfcPropertySetDefinition)), true);
                 expression = BindPropertySelection(expression, psetFacet);
                 return expression;
             }
@@ -450,8 +450,8 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             var facetExpr = Expression.Constant(psetFacet, typeof(IfcPropertyFacet));
             // Expression we're building
-            // var psetRelDefines = model.Instances.OfType<IIfcRelDefinesByProperties>();
-            // var entities = IfcExtensions.GetIfcObjectsWithProperties(psetRelDefines, facet);
+            // var psets = model.Instances.OfType<IIfcPropertySetDefinition>();
+            // var entities = IfcExtensions.GetIfcObjectsWithProperties(psets, facet);
 
             var propsMethod = ExpressionHelperMethods.EnumerableIfcObjectsWithProperties;
 
@@ -489,7 +489,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             else if (typeof(IIfcObjectDefinition).IsAssignableFrom(collectionType))
             {
-                // We could have a mixture of Objects and Types. (e.g. when starting IfcRelDefinesByProperties).
+                // We could have a mixture of Objects and Types. (e.g. when starting IIfcPropertySetDefinition).
                 // So have to cast and check objects and Types separately and concat the results.
                 // Use case, all elements with IsExternal=True which are also LoadBearing, could be a mix of Objects and Types
 
