@@ -27,7 +27,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
             m.GetParameters().Length == 1 &&
             m.ReturnType.GetGenericTypeDefinition() == typeof(IEnumerable<>));
         
-        private static MethodInfo _enumerableIfcObjectsWithPropertiesMethod = typeof(IfcPropertiesExtensions).GetMethod(nameof(IfcPropertiesExtensions.GetIfcObjectsWithProperties), new Type[] { typeof(IEnumerable<IIfcRelDefinesByProperties>), typeof(IfcPropertyFacet)});
+        private static MethodInfo _enumerableIfcObjectsWithPropertiesMethod = typeof(IfcPropertiesExtensions).GetMethod(nameof(IfcPropertiesExtensions.GetIfcObjectsWithProperties), new Type[] { typeof(IEnumerable<IIfcPropertySetDefinition>), typeof(IfcPropertyFacet)});
         private static MethodInfo _enumerableIfcAssociatesClassificationMethod = typeof(IfcClassificationExtensions).GetMethod(nameof(IfcClassificationExtensions.GetIfcObjectsUsingClassification), new Type[] { typeof(IEnumerable<IIfcRelAssociatesClassification>), typeof(IfcClassificationFacet) });
         private static MethodInfo _enumerableIfcMaterialSelectorMethod = typeof(IfcMaterialsExtensions).GetMethod(nameof(IfcMaterialsExtensions.GetIfcObjectsUsingMaterials), new Type[] { typeof(IEnumerable<IIfcRelAssociatesMaterial>), typeof(MaterialFacet) });
         private static MethodInfo _enumerableIfcPartofRelatedMethod = typeof(IfcRelationsExtensions).GetMethod(nameof(IfcRelationsExtensions.GetRelatedIfcObjects), new Type[] { typeof(IEnumerable<IIfcRelationship>), typeof(PartOfFacet) });

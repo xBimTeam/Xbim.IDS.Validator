@@ -14,19 +14,20 @@ namespace Xbim.IDS.Validator.Core.Extensions
         /// <summary>
         /// Gets all <see cref="IIfcObjectDefinition"/>s defined by the propertyset and name
         /// </summary>
-        /// <param name="relDefines"></param>
+        /// <param name="pset"></param>
         /// <param name="facet"></param>
         /// <returns></returns>
-        public static IEnumerable<IIfcObjectDefinition> GetIfcObjectsWithProperties(this IEnumerable<IIfcRelDefinesByProperties> relDefines,
+        public static IEnumerable<IIfcObjectDefinition> GetIfcObjectsWithProperties(this IEnumerable<IIfcPropertySetDefinition> pset,
             IfcPropertyFacet facet)
         {
-            if (relDefines is null)
+
+            if (pset is null)
             {
-                throw new ArgumentNullException(nameof(relDefines));
+                throw new ArgumentNullException(nameof(pset));
             }
 
-            return relDefines.FilterByPropertyFacet(facet)
-                    .SelectMany(r => r.RelatedObjects);
+            return pset.FilterByPropertyFacet(facet)
+                    .SelectMany(r => r.DefinesType.Union((IEnumerable<IIfcObjectDefinition>)r.DefinesOccurrence.SelectMany(o =>o.RelatedObjects)));
         }
 
         /// <summary>

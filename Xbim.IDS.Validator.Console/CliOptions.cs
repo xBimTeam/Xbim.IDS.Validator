@@ -109,7 +109,7 @@ namespace Xbim.IDS.Validator.Console
         public class DetokeniseCommand : BaseCommand
         {
             public static readonly Argument<FileInfo> IdsTemplateFileArgument = new Argument<FileInfo>("template", "An IDS template file (*.ids|*.xml)");
-            public static readonly Argument<FileInfo> IdsOutputFileArgument = new Argument<FileInfo>("template", "An IDS template file (*.ids|*.xml)");
+            public static readonly Argument<FileInfo> IdsOutputFileArgument = new Argument<FileInfo>("output", "An IDS template file (*.ids|*.xml)");
 
             public DetokeniseCommand(IServiceProvider provider) : base(provider, "detokenise", "Detokenise IDS files replacing tokens (e.g. {{ProjectCode}} ) in an IDS template with values of your choosing")
 
