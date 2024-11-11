@@ -16,7 +16,7 @@ namespace Xbim.IDS.Validator.Console
         };
 
         public static readonly Option<Verbosity> VerbosityOption = new Option<Verbosity>
-            (aliases: new[] { "--vebosity", "-v" },
+            (aliases: new[] { "--verbosity", "-v" },
             description: "Verbosity of the output")
             {
                 Arity = ArgumentArity.ZeroOrOne,

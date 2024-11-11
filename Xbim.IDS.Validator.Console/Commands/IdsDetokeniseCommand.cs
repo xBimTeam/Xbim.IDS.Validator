@@ -8,7 +8,7 @@ using Xbim.IDS.Validator.Core.Interfaces;
 namespace Xbim.IDS.Validator.Console.Commands
 {
     /// <summary>
-    /// Audits IDS files against the IDS 1.0 standards using ids-lib
+    /// Detokenises IDS files replacing 'Handlebar' style tokens with a value supplied at runtime
     /// </summary>
     internal class IdsDetokeniseCommand : ICommand
     {
