@@ -116,7 +116,7 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Tests
 
             var ifcbinder = new IfcTypeFacetBinder(IfcTypeLogger);
             ifcbinder.Initialise(BinderContext);
-            var attrbinder = new COBieAttributeFacetBinder(GetLogger<COBieAttributeFacetBinder>(), GetValueMapper());
+            var attrbinder = new COBieColumnFacetBinder(GetLogger<COBieColumnFacetBinder>(), GetValueMapper());
             attrbinder.Initialise(BinderContext);
             attrbinder.SetOptions(new VerificationOptions { AllowDerivedAttributes = true, IncludeSubtypes = true }) ;
             // Act
@@ -134,7 +134,7 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Tests
         [InlineData(typeof(IfcClassificationFacet))]
         [InlineData(typeof(PartOfFacet))]
         //[InlineData(typeof(AttributeFacet))]
-        [InlineData(typeof(IfcPropertyFacet))]
+        //[InlineData(typeof(IfcPropertyFacet))]
         [Theory]
         public void Cobie_Cannot_Query_By_Unsupported_Facets(Type facetType)
         {

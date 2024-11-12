@@ -23,11 +23,11 @@ namespace Xbim.IDS.Validator.Core.Configuration
             builder.Services
                 .AddSingleton<IValueMapProvider, COBieValueMapProvider>()
 
-                .RegisterIdsBinder<AttributeFacet, COBieAttributeFacetBinder>(XbimSchemaVersion.Cobie2X4)
+                .RegisterIdsBinder<AttributeFacet, COBieColumnFacetBinder>(XbimSchemaVersion.Cobie2X4)
                 .RegisterIdsBinder<IfcTypeFacet, COBieTableFacetBinder>(XbimSchemaVersion.Cobie2X4)
+                .RegisterIdsBinder<IfcPropertyFacet, COBieAttributesSheetFacetBinder>(XbimSchemaVersion.Cobie2X4)
                 // Rest are Not supported currently
                 .RegisterIdsBinder<IfcClassificationFacet, NotSupportedBinder<IfcClassificationFacet>>(XbimSchemaVersion.Cobie2X4)
-                .RegisterIdsBinder<IfcPropertyFacet, NotSupportedBinder<IfcPropertyFacet>>(XbimSchemaVersion.Cobie2X4)
                 .RegisterIdsBinder<MaterialFacet, NotSupportedBinder<MaterialFacet>>(XbimSchemaVersion.Cobie2X4)
                 .RegisterIdsBinder<PartOfFacet, NotSupportedBinder<PartOfFacet>>(XbimSchemaVersion.Cobie2X4)
                 ;

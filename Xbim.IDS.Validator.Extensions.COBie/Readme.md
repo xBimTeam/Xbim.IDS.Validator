@@ -47,7 +47,7 @@ Ultimately, in place of a IDS facet specifying an IFC entity type such as IFCDOO
 
 ## Which IDS Facet Types work with COBie?
 
-Currently only Entity Type and Attribute are supported - however this alone gives access to the whole COBie domain. Other
+Currently only Entity Type (Sheet), Attribute (Column) and Properties (Attributes sheet) are supported - however this alone gives access to the whole COBie domain. Other
 facets such as Classification can be expressed in terms of these two facets, and will be introduced in a future update for 
 completeness.
 
@@ -55,8 +55,8 @@ completeness.
 | --------- | ---------------- |
 | Entity Type | Cobie Table      |
 | Attribute | Cobie Field/Column |
+| Property | *WIP:** Mapped to COBie Attributes sheet |
 | Classification | **TO DO:** Mapped through to Cobie Category |
-| Property | **TO DO:** Mapped to Attribute table |
 | Part Of | **TO DO:** Mapped Assemblies / Spatial tables |
 | Material | Not supported? |
 
@@ -203,8 +203,8 @@ This is experimental addon module. It currently support just two of the six IDS 
 
 - [x] IFC Entity Type (Cobie Sheet/Table)
 - [x] Attribute (COBie column)
+- [x] Properties - Permits verification against Attributes relating to a COBie entity (COBieAsset)
 - [ ] Classification - TODO map to Category
-- [ ] Properties - TODO map to Attributes relating to an entity
 - [ ] PartOf - TODO handle Assemblies, Spatial etc
 - [ ] Material - n/a : Not part of COBie?
 

@@ -14,6 +14,9 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Tests.TestCases
         [InlineData(@"TestCases/xbim/pass-cobie_models_work.ids", ValidationStatus.Pass)]
         [InlineData(@"TestCases/xbim/pass-cobie_checks_ext_id_length.ids", ValidationStatus.Pass)]
         [InlineData(@"TestCases/xbim/pass-cobie_models_can_verify.ids", ValidationStatus.Pass)]
+        [InlineData(@"TestCases/xbim/pass-cobie_verifies_missing_references.ids", ValidationStatus.Pass)]
+        [InlineData(@"TestCases/xbim/pass-cobie_models_support_attribute_verification.ids", ValidationStatus.Pass)]
+        [InlineData(@"TestCases/xbim/fail-cobie_models_support_attribute_verification.ids", ValidationStatus.Fail)]
         [Theory]
         public async Task COBieSupported(string idsFile, ValidationStatus expected)
         {

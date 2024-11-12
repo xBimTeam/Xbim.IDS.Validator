@@ -22,8 +22,8 @@ namespace Xbim.IDS.Validator.Core.Binders
 
     public class PsetFacetBinder : FacetBinderBase<IfcPropertyFacet>
     {
-        private readonly ILogger<PsetFacetBinder> logger;
-        private readonly IValueMapper valueMapper;
+        protected readonly ILogger<PsetFacetBinder> logger;
+        protected readonly IValueMapper valueMapper;
 
         public PsetFacetBinder(ILogger<PsetFacetBinder> logger, IValueMapper valueMapper) : base(logger)
         {
@@ -692,7 +692,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
 
 
-        private bool ValueSatifiesConstraint(IfcPropertyFacet pf, object? value, ValidationContext<IfcPropertyFacet> ctx)
+        protected bool ValueSatifiesConstraint(IfcPropertyFacet pf, object? value, ValidationContext<IfcPropertyFacet> ctx)
         {
             if (pf.PropertyValue != null)
             {
