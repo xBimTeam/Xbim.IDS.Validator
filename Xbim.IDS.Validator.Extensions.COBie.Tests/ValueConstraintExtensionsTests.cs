@@ -1,10 +1,10 @@
-﻿using Xbim.InformationSpecifications;
-using Xbim.IDS.Validator.Core.Extensions;
-using FluentAssertions;
-using Xbim.IO.CobieExpress;
-using Xbim.IDS.Validator.Core.Configuration;
+﻿using FluentAssertions;
 using Xbim.CobieExpress;
 using Xbim.IDS.Validator.Common.Interfaces;
+using Xbim.IDS.Validator.Core.Configuration;
+using Xbim.IDS.Validator.Core.Extensions;
+using Xbim.InformationSpecifications;
+using Xbim.IO.CobieExpress;
 
 namespace Xbim.IDS.Validator.Extensions.COBie.Tests
 {
@@ -68,6 +68,7 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Tests
 
 
         }
+
 
         protected IValueMapper GetValueMapper()
         {

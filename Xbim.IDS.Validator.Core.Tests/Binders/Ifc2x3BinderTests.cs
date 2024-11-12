@@ -77,7 +77,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 propertyFacet.PropertyValue.AddAccepted(new ExactConstraint(value?.ToString()));
             var ifcbinder = new IfcTypeFacetBinder(GetLogger<IfcTypeFacetBinder>());
             ifcbinder.Initialise(BinderContext);
-            var psetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>());
+            var psetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>(), GetValueMapper());
             psetbinder.Initialise(BinderContext);
             // Act
             var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
@@ -123,9 +123,9 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             if (value2 != null)
                 propertyFacet2.PropertyValue.AddAccepted(new ExactConstraint(value2?.ToString()));
 
-            var psetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>());
+            var psetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>(), GetValueMapper());
             psetbinder.Initialise(BinderContext);
-            var psetbinder2 = new PsetFacetBinder(GetLogger<PsetFacetBinder>());
+            var psetbinder2 = new PsetFacetBinder(GetLogger<PsetFacetBinder>(), GetValueMapper());
             psetbinder2.Initialise(BinderContext);
             // Act
             var expression = psetbinder.BindSelectionExpression(query.InstancesExpression, propertyFacet);
@@ -180,7 +180,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
            ConstraintType valueConstraint = ConstraintType.Exact
            )
         {
-            var psetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>());
+            var psetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>(), GetValueMapper());
             psetbinder.Initialise(BinderContext);
             AssertIfcPropertyFacetQuery(psetbinder, psetName, propName, propValue, expectedCount, psetConstraint, propConstraint, valueConstraint);
 

@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using Xbim.Common;
 using Xbim.Common.Metadata;
 using Xbim.Common.Step21;
+using Xbim.IDS.Validator.Common.Interfaces;
 using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.IDS.Validator.Core.Interfaces;
@@ -379,6 +380,8 @@ namespace Xbim.IDS.Validator.Core.Binders
             //    var units = GetUnits();
             //    result = derived.NormaliseUnits(units);
             //}
+
+            // TODO: use ValueMapper
             if (result is IIfcValue v)
             {
                 result = v.Value;   // Unpack the primitive object
@@ -553,6 +556,23 @@ namespace Xbim.IDS.Validator.Core.Binders
             {
                 vc.BaseType = NetTypeName.Integer;
             }
+
+        }
+
+        /// <summary>
+        /// Maps a complex model entity to a primitive value, using
+        /// maps defined by the the <see cref="IValueMapProvider"/>s
+        /// </summary>
+        /// <param name="attrvalue"></param>
+        /// <param name="valueMapper"></param>
+        /// <returns></returns>
+        protected object MapValue(object attrvalue, IValueMapper valueMapper)
+        {
+            if (valueMapper.MapValue(attrvalue, out var newValue))
+            {
+                return newValue!;
+            }
+            return attrvalue;
 
         }
 

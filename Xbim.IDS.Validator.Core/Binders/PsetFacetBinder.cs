@@ -7,6 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Xbim.Common;
+using Xbim.IDS.Validator.Common.Interfaces;
 using Xbim.IDS.Validator.Core.Extensions;
 using Xbim.IDS.Validator.Core.Helpers;
 using Xbim.Ifc4.Interfaces;
@@ -22,10 +23,12 @@ namespace Xbim.IDS.Validator.Core.Binders
     public class PsetFacetBinder : FacetBinderBase<IfcPropertyFacet>
     {
         private readonly ILogger<PsetFacetBinder> logger;
+        private readonly IValueMapper valueMapper;
 
-        public PsetFacetBinder(ILogger<PsetFacetBinder> logger) : base(logger)
+        public PsetFacetBinder(ILogger<PsetFacetBinder> logger, IValueMapper valueMapper) : base(logger)
         {
             this.logger = logger;
+            this.valueMapper = valueMapper;
         }
 
         /// <summary>
@@ -316,16 +319,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
                     if (facet.PropertyValue != null)
                     {
-                        attrvalue = HandleBoolConventions(attrvalue);
-                        // Unpack Ifc Values
-                        if (attrvalue is IIfcValue v)
-                        {
-                            attrvalue = v.Value;
-                        }
-                        if (attrvalue is Enum e)
-                        {
-                            attrvalue = e.ToString();
-                        }
+                        attrvalue = MapValue(attrvalue, valueMapper);
                         if (IsTypeAppropriateForConstraint(facet.PropertyValue, attrvalue) && facet.PropertyValue.ExpectationIsSatisifedBy(attrvalue, ctx, logger))
                         {
                             result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, attrvalue, "Predefined Property value matched", predef));

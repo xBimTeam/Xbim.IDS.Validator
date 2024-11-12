@@ -219,16 +219,8 @@ namespace Xbim.IDS.Validator.Core.Binders
 
                     if (af.AttributeValue != null)
                     {
-                        attrvalue = HandleBoolConventions(attrvalue);
-                        // Unpack Ifc Values
-                        if (attrvalue is IIfcValue v)
-                        {
-                            attrvalue = v.Value;
-                        }
-                        if (attrvalue is Enum e)
-                        {
-                            attrvalue = e.ToString();
-                        }
+                        // Unwrap the value from IfcValues etc.
+                        attrvalue = MapValue(attrvalue, valueMapper);
                         if (IsTypeAppropriateForConstraint(af.AttributeValue, attrvalue) && af.AttributeValue.ExpectationIsSatisifedBy(attrvalue, ctx, logger))
                             result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.AttributeValue!, attrvalue, "Attribute value OK", item));
                         else
@@ -240,17 +232,24 @@ namespace Xbim.IDS.Validator.Core.Binders
                                     break;
 
                                 case Cardinality.Prohibited:
-                                    result.MarkSatisified(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No matching attribute value", item));
+                                    result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "Matched prohibited attribute", item));
                                     break;
 
                                 case Cardinality.Optional:
                                     if (attrvalue is string s && s == string.Empty)
                                     {
+                                        // Empty strings on Optional Attributes are expected to fail as per 'fail-an_optional_attribute_fails_if_empty'
                                         result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "Empty attribute found", item));
+                                    }
+                                    else if(attrvalue == null)
+                                    {
+                                        // A null value is otherwise fine for an optional attribute.
+                                        result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.AttributeValue!, attrvalue, "Attribute empty", item));
                                     }
                                     else
                                     {
-                                        result.MarkSatisified(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No matching attribute value", item));
+                                        // else a value was supplied but it doesn't satisfy the constraint.
+                                        result.Fail(ValidationMessage.Failure(ctx, fn => fn.AttributeValue!, attrvalue, "No matching attribute value", item));
                                     }
                                     break;
                             }
