@@ -170,7 +170,7 @@ namespace Xbim.IDS.Validator.Core
         private string FacetType => Clause switch
         {
             MaterialFacet prop => "Material",
-            PartOfFacet prop => "Releated",
+            PartOfFacet prop => "Related",
             _ => "",
         };
 

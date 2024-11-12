@@ -11,6 +11,7 @@ using static System.ConsoleColor;
 using Microsoft.Extensions.Options;
 using static Xbim.IDS.Validator.Console.CliOptions;
 using Xbim.IDS.Validator.Console.Internal;
+using Xbim.IO.CobieExpress;
 
 namespace Xbim.IDS.Validator.Console.Commands
 {
@@ -88,13 +89,19 @@ namespace Xbim.IDS.Validator.Console.Commands
                         {
                             IncludeSubtypes = false,
                             OutputFullEntity = true,
-                            AllowDerivedAttributes = true,
+                            AllowDerivedAttributes = false,
                             PerformInPlaceSchemaUpgrade = true,
                             PermittedIdsAuditStatuses = VerificationOptions.AnyState,
                             SkipIncompatibleSpecification = true,
                             SpecExecutionFilter = s => string.IsNullOrEmpty(specNameFilter) || s?.Name?.Contains(specNameFilter, StringComparison.InvariantCultureIgnoreCase) != false,
                             RuntimeTokens = config.Detokenise ? config.Tokens : new(),
                         };
+
+                        if(model is CobieModel)
+                        {
+                            options.IncludeSubtypes = true;
+                            options.AllowDerivedAttributes = true;
+                        }
 
                         var results = await idsValidator.ValidateAgainstIdsAsync(model, ids, logger, OutputRequirement, options);
 

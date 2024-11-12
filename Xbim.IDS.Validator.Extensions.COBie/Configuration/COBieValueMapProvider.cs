@@ -1,5 +1,6 @@
-﻿using Xbim.CobieExpress.Interfaces;
+﻿using System.Linq;
 using Xbim.CobieExpress;
+using Xbim.CobieExpress.Interfaces;
 using Xbim.IDS.Validator.Common.Interfaces;
 
 namespace Xbim.IDS.Validator.Extensions.COBie.Configuration
@@ -14,6 +15,8 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Configuration
             mapper.AddMap<CobieExternalSystem>(v => v.Name);
 
             mapper.AddMap<ICobieAsset>(v => v.Name);
+
+            mapper.AddMap<OptionalItemSet<CobieCategory>>(v => v.FirstOrDefault().Value);
         }
     }
 }

@@ -149,12 +149,7 @@ namespace Xbim.IDS.Validator.Core
 
             foreach (var facet in requirement.Facets)
             {
-                var binder = FacetBinderFactory.Create(facet, binderContext, Schema);
-
-                if(binder is ISupportOptions opts)
-                {
-                    opts.SetOptions(options);
-                }
+                IFacetBinder binder = CreateBinder(facet);
                 var card = requirement.GetCardinality(facet) ?? RequirementCardinalityOptions.Cardinality.Expected;
                 binder.ValidateEntity(item, facet, card, result);
             }
@@ -172,14 +167,29 @@ namespace Xbim.IDS.Validator.Core
         /// <exception cref="NotImplementedException"></exception>
         private Expression BindSelection(Expression baseExpression, IFacet facet)
         {
+            IFacetBinder binder = CreateBinder(facet);
+            return binder.BindSelectionExpression(baseExpression, facet);
+
+        }
+
+        /// <summary>
+        /// Constructs a binder for the <see cref="IFacet"/> and configuring the options.
+        /// </summary>
+        /// <param name="facet"></param>
+        /// <returns></returns>
+        private IFacetBinder CreateBinder(IFacet facet)
+        {
             var binder = FacetBinderFactory.Create(facet, binderContext, Schema);
-            return binder.BindSelectionExpression(baseExpression, facet); 
-           
+            if (binder is ISupportOptions opts)
+            {
+                opts.SetOptions(options);
+            }
+            return binder;
         }
 
         private Expression BindFilters(Expression baseExpression, IFacet facet)
         {
-            var binder = FacetBinderFactory.Create(facet, binderContext, Schema);
+            IFacetBinder binder = CreateBinder(facet);
             return binder.BindWhereExpression(baseExpression, facet);
         }
 

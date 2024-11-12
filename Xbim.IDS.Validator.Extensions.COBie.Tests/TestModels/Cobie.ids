@@ -1,34 +1,66 @@
-﻿<ids xmlns="http://standards.buildingsmart.org/IDS" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://standards.buildingsmart.org/IDS/ids_05.xsd">
+﻿<ids xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://standards.buildingsmart.org/IDS http://standards.buildingsmart.org/IDS/1.0/ids.xsd" xmlns="http://standards.buildingsmart.org/IDS">
   <info>
     <title>Tests COBie models for customer requirements</title>
   </info>
   <specifications>
-    <specification name="All COBie Types should have Model Reference" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
-      <applicability>
+    
+    <specification name="All COBie rows should be correctly referenced" ifcVersion="COBie2.4">
+      <applicability minOccurs="1" maxOccurs="unbounded">
         <entity>
           <name>
-            <simpleValue>COBieType</simpleValue>
+            <simpleValue>COBIEREFERENCEDOBJECT</simpleValue>
           </name>
         </entity>
       </applicability>
       <requirements>
-        <attribute minOccurs="1" maxOccurs="1">
+        <attribute cardinality="prohibited">
+          <name>
+            <simpleValue>RowNumber</simpleValue>
+          </name>
+          <value>
+            <simpleValue>0</simpleValue>
+          </value>
+        </attribute>
+      </requirements>
+    </specification>
+    
+    
+    <specification name="All COBie Types should have Model Reference" ifcVersion="COBie2.4">
+      <applicability minOccurs="1" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>COBIETYPE</simpleValue>
+          </name>
+        </entity>
+        <attribute>
+          <name>
+            <simpleValue>RowNumber</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:integer">
+              <xs:minExclusive value="0" />
+            </xs:restriction>
+          </value>
+        </attribute>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required">
           <name>
             <simpleValue>ModelReference</simpleValue>
           </name>
         </attribute>
       </requirements>
     </specification>
-    <specification name="All COBie Types should Cost between £100 and £10k" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
-      <applicability>
+    <specification name="All COBie Types should Cost between £100 and £10k" ifcVersion="COBie2.4">
+      <applicability minOccurs="1" maxOccurs="unbounded">
         <entity>
           <name>
-            <simpleValue>COBieType</simpleValue>
+            <simpleValue>COBIETYPE</simpleValue>
           </name>
         </entity>
       </applicability>
       <requirements>
-        <attribute minOccurs="1" maxOccurs="1">
+        <attribute cardinality="required">
           <name>
             <simpleValue>ReplacementCost</simpleValue>
           </name>
@@ -41,16 +73,26 @@
         </attribute>
       </requirements>
     </specification>
-    <specification name="All COBie Components should have an installation Date" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
-      <applicability>
+    <specification name="All COBie Components should have an installation Date" ifcVersion="COBie2.4">
+      <applicability minOccurs="1" maxOccurs="unbounded">
         <entity>
           <name>
-            <simpleValue>COBieComponent</simpleValue>
+            <simpleValue>COBIECOMPONENT</simpleValue>
           </name>
         </entity>
+        <attribute>
+          <name>
+            <simpleValue>RowNumber</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:integer">
+              <xs:minExclusive value="0" />
+            </xs:restriction>
+          </value>
+        </attribute>
       </applicability>
       <requirements>
-        <attribute minOccurs="1" maxOccurs="1">
+        <attribute cardinality="required">
           <name>
             <simpleValue>InstallationDate</simpleValue>
           </name>
@@ -63,11 +105,11 @@
         </attribute>
       </requirements>
     </specification>
-    <specification name="All mechanical components should have a SerialNumber between 2 and 20 in length" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
-      <applicability>
+    <specification name="All mechanical components should have a SerialNumber between 2 and 20 in length" ifcVersion="COBie2.4">
+      <applicability minOccurs="1" maxOccurs="unbounded">
         <entity>
           <name>
-            <simpleValue>COBieComponent</simpleValue>
+            <simpleValue>COBIECOMPONENT</simpleValue>
           </name>
         </entity>
         <attribute>
@@ -82,7 +124,7 @@
         </attribute>
       </applicability>
       <requirements>
-        <attribute minOccurs="1" maxOccurs="1">
+        <attribute cardinality="required">
           <name>
             <simpleValue>SerialNumber</simpleValue>
           </name>
@@ -95,16 +137,26 @@
         </attribute>
       </requirements>
     </specification>
-    <specification name="All COBie rows should have a valid CreatedOn date" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
-      <applicability>
+    <specification name="All COBie rows should have a valid CreatedOn date" ifcVersion="COBie2.4">
+      <applicability minOccurs="1" maxOccurs="unbounded">
         <entity>
           <name>
-            <simpleValue>COBieReferencedObject</simpleValue>
+            <simpleValue>COBIEREFERENCEDOBJECT</simpleValue>
           </name>
         </entity>
+        <attribute>
+          <name>
+            <simpleValue>RowNumber</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:integer">
+              <xs:minExclusive value="0" />
+            </xs:restriction>
+          </value>
+        </attribute>
       </applicability>
       <requirements>
-        <attribute minOccurs="1" maxOccurs="1">
+        <attribute cardinality="required">
           <name>
             <simpleValue>CreatedOn</simpleValue>
           </name>
@@ -117,16 +169,26 @@
       </requirements>
     </specification>
 
-    <specification name="All COBie rows should have a CreatedOn in Range" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
-      <applicability>
+    <specification name="All COBie rows should have a CreatedOn in Range" ifcVersion="COBie2.4">
+      <applicability minOccurs="1" maxOccurs="unbounded">
         <entity>
           <name>
-            <simpleValue>COBieReferencedObject</simpleValue>
+            <simpleValue>COBIEREFERENCEDOBJECT</simpleValue>
           </name>
         </entity>
+        <attribute>
+          <name>
+            <simpleValue>RowNumber</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:integer">
+              <xs:minExclusive value="0" />
+            </xs:restriction>
+          </value>
+        </attribute>
       </applicability>
       <requirements>
-        <attribute minOccurs="1" maxOccurs="1">
+        <attribute cardinality="required">
           <name>
             <simpleValue>CreatedOn</simpleValue>
           </name>
@@ -140,53 +202,84 @@
       </requirements>
     </specification>
 
-    <specification name="All COBie Components should have a Space" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
-      <applicability>
+    <specification name="All COBie Components should have a Space" ifcVersion="COBie2.4">
+      <applicability minOccurs="1" maxOccurs="unbounded">
         <entity>
           <name>
-            <simpleValue>COBieComponent</simpleValue>
+            <simpleValue>COBIECOMPONENT</simpleValue>
           </name>
         </entity>
+        <attribute>
+          <name>
+            <simpleValue>RowNumber</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:integer">
+              <xs:minExclusive value="0" />
+            </xs:restriction>
+          </value>
+        </attribute>
       </applicability>
       <requirements>
-        <attribute minOccurs="1" maxOccurs="1">
+        <attribute cardinality="required">
           <name>
             <simpleValue>Spaces</simpleValue>
           </name>
         </attribute>
       </requirements>
     </specification>
-    <specification name="All COBie Spaces should be categorised" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
-      <applicability>
+    <specification name="All COBie Spaces should be categorised" ifcVersion="COBie2.4">
+      <applicability minOccurs="1" maxOccurs="unbounded">
         <entity>
           <name>
-            <simpleValue>COBieSpace</simpleValue>
+            <simpleValue>COBIESPACE</simpleValue>
           </name>
         </entity>
+        <attribute>
+          <name>
+            <simpleValue>RowNumber</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:integer">
+              <xs:minExclusive value="0" />
+            </xs:restriction>
+          </value>
+        </attribute>
       </applicability>
       <requirements>
-        <attribute minOccurs="1" maxOccurs="1">
+        <attribute cardinality="required">
           <name>
             <simpleValue>Categories</simpleValue>
           </name>
         </attribute>
       </requirements>
     </specification>
-    <specification name="Every COBie Space should have at least one component" ifcVersion="COBie2.4" minOccurs="1" maxOccurs="unbounded">
-      <applicability>
+    <specification name="Every COBie Space should have at least one component" ifcVersion="COBie2.4">
+      <applicability minOccurs="1" maxOccurs="unbounded">
         <entity>
           <name>
-            <simpleValue>COBieSpace</simpleValue>
+            <simpleValue>COBIESPACE</simpleValue>
           </name>
         </entity>
+        <attribute>
+          <name>
+            <simpleValue>RowNumber</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:integer">
+              <xs:minExclusive value="0" />
+            </xs:restriction>
+          </value>
+        </attribute>
       </applicability>
       <requirements>
-        <attribute minOccurs="1" maxOccurs="1">
+        <attribute cardinality="required">
           <name>
             <simpleValue>Components</simpleValue>
           </name>
         </attribute>
       </requirements>
     </specification>
+   
   </specifications>
 </ids>

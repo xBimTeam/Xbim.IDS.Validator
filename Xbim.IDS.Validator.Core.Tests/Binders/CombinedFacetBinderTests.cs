@@ -199,7 +199,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             var ifcbinder = new IfcTypeFacetBinder(IfcTypeLogger);
             ifcbinder.Initialise(BinderContext);
 
-            var psetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>());
+            var psetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>(), GetValueMapper());
             psetbinder.Initialise(BinderContext);
 
             // Act
@@ -232,7 +232,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
             var ifcbinder = new IfcTypeFacetBinder(IfcTypeLogger);
             ifcbinder.Initialise(BinderContext);
-            var psetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>());
+            var psetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>(), GetValueMapper());
             psetbinder.Initialise(BinderContext);
 
             // Act
