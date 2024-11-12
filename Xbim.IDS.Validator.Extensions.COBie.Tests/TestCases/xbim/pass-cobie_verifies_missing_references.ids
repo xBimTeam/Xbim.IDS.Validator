@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ids xsi:schemaLocation="http://standards.buildingsmart.org/IDS http://standards.buildingsmart.org/IDS/1.0/ids.xsd" xmlns="http://standards.buildingsmart.org/IDS" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <info>
+    <title>Missing references can be identified by a zero Row Number</title>
+  </info>
+  <specifications>
+    <specification name="Row numbers of zero indiciate a broken link - as data is created implicitly" ifcVersion="COBIE2.4">
+      <applicability minOccurs="1" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>COBIEREFERENCEDOBJECT</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="prohibited">
+          <name>
+            <simpleValue>RowNumber</simpleValue>
+          </name>
+          <value>
+            <simpleValue>0</simpleValue>
+          </value>
+        </attribute>
+      </requirements>
+    </specification>
+  </specifications>
+</ids>

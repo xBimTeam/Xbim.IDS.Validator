@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ids xsi:schemaLocation="http://standards.buildingsmart.org/IDS http://standards.buildingsmart.org/IDS/1.0/ids.xsd" xmlns="http://standards.buildingsmart.org/IDS" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <info>
+    <title>IDS Property facets make use of COBie Objects Attribute sheet</title>
+  </info>
+  <specifications>
+    <specification name="Checks Spaces have property 'Unbounded Height' = 2500" ifcVersion="COBIE2.4">
+      <applicability minOccurs="1" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>COBIESPACE</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <property>
+          <propertySet>
+            <simpleValue>.*</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>Unbounded Height</simpleValue>
+          </baseName>
+          <value>
+            <simpleValue>2500</simpleValue>
+          </value>
+        </property>
+      </requirements>
+    </specification>
+  </specifications>
+</ids>
