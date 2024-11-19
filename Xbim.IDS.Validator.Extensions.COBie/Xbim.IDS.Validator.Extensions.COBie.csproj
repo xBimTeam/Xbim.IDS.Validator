@@ -24,8 +24,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Xbim.CobieExpress.Exchanger" Version="6.0.174" />
-    <PackageReference Include="Xbim.IO.CobieExpress" Version="6.0.174" />
+    <PackageReference Include="Xbim.CobieExpress.Exchanger" Version="6.0.176" />
+    <PackageReference Include="Xbim.IO.CobieExpress" Version="6.0.176" />
   </ItemGroup>
 
   <ItemGroup>
