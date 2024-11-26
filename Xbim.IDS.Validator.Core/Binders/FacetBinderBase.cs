@@ -313,8 +313,9 @@ namespace Xbim.IDS.Validator.Core.Binders
         {
 
             // e.g. Concat an IfcObjectDefinition + IfcTypeObject => IfcObject
-            Type highestCommonType = GetCommonAncestor(expression, right);
+            Type highestCommonType = Model.GetCommonAncestorType(expression, right);
             expression = BindCast(expression, highestCommonType);
+            right = BindCast(right, highestCommonType);
 
             expression = Expression.Call(null, ExpressionHelperMethods.EnumerableConcatGeneric.MakeGenericMethod(highestCommonType), expression, right);
             return expression;
@@ -331,29 +332,6 @@ namespace Xbim.IDS.Validator.Core.Binders
             return Expression.Call(null, ExpressionHelperMethods.EnumerableCastGeneric.MakeGenericMethod(type), expression);
         }
 
-        private Type GetCommonAncestor(Expression left, Expression right)
-        {
-            var leftType = TypeHelper.GetImplementedIEnumerableType(left.Type);
-            var rightType = TypeHelper.GetImplementedIEnumerableType(right.Type);
-
-            var ancestors = new HashSet<ExpressType>();
-            var express = Model.Metadata.ExpressType(leftType);
-            while(express != null)
-            {
-                ancestors.Add(express);
-                express = express.SuperType;
-            }
-            express = Model.Metadata.ExpressType(rightType);
-            while (express != null)
-            {
-                if(ancestors.Contains(express))
-                {
-                    return express.Type;
-                }
-                express = express.SuperType;
-            }
-            return typeof(IPersistEntity);
-        }
 
         protected IIfcValue? UnwrapQuantity(IIfcPhysicalQuantity quantity)
         {

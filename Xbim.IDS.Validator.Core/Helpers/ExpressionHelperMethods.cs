@@ -12,7 +12,6 @@ using Xbim.InformationSpecifications;
 
 namespace Xbim.IDS.Validator.Core.Helpers
 {
-
 #nullable disable
 
     internal class ExpressionHelperMethods
@@ -32,7 +31,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
         private static MethodInfo _enumerableIfcMaterialSelectorMethod = typeof(IfcMaterialsExtensions).GetMethod(nameof(IfcMaterialsExtensions.GetIfcObjectsUsingMaterials), new Type[] { typeof(IEnumerable<IIfcRelAssociatesMaterial>), typeof(MaterialFacet) });
         private static MethodInfo _enumerableIfcPartofRelatedMethod = typeof(IfcRelationsExtensions).GetMethod(nameof(IfcRelationsExtensions.GetRelatedIfcObjects), new Type[] { typeof(IEnumerable<IIfcRelationship>), typeof(PartOfFacet) });
 
-        private static MethodInfo _enumerableWhereIfcEntityHasPredefinedTypeMethod = typeof(IfcEntityTypeExtensions).GetMethod(nameof(IfcEntityTypeExtensions.WhereHasPredefinedType), new Type[] { typeof(IEnumerable<IIfcObjectDefinition>), typeof(IfcTypeFacet) });
+        private static MethodInfo _enumerableWhereIfcEntityHasPredefinedTypeMethod = GenericMethodOf(_ => IfcEntityTypeExtensions.WhereHasPredefinedType<IIfcObjectDefinition>(default(IEnumerable<IIfcObjectDefinition>), default));
         private static MethodInfo _enumerableWhereObjAssociatedWithPropertyMethod = typeof(IfcPropertiesExtensions).GetMethod(nameof(IfcPropertiesExtensions.WhereAssociatedWithProperty), new Type[] { typeof(IEnumerable<IIfcObject>), typeof(IfcPropertyFacet) });
         private static MethodInfo _enumerableWhereTypeAssociatedWithPropertyMethod = typeof(IfcPropertiesExtensions).GetMethod(nameof(IfcPropertiesExtensions.WhereAssociatedWithProperty), new Type[] { typeof(IEnumerable<IIfcTypeObject>), typeof(IfcPropertyFacet) });
         private static MethodInfo _enumerableWhereAssociatedWithClassificationMethod = typeof(IfcClassificationExtensions).GetMethod(nameof(IfcClassificationExtensions.WhereAssociatedWithClassification), new Type[] { typeof(IEnumerable<IIfcObjectDefinition>), typeof(IfcClassificationFacet) });
