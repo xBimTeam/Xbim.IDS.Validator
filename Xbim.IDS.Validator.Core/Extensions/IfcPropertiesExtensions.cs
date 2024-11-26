@@ -150,22 +150,22 @@ namespace Xbim.IDS.Validator.Core.Extensions
                         facet!.PropertyName?.IsSatisfiedBy(pe.Name.Value, true) == true &&
                         (
                             facet.PropertyValue?.HasAnyAcceptedValue() != true ||
-                            pe.EnumerationValues.Any(v => facet!.PropertyName?.IsSatisfiedBy(v.Value, true) == true)
+                            pe.EnumerationValues.Any(v => facet!.PropertyValue?.IsSatisfiedBy(v.Value, true) == true)
                         )).Any()
                         // List Values
                         || ps.HasProperties.OfType<IIfcPropertyListValue>().Where(pl =>
                         facet!.PropertyName?.IsSatisfiedBy(pl.Name.Value, true) == true &&
                         (
                             facet.PropertyValue?.HasAnyAcceptedValue() != true ||
-                            pl.ListValues.Any(v => facet!.PropertyName?.IsSatisfiedBy(v.Value, true) == true)
+                            pl.ListValues.Any(v => facet!.PropertyValue?.IsSatisfiedBy(v.Value, true) == true)
                         )).Any()
                         // Table Values
                         || ps.HasProperties.OfType<IIfcPropertyTableValue>().Where(ptv =>
                         facet!.PropertyName?.IsSatisfiedBy(ptv.Name.Value, true) == true &&
                         (
                             facet.PropertyValue?.HasAnyAcceptedValue() != true ||
-                            ptv.DefinedValues.Any(v => facet!.PropertyName?.IsSatisfiedBy(v.Value, true) == true) ||
-                            ptv.DefiningValues.Any(v => facet!.PropertyName?.IsSatisfiedBy(v.Value, true) == true)
+                            ptv.DefinedValues.Any(v => facet!.PropertyValue?.IsSatisfiedBy(v.Value, true) == true) ||
+                            ptv.DefiningValues.Any(v => facet!.PropertyValue?.IsSatisfiedBy(v.Value, true) == true)
                         )).Any()
                     ));
 

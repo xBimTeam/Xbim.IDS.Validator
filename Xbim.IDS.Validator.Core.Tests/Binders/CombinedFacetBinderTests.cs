@@ -4,6 +4,7 @@ using Xbim.IDS.Validator.Core.Binders;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 using Xunit.Abstractions;
+using static Microsoft.Isam.Esent.Interop.EnumeratedColumn;
 using static Xbim.InformationSpecifications.PartOfFacet;
 
 namespace Xbim.IDS.Validator.Core.Tests.Binders
@@ -211,6 +212,109 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             var result = query.Execute(expression, Model);
             result.Should().HaveCount(expectedCount);
             
+        }
+
+        [Fact]
+        public void CanFilterByTypeMaterialAndProps()
+        {
+            // TODO: Should fix up WhereAssociatedWithMaterial() and others to be generic which trigger an edge case since we lose the
+            // best type of the expression in place of IIfcObjectDefinition (an interface), which caused downstream issues when 
+            // chaining expressions together
+            IfcTypeFacet ifcFacet = new IfcTypeFacet
+            {
+                IfcType = new ValueConstraint("IFCWALL"),
+                PredefinedType = new ValueConstraint("PARTITIONING")
+            };
+
+            MaterialFacet materialFacet = new MaterialFacet
+            {
+                Value = "Metal Stud Layer",
+            };
+
+            IfcPropertyFacet firstPropertyFacet = new IfcPropertyFacet
+            {
+                PropertySetName = "Pset_WallCommon",
+                PropertyName = "IsExternal",
+                PropertyValue = "false",
+
+            };
+
+            IfcPropertyFacet secondPropertyFacet = new IfcPropertyFacet
+            {
+                PropertySetName = "Pset_WallCommon",
+                PropertyName = "LoadBearing",
+                PropertyValue = "false",
+            };
+
+            var ifcbinder = new IfcTypeFacetBinder(IfcTypeLogger);
+            ifcbinder.Initialise(BinderContext);
+
+            var materialbinder = new MaterialFacetBinder(GetLogger<MaterialFacetBinder>());
+            materialbinder.Initialise(BinderContext);
+
+            var firstPsetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>(), GetValueMapper());
+            firstPsetbinder.Initialise(BinderContext);
+
+
+            var secondPsetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>(), GetValueMapper());
+            secondPsetbinder.Initialise(BinderContext);
+
+            // Act
+            var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
+            expression = materialbinder.BindWhereExpression(expression, materialFacet);
+            expression = firstPsetbinder.BindWhereExpression(expression, firstPropertyFacet);
+            expression = secondPsetbinder.BindWhereExpression(expression, secondPropertyFacet);
+
+            // Assert
+
+            var result = query.Execute(expression, Model);
+            result.Should().HaveCount(2);
+        }
+
+        [Fact]
+        public void CanFilterByTypeAndPredefinedAndMultipleProperties()
+        {
+            IfcTypeFacet ifcFacet = new IfcTypeFacet
+            {
+                IfcType = new ValueConstraint("IFCWALL"),
+                PredefinedType = new ValueConstraint("PARTITIONING")
+            };
+
+            IfcPropertyFacet firstPropertyFacet = new IfcPropertyFacet
+            {
+                PropertySetName = "Pset_WallCommon",
+                PropertyName = "IsExternal",
+                PropertyValue = "false",
+
+            };
+
+            IfcPropertyFacet secondPropertyFacet = new IfcPropertyFacet
+            {
+                PropertySetName = "Pset_WallCommon",
+                PropertyName = "LoadBearing",
+                PropertyValue = "false",
+            };
+
+            var ifcbinder = new IfcTypeFacetBinder(IfcTypeLogger);
+            ifcbinder.Initialise(BinderContext);
+
+            var firstPsetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>(), GetValueMapper());
+            firstPsetbinder.Initialise(BinderContext);
+
+            var secondPsetbinder = new PsetFacetBinder(GetLogger<PsetFacetBinder>(), GetValueMapper());
+            secondPsetbinder.Initialise(BinderContext);
+
+            // Act
+            var expression = ifcbinder.BindSelectionExpression(query.InstancesExpression, ifcFacet);
+            expression = firstPsetbinder.BindWhereExpression(expression, firstPropertyFacet);
+            expression = secondPsetbinder.BindWhereExpression(expression, secondPropertyFacet);
+
+            // Assert
+
+            var result = query.Execute(expression, Model);
+            result.Should().HaveCount(2);
+
+
         }
 
 

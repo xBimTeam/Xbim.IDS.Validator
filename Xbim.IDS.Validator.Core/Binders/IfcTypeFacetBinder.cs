@@ -265,13 +265,14 @@ namespace Xbim.IDS.Validator.Core.Binders
 
             // Expression we're building:
             // var entities = model.Instances.OfType<IfcObjectDefinition>();
-            // var filteredresult = entities.WhereHasPredefinedType(e, facet));
+            // var filteredresult = entities.WhereHasPredefinedType(facet));
             // or
             // var filteredresult =  IfcEntityTypeExtensions.WhereHasPredefinedType(entities, facet);
+            var collectionType = TypeHelper.GetImplementedIEnumerableType(expression.Type);
 
             var typeFacetExpr = Expression.Constant(ifcFacet, typeof(IfcTypeFacet));
 
-            var propsMethod = ExpressionHelperMethods.EnumerableWhereIfcTypeHasMatchingPredefinedType;
+            var propsMethod = ExpressionHelperMethods.EnumerableWhereIfcTypeHasMatchingPredefinedType.MakeGenericMethod(collectionType);
 
             return Expression.Call(null, propsMethod, new[] { expression, typeFacetExpr });
 

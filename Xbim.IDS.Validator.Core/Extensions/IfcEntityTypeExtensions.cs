@@ -19,7 +19,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
         /// <param name="objects"></param>
         /// <param name="facet"></param>
         /// <returns></returns>
-        public static IEnumerable<IIfcObjectDefinition> WhereHasPredefinedType(this IEnumerable<IIfcObjectDefinition> objects, IfcTypeFacet facet)
+        public static IEnumerable<T> WhereHasPredefinedType<T>(this IEnumerable<T> objects, IfcTypeFacet facet) where T: IIfcObjectDefinition
         {
             return objects.Where(o => MatchesPredefinedType(o, facet));
         }
