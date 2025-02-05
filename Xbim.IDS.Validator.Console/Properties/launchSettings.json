@@ -2,7 +2,7 @@
   "profiles": {
     "Xbim.IDS.Validator.Console": {
       "commandName": "Project",
-      "commandLineArgs": "detokenise ../../../../Xbim.IDS.Validator.Core.Tests/TestModels/BasicRequirements1-0.ids ../../../../Xbim.IDS.Validator.Core.Tests/TestModels/BasicRequirements1-0-update.ids"
+      "commandLineArgs": "verify ../../../../../Xbim.IDS.Validator.Core.Tests/TestModels/Samplehouse4.ifc -ids ../../../../../Xbim.IDS.Validator.Core.Tests/TestModels/BasicRequirements1-0.ids "
     }
   }
 }
