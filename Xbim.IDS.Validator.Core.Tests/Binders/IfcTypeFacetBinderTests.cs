@@ -1,5 +1,7 @@
 ﻿using FluentAssertions;
+using Xbim.Common;
 using Xbim.IDS.Validator.Core.Binders;
+using Xbim.Ifc4;
 using Xbim.Ifc4.Interfaces;
 using Xbim.InformationSpecifications;
 using Xunit.Abstractions;
@@ -58,6 +60,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData("IfcWall.*,IfcDoor.*", 9 + 12, typeof(IIfcWall), typeof(IIfcWallType),
             typeof(IIfcDoor), typeof(IIfcDoorType),
             typeof(IIfcDoorLiningProperties), typeof(IIfcDoorPanelProperties))]
+        [InlineData("^(?!IFCPROJECT|IFCBUILDING|IFCBUILDINGSTOREY|IFCSITE)(.+)", 176484, typeof(IPersistEntity))]
         [Theory]
         public void Can_Query_IfcType_Patterns(string ifcType, int expectedCount, params Type[] expectedTypes)
         {
@@ -67,6 +70,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
         [InlineData("IfcInvalid")]
         [InlineData("IfcIdentifier")]
+        [InlineData("IfcStrippedOptional")]
         [InlineData("1234")]
         [InlineData("")]
         [InlineData("*")]
@@ -78,7 +82,6 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             {
                 IfcType = new ValueConstraint(ifcType)
             };
-
 
             // Act
             var ex = Record.Exception(() => Binder.BindSelectionExpression(query.InstancesExpression, facet));

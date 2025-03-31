@@ -89,8 +89,7 @@ namespace Xbim.IDS.Validator.Core.Binders
 
         protected static bool ExpressTypeIsValid(ExpressType expressType)
         {
-            // Exclude invalid schema items (including un-rooted entity types like IfcLabel)
-            return !(expressType == null || expressType.Properties.Count == 0);
+            return !(expressType == null);
         }
 
         protected ExpressMetaProperty? GetMatchingProperty(ExpressType expressType, string propName)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Xbim.Common;
 
 namespace Xbim.IDS.Validator.Core.Helpers
 {
@@ -112,6 +113,19 @@ namespace Xbim.IDS.Validator.Core.Helpers
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Determines if a type implements an Interface or Type
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        internal static bool ImplementsInterface<T>(Type type)
+        {
+            if (type is null)
+                return false;
+            return typeof(T).IsAssignableFrom(type);
         }
 
         /// <summary>

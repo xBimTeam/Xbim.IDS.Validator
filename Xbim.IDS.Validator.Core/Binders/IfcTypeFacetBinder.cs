@@ -199,12 +199,13 @@ namespace Xbim.IDS.Validator.Core.Binders
             }
             else
             {
-                // It's an Regex, Range or Structure
+                // It's a Regex, Range or Structure
 
                 if (Model?.Metadata?.Types() == null) yield break;
                 // We don't support inference for these more complex scenarios.
                 // e.g. IFCTYPE matches IFCDUCT.* returning IFC2x3's IfcDuctSegment equivalent
-                var types = Model?.Metadata?.Types() ?? Enumerable.Empty<ExpressType>();
+                var types = (Model?.Metadata?.Types() ?? Enumerable.Empty<ExpressType>())
+                    .Where(t => TypeHelper.ImplementsInterface<IPersistEntity>(t.Type));
                 foreach (var type in types)
                 {
                     if (ifcFacet?.IfcType?.IsSatisfiedBy(type.Name, true) == true)
@@ -230,7 +231,11 @@ namespace Xbim.IDS.Validator.Core.Binders
             if (metaData != null)
             {
                 // Found in Schema
-                yield return new EntitySelectionCriteria(metaData);
+                if(TypeHelper.ImplementsInterface<IPersistEntity>(metaData.Type))
+                {
+                    yield return new EntitySelectionCriteria(metaData);
+                }
+                // else skip as it's not a rooted element type
             }
             else
             {
