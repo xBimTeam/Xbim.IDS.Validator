@@ -129,6 +129,9 @@ namespace Xbim.IDS.Validator.Tests.Common
                     DoInPlaceUpgrade(idsFile);
                 }
                 string modelFile = Path.ChangeExtension(idsFile, "ifc");
+                output.WriteLine($"IDS: {new FileInfo(idsFile).FullName}");
+                output.WriteLine($"IFC: {new FileInfo(modelFile).FullName}");
+                
                 logger.LogInformation("Verifying {schema} model {model}", schemaVersion, modelFile);
                 model = LoadModel(modelFile, schemaVersion, spotfix);
 

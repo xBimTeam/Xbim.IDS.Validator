@@ -1,6 +1,7 @@
 ﻿using IdsLib.IfcSchema;
 using System.Text;
 using Xbim.Common.Metadata;
+using Xbim.Ifc4.SharedBldgElements;
 
 namespace CodeGenerator
 {
@@ -17,13 +18,10 @@ namespace CodeGenerator
 
             foreach (var item in measures)
             {
-
                 if (!item.IfcMeasure.EndsWith("MEASURE"))
                 {
                     continue;
                 }
-                
-
                 if (item.UnitTypeEnum.StartsWith("IfcDerivedUnitEnum"))
                 {
                     // TODO: Handle Derived?
@@ -39,6 +37,7 @@ namespace CodeGenerator
 
             source = source.Replace(searchKw, sb.ToString());
             source = source.Replace("<version>", Xbim.InformationSpecifications.Xids.AssemblyVersion);
+            source = source.Replace("<versionIds>", IdsLib.LibraryInformation.AssemblyVersion);
             return source;
         }
 
@@ -79,6 +78,7 @@ namespace CodeGenerator
 
         private const string stub = @"// generated code, any changes made directly here will be lost
 // Generated using Xids: <version>
+// Generated using ids-lib: <versionIds>
 using Microsoft.Extensions.Logging;
 using System;
 using Xbim.Ifc4.Interfaces;
