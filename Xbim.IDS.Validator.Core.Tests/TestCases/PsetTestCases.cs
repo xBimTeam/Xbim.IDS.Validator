@@ -22,7 +22,7 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             { "pass-any_matching_value_in_a_bounded_property_will_pass_2_4.ids", new [] { XbimSchemaVersion.Ifc4 } },
             { "pass-any_matching_value_in_a_bounded_property_will_pass_3_4.ids", new [] { XbimSchemaVersion.Ifc4 } },
             { "pass-dates_are_treated_as_strings_1_2.ids", new [] { XbimSchemaVersion.Ifc4 } },
-            { "pass-durations_are_treated_as_strings_1_2.ids", new [] { XbimSchemaVersion.Ifc4 } },
+            { "pass-durations_are_treated_as_strings_2_2.ids", new [] { XbimSchemaVersion.Ifc4 } },
 
             { "pass-any_matching_value_in_an_enumerated_property_will_pass_1_3.ids", new [] { XbimSchemaVersion.Ifc4 } },
             { "pass-any_matching_value_in_an_enumerated_property_will_pass_2_3.ids", new [] { XbimSchemaVersion.Ifc4 } },
@@ -35,19 +35,15 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
 
        
         [MemberData(nameof(GetPassTestCases))]
-
         [Theory]
         public async Task ExpectedPasses(string idsFile, params XbimSchemaVersion[] schemas)
         {
             foreach(var schema in GetSchemas(schemas))
             {
                 var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
-
                 outcome.Status.Should().Be(ValidationStatus.Pass, $"{idsFile} ({schema})");
             }
-            
         }
-
         
         [MemberData(nameof(GetFailureTestCases))]
         [Theory]
@@ -56,7 +52,6 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             foreach (var schema in GetSchemas(schemas))
             {
                 var outcome = await VerifyIdsFile(idsFile);
-
                 outcome.Status.Should().Be(ValidationStatus.Fail, $"{idsFile} ({schema})");
             }
         }

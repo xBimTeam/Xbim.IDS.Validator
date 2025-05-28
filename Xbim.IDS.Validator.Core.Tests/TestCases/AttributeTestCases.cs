@@ -11,7 +11,6 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
         {
         }
 
-
         public static IDictionary<string, XbimSchemaVersion[]> testExceptions = new Dictionary<string, XbimSchemaVersion[]>
         {
             // Schema dependent tests
@@ -59,7 +58,6 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             foreach (var schema in GetSchemas(schemas))
             {
                 var outcome = await VerifyIdsFile(idsFile, schemaVersion: schema);
-
                 outcome.Status.Should().Be(ValidationStatus.Pass, schema.ToString());
             }
         }
