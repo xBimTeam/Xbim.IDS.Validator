@@ -2,7 +2,7 @@
 
 
 Xbim.IDS.Validator is a .net (core & framework) library tht verifies IFC models against the official 
-BuildingSMART [Information Delivery Specification](https://github.com/buildingSMART/IDS/blob/master/Documentation/README.md) (IDS) standard.
+BuildingSMART [Information Delivery Specification](https://github.com/buildingSMART/IDS/blob/development/Documentation/UserManual/README.md) (IDS) standard.
 
 Powered by xbim Tookit, this library can be used to translate IDS files into an executable specification, 
 which can be run against any IFC2x3, IFC4 or IFC4.3 model and provide a detailed breakdown of the the test outcomes.
@@ -90,7 +90,7 @@ foreach (ValidationRequirement requirement in outcome.ExecutedRequirements)
 
 ## How much of the IDS spec does this support?
 
-This is a comprehensive implementation of the latest IDS v1.0 standard, with 100% pass rate all current [IDS TestCases](https://github.com/buildingSMART/IDS/blob/master/Documentation/testcases/scripts.md) 
+This is a comprehensive implementation of the latest IDS v1.0 standard, with 100% pass rate all current [IDS TestCases](https://github.com/buildingSMART/IDS/tree/development/Documentation/ImplementersDocumentation/TestCases) 
 
 This library has been tested at scale with real-world models. It also supports some useful extensions that can be enabled through runtime options.
 
@@ -107,12 +107,12 @@ It currently supports:
         - Support for all IfcSimpleProperty implementations
         - Support for IfcElementQuantities
         - Support for Unit conversion
-        - Support for 1e6 Floating Point precision tolerances
+        - Support for 1e6 Floating Point precision [tolerances](https://github.com/buildingSMART/IDS/blob/development/Documentation/ImplementersDocumentation/tolerance.md)
     - [x] Materials
     - [x] PartOf
     - [x] Combinations of all Facet types and Cardinalities
     - [ ] Xbim.IDS custom facet extensions (Document, IfcRelation)
-- [Complex Restrictions](https://github.com/buildingSMART/IDS/blob/master/Documentation/restrictions.md):
+- [Complex Restrictions](https://github.com/buildingSMART/IDS/blob/development/Documentation/UserManual/restrictions.md):
     - [x] Enumerations
     - [x] Patterns (Regex)
     - [x] Bounds/Ranges
@@ -136,18 +136,18 @@ It currently supports:
     - [x] Optional Support for Ifc Type Inheritance
     - [x] Optional Support for querying/verifying Derived Properties (Mostly for COBie)
     - [x] Optional support for running IDS against COBie Spreadsheets (using Xbim.COBieExpress extensions)
-    - [x] Support for use of IFC4+ schema items on Ifc2x3 models - e.g. to support IfcAirTerminal queries via an inferred IfcAirTerminalType definition [See IDS#116](https://github.com/buildingSMART/IDS/issues/116)  [Usage Example](Xbim.IDS.Validator.Core.Tests/TestCases/xbim/pass-ifc2x3-air_terminal_edge_case.ids)
+    - [x] Support for use of IFC2x3 [occurrence type mapping](https://github.com/buildingSMART/IDS/blob/development/Documentation/ImplementersDocumentation/ifc2x3-occurrence-type-mapping-table.md) - e.g. to support IfcAirTerminal queries via an inferred IfcAirTerminalType definition [See IDS#116](https://github.com/buildingSMART/IDS/issues/116)  [Usage Example](Xbim.IDS.Validator.Core.Tests/TestCases/xbim/pass-ifc2x3-air_terminal_edge_case.ids)
 
-The library has been tested against the [IDS test suite](https://github.com/buildingSMART/IDS/blob/master/Documentation/developer-guide.md#checking-ids-against-ifc)
-
-Currently only one minor test-case is unsupported. (See PropertySet skipped unit-test).
+The library has been tested against the [IDS test suite](https://github.com/buildingSMART/IDS/blob/development/Documentation/ImplementersDocumentation/TestCases/scripts.md) with a 100% pass rate.
 
 ## To-do list
 
 - [ ] Support for Xbim.XIDS extensions (Documents etc)
 - [x] Testing Pre-defined Properties. e.g. IFCDOORPANELPROPERTIES.PanelOperation
 - [x] Review support of latest PartOf relations in 0.96/0.97
-- [ ] Further COBie specific enhancements (Attributes checking, Classification etc)
+- [ ] Further COBie specific enhancements 
+   - [x] Attributes checking
+   - [ ] Classification
 - [ ] Refactoring to further unify selection and verification logic for consistency
 
 ## License
