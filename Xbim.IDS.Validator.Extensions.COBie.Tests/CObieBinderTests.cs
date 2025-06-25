@@ -44,7 +44,7 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Tests
             var mapping = CobieModel.GetMapping();
             mapping.ClassMappings.RemoveAll(m => m.Class == "System");
 
-            using (IModel model = CobieModel.ImportFromTable(file, out string report, mapping))
+            using (ICOBieModel model = CobieModel.ImportFromTable(file, out string report, mapping))
             {
 
                 output.WriteLine(report);
@@ -256,7 +256,7 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Tests
         }
 
 
-        public override IModel Model
+        public override ICOBieModel Model
         {
             get
             {
@@ -264,9 +264,9 @@ namespace Xbim.IDS.Validator.Extensions.COBie.Tests
             }
         }
 
-        private static Lazy<IModel> lazyCobieModel = new Lazy<IModel>(() => BuildCOBieModel(staticOutput));
+        private static Lazy<ICOBieModel> lazyCobieModel = new Lazy<ICOBieModel>(() => BuildCOBieModel(staticOutput));
 
-        private static IModel BuildCOBieModel(ITestOutputHelper outputHelper = null)
+        private static ICOBieModel BuildCOBieModel(ITestOutputHelper outputHelper = null)
         {
             if (!File.Exists(file))
                 throw new FileNotFoundException(file);

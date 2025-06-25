@@ -239,7 +239,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             newTypes.Should().Contain("IFCORGANIZATION");
 
             newTypes.Should().NotContain("IFCPRODUCT");
-            var metaData = ExpressMetaData.GetMetadata(typeof(Ifc4.EntityFactoryIfc4).Module);
+            var metaData = ExpressMetaData.GetMetadata(new Ifc4.EntityFactoryIfc4());
 
             var filtered = newTypes.AsEnumerable().FilterToBaseType("IFCROOT", metaData).ToArray();
 

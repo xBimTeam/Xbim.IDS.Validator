@@ -41,7 +41,7 @@ namespace CodeGenerator
             return source;
         }
 
-        private static readonly ExpressMetaData ifc4Schema = ExpressMetaData.GetMetadata(typeof(Xbim.Ifc4.EntityFactoryIfc4x1).Module);
+        private static readonly ExpressMetaData ifc4Schema = ExpressMetaData.GetMetadata(new Xbim.Ifc4.EntityFactoryIfc4x1());
 
         // Converts the uppercase Measure name to xbim Class name in IFC4 Interfaces namespace
         private static string GetTypeName(string ifcMeasure)

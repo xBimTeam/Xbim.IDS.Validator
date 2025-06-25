@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Xbim.Essentials" Version="6.0.521" />
+    <PackageReference Include="Xbim.Essentials" Version="6.0.548" />
     <PackageReference Include="Xbim.InformationSpecifications" Version="1.0.10" />
   </ItemGroup>
 

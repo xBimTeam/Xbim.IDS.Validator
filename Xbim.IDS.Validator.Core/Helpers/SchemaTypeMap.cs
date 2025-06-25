@@ -53,8 +53,8 @@ namespace Xbim.IDS.Validator.Core.Helpers
         // Inferences: New types in later schemas that can be inferred in older schemas using Type information
         static IDictionary<string, SchemaInference> BuildSchemaInferenceMappings()
         {
-            var baseSchema = ExpressMetaData.GetMetadata(typeof(Ifc2x3.EntityFactoryIfc2x3).Module);
-            var targetSchema = ExpressMetaData.GetMetadata(typeof(Ifc4.EntityFactoryIfc4).Module);
+            var baseSchema = ExpressMetaData.GetMetadata(new Ifc2x3.EntityFactoryIfc2x3());
+            var targetSchema = ExpressMetaData.GetMetadata(new Ifc4.EntityFactoryIfc4());
 
             var implicitlyMapped = GetMappings(baseSchema, targetSchema);
 

@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿// Uncomment to upgrade scripts to latest schema using XSLT transformation
+//#define InPlaceUpgrade
+
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.Text.RegularExpressions;
 using Xbim.Common;
 using Xbim.Common.Step21;
 using Xbim.IDS.Validator.Common;
@@ -10,6 +12,7 @@ using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xunit.Abstractions;
 using AuditStatus = IdsLib.Audit.Status;
+
 
 namespace Xbim.IDS.Validator.Tests.Common
 {
@@ -124,10 +127,9 @@ namespace Xbim.IDS.Validator.Tests.Common
             IModel model = null;
             try
             {
-                if (false)
-                {
-                    DoInPlaceUpgrade(idsFile);
-                }
+#if InPlaceUpgrade
+                DoInPlaceUpgrade(idsFile);
+#endif
                 string modelFile = Path.ChangeExtension(idsFile, "ifc");
                 output.WriteLine($"IDS: {new FileInfo(idsFile).FullName}");
                 output.WriteLine($"IFC: {new FileInfo(modelFile).FullName}");
