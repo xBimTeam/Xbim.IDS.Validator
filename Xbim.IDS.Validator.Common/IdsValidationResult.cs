@@ -171,6 +171,7 @@ namespace Xbim.IDS.Validator.Core
         {
             MaterialFacet prop => "Material",
             PartOfFacet prop => "Related",
+            IfcClassificationFacet prop => "Classification ",
             _ => "",
         };
 

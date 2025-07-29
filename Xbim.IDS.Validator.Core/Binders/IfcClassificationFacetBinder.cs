@@ -149,7 +149,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             // then fall back to the type's classificationreference values on the system (and ancestors).
 
             var systems = GetClassificationSystems(item).Distinct().ToList();
-            var isClassified = systems.Any();
+            var entityIsClassified = systems.Any();
             foreach(var system in systems)
             {
                 var classResult = SystemClassificationsSatisfies(item, system, facet, result, ctx);
@@ -160,11 +160,16 @@ namespace Xbim.IDS.Validator.Core.Binders
                 }
             }
 
-            if(isClassified)
+            // Identify which parameter was provided for messages
+            Expression<Func<IfcClassificationFacet, object>> applicableParam = (IfcClassificationFacet f) => facet.ClassificationSystem!;
+            if (facet.Identification != null || facet.ClassificationSystem is null)
+                applicableParam = (IfcClassificationFacet f) => facet.Identification!;
+
+            if (entityIsClassified)
             {
                 // Classified but not satifying requirement
                 // - Fail is applicable to all cardinalities since ClassificationsSatisfy accounts for Prohibited
-                result.Fail(ValidationMessage.Failure(ctx, fn => fn.Identification ?? fn.ClassificationSystem!, null, "No classifications matching", item));
+                result.Fail(ValidationMessage.Failure(ctx, applicableParam, null, "No classifications matching", item));
             }
             else
             {
@@ -174,14 +179,14 @@ namespace Xbim.IDS.Validator.Core.Binders
                     case Cardinality.Expected:
                         {
                             // No classifications, or none matching
-                            result.Fail(ValidationMessage.Failure(ctx, fn => fn.Identification ?? fn.ClassificationSystem!, null, "No classifications found", item));
+                            result.Fail(ValidationMessage.Failure(ctx, applicableParam, null, "No classifications found", item));
                             break;
                         }
 
                     case Cardinality.Optional:
                     case Cardinality.Prohibited:
                         {
-                            result.MarkSatisified(ValidationMessage.Failure(ctx, fn => fn.Identification ?? fn.ClassificationSystem!, null, "No classification found", item));
+                            result.MarkSatisified(ValidationMessage.Failure(ctx, applicableParam, null, "No classification found", item));
                             break;
                         }
                 }
