@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections;
-using System.Linq;
+using System.Collections.Generic;
+using Xbim.IDS.Validator.Core.Interfaces;
 using Xbim.InformationSpecifications;
 using static IdsLib.Audit;
 
@@ -89,6 +89,12 @@ namespace Xbim.IDS.Validator.Core
         /// A predicate that allows specifications to be filtered from execution
         /// </summary>
         public Func<Specification, bool> SpecExecutionFilter { get; set; } = (_ => true);
+
+        /// <summary>
+        /// An optional set of <see cref="ISpecificationExclusion"/>s identifying entities to exclude from validation checks
+        /// </summary>
+        /// <remarks>Permits applicable entities to be skipped over, e.g. when a user may have accepted the specification can be safely ignored for selected elements.</remarks>
+        public IList<ISpecificationExclusion> EntityExclusions { get; set; } = new List<ISpecificationExclusion>();
     }
 
     

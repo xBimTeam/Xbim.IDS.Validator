@@ -41,6 +41,7 @@ namespace Xbim.IDS.Validator.Core
         public ValidationStatus ValidationStatus { get => TestStatus switch
         {
             EntityValidationResult.NotTested => ValidationStatus.Inconclusive,
+            EntityValidationResult.Excluded => ValidationStatus.Skipped,
             EntityValidationResult.RequirementSatisfied => ValidationStatus.Pass,
             EntityValidationResult.RequirementNotSatisfied => ValidationStatus.Fail,
             EntityValidationResult.Error => ValidationStatus.Error,
@@ -157,6 +158,10 @@ namespace Xbim.IDS.Validator.Core
                     return $"[{Status}] {Reason}: {Expectation} {FacetType}{ValidatedField} to be '{ExpectedResult}' - but found {FormatedActualResult}";
                 }
             }
+            else if (Status == ValidationStatus.Skipped)
+            {
+                return $"[{Status}] {Reason}";
+            }
             else
             {
                 return $"[{Status}] {Reason}: {Expectation} {FacetType}{ValidatedField} to be '{ExpectedResult}' and found {FormatedActualResult}";
@@ -248,6 +253,23 @@ namespace Xbim.IDS.Validator.Core
                 ExpectedResult = context.GetExpected(memberField),
                 Expectation = context.FacetCardinality,
                 ValidatedField = context.GetMember(memberField),
+                EntityAffected = entity
+            };
+        }
+
+        /// <summary>
+        /// Builds a message representing an skipped check
+        /// </summary>
+        /// <param name="reason"></param>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public static ValidationMessage Skipped(string? reason = default, IPersist? entity = null)
+        {
+
+            return new ValidationMessage
+            {
+                Status = ValidationStatus.Skipped,
+                Reason = reason,
                 EntityAffected = entity
             };
         }

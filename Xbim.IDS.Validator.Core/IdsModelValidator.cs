@@ -266,9 +266,22 @@ namespace Xbim.IDS.Validator.Core
 
                 foreach (var item in items)
                 {
-                    if (specCardinality.NoMatchingEntities) // Prohibited items
+                    var exclusionPolicy = options.EntityExclusions.FirstOrDefault(exc => exc.IsEntityMatching(spec, item));
+                    if (exclusionPolicy != null)
                     {
-                        var result = new IdsValidationResult(item, spec.Applicability);
+                        var result = new IdsValidationResult(item, spec.Applicability, options.OutputFullEntity);
+                        result.MarkStatus(EntityValidationResult.Excluded);
+                        var message = ValidationMessage.Skipped($"Exception made using {exclusionPolicy.PolicyType} policy", item);
+                        result.Messages.Add(message);
+                        userLogger.LogDebug("{pad}           [{result}]: {entity} because marked as exception by {policyType} policy", "".PadLeft(0, ' '),
+                            result.ValidationStatus.ToString().ToUpperInvariant(), item, exclusionPolicy.PolicyType);
+                        
+                        requirementResult.ApplicableResults.Add(result);
+                        
+                    }
+                    else if (specCardinality.NoMatchingEntities) // Prohibited items
+                    {
+                        var result = new IdsValidationResult(item, spec.Applicability, options.OutputFullEntity);
                         var message = ValidationMessage.Prohibited(item);
                         result.Fail(message);
                         userLogger.LogDebug("{pad}           [{result}]: {entity} because {short}", "".PadLeft(0, ' '),
@@ -281,7 +294,7 @@ namespace Xbim.IDS.Validator.Core
                         if (spec.Requirement != null)
                         {
                             var result = ModelBinder.ValidateRequirement(item, spec.Requirement, userLogger);
-                            userLogger.LogDebug("{pad}           [{result}]: {entity} because {short}", "".PadLeft(0, ' '),
+                            userLogger.LogDebug("{pad}           [{result}]: {entity} expected {short}", "".PadLeft(0, ' '),
                                 result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Requirement?.Short() ?? "No requirement");
                             foreach (var message in result.Messages)
                             {
@@ -295,7 +308,7 @@ namespace Xbim.IDS.Validator.Core
                             var result = new IdsValidationResult(item, spec.Applicability);
                             var message = ValidationMessage.Success(item);
                             result.MarkSatisified(message);
-                            userLogger.LogDebug("{pad}           [{result}]: {entity} because {short}", "".PadLeft(0, ' '),
+                            userLogger.LogDebug("{pad}           [{result}]: {entity} expected {short}", "".PadLeft(0, ' '),
                                 result.ValidationStatus.ToString().ToUpperInvariant(), item, spec.Applicability?.Short() ?? "No applicability");
                             requirementResult.ApplicableResults.Add(result);
                         }

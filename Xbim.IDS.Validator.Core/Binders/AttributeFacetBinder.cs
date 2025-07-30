@@ -289,7 +289,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         private Expression BindAttributeSelection(Expression expression, ExpressType expressType,
             string ifcAttributeName, ValueConstraint constraint)
         {
-            var props = GetAllProperties(expressType, _options.AllowDerivedAttributes);
+            var props = GetAllProperties(expressType, _options?.AllowDerivedAttributes ?? false);
             var propertyMeta = props.FirstOrDefault(p => p.Name == ifcAttributeName);
             if (propertyMeta == null)
             {

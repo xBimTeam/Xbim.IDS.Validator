@@ -37,6 +37,7 @@ partial class Program
     {
         var host = Host.CreateApplicationBuilder(args);
 
+        
         host.Services
             .AddLogging(o => o.AddConsole().SetMinimumLevel(LogLevel.Warning))
             .AddIdsValidation(cfg => cfg.AddCOBie())
@@ -49,8 +50,8 @@ partial class Program
             .AddOptions<IdsConfig>()
             .Bind(host.Configuration.GetSection(IdsConfig.SectionName));
 
-             // register your services here.
-
+        // register your services here.
+        XbimServices.Current.UseExternalServiceProvider(host.Services.BuildServiceProvider());
         return host;
 
     }

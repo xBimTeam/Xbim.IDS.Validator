@@ -139,5 +139,28 @@
         </ids:attribute>
       </ids:requirements>
     </ids:specification>
+    <ids:specification ifcVersion="IFC4 IFC4X3_ADD2" name="Doors are Named correctly" identifier="12.34">
+      <ids:applicability minOccurs="0" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCDOOR</ids:simpleValue>
+          </ids:name>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:attribute>
+          <ids:name>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="Name" />
+            </xs:restriction>
+          </ids:name>
+          <ids:value>
+            <xs:restriction base="xs:string">
+              <xs:pattern value="Doors_Int.*" />
+            </xs:restriction>
+          </ids:value>
+        </ids:attribute>
+      </ids:requirements>
+    </ids:specification>
   </ids:specifications>
 </ids:ids>

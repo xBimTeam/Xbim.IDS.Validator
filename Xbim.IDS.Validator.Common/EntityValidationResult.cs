@@ -25,7 +25,12 @@ namespace Xbim.IDS.Validator.Common
         /// <summary>
         /// An error occurred testing the entity
         /// </summary>
-        Error
+        Error,
+
+        /// <summary>
+        /// Excluded from testing via Exclusion Policy / rule
+        /// </summary>
+        Excluded,
     }
 
 }
