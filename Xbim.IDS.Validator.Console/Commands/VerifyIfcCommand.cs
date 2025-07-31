@@ -167,6 +167,10 @@ namespace Xbim.IDS.Validator.Console.Commands
                 {
                     percent = null;
                 }
+                if(console?.MinVerbosity <= Verbosity.Minimal && req.ApplicableResults.Any() == false && req.Status == ValidationStatus.Pass && req.Specification.Cardinality.NoMatchingEntities == false )
+                {
+                    continue;   // Skip 'no applicable rows' for quieter log levels for more consise logs 
+                }
                 console?.WriteImportant(White, $"{i++,4}");
                 console?.WriteImportant(console.GetColorForStatus(req.Status), $"{StatusIcon(req.Status)}");
                 console?.WriteImportant(White, $" [{passed,5}")
