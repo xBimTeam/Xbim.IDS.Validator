@@ -19,7 +19,7 @@
   
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
-    <PackageReference Include="Xbim.InformationSpecifications" Version="1.0.10" />
+    <PackageReference Include="Xbim.InformationSpecifications" Version="1.0.11" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetXbimV6)' != 'true'">

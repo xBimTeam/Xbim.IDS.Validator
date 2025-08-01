@@ -458,7 +458,9 @@ namespace Xbim.IDS.Validator.Core
 
             // decode the field we're validating from the expression
             var accessor = GetCompiled(memberField);
-            return accessor?.Invoke(Clause)?.ToString() ?? "<any>";
+            var value = accessor?.Invoke(Clause);
+            if(value is ValueConstraint constr) return constr?.Short() ?? "<any>";
+            return value?.ToString() ?? "<any>";
         }
 
         /// <summary>

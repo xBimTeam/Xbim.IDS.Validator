@@ -1,5 +1,5 @@
 // generated code, any changes made directly here will be lost
-// Generated using Xids: 1.0.10
+// Generated using Xids: 1.0.11
 // Generated using ids-lib: 1.0.95
 using Microsoft.Extensions.Logging;
 using System;
