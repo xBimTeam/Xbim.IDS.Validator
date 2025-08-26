@@ -64,7 +64,14 @@ jobs:
       nugetConfigPath: 'nuget.config'
 
   - task: DotNetCoreCLI@2
-    displayName: 'Build & Pack'
+    displayName: 'Build Everything'
+    inputs:
+      command: 'build'
+      projects: '**/*.sln'
+      arguments: '/p:Configuration=$(BuildConfiguration)'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Pack'
     inputs:
       command: 'pack'
       packagesToPack: '**/*.sln'
@@ -76,7 +83,15 @@ jobs:
       command: 'test'
       projects: '**/*.Tests.csproj'
       #arguments: '-v normal -l "console;verbosity=detailed"'
-  
+
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: '$(build.sourcesdirectory)\Xbim.IDS.Validator.Console\bin\$(BuildConfiguration)'
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/Xbim.IDS.Validator.Console-$(Build.BuildId).zip'
+      replaceExistingArchive: true
+
   - task: CopyFiles@2
     name: ''
     displayName: 'Copy Nuget Packages to: $(build.artifactstagingdirectory)'
