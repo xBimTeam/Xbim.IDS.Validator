@@ -1,26 +1,31 @@
 ﻿using IdsLib.IfcSchema;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Xbim.Common;
 using Xbim.Common.Metadata;
 
 namespace Xbim.IDS.Validator.Core.Helpers
 {
-    internal class SchemaTypeMap
+    /// <summary>
+    /// Provides mapping between IFC types across diffrent schemas where equivalents exist
+    /// </summary>
+    public class SchemaTypeMap
     {
 
+        /// <summary>
+        /// Infers the IFC2x3 equivalent of a new type in IFC 4, where one exists
+        /// </summary>
+        /// <remarks>Supports the implementation of the 'AirTerminal' issue in IFC2x3: https://github.com/buildingSMART/IDS/issues/116</remarks>
+        /// <param name="model"></param>
+        /// <param name="entityType"></param>
+        /// <returns></returns>
         public static SchemaInference? InferSchemaForEntity(IModel model, string entityType)
         {
-            if(!_ifc2x3Inferences.ContainsKey(entityType))
+            if (_ifc2x3Inferences.TryGetValue(entityType, out var result))
             {
-                return null;
+                return result;
             }
-            else
-            {
-                return _ifc2x3Inferences[entityType];
-            }
-            
+            return null;            
         }
 
         public static ClassInfo? GetSchemaEquivalent(IModel model, string entityType)
@@ -45,6 +50,10 @@ namespace Xbim.IDS.Validator.Core.Helpers
             return null;
         }
 
+        /// <summary>
+        /// A map of IFC4 types to IFC2x3 equivalents using a qualifying DefiningType
+        /// </summary>
+        public static IEnumerable<KeyValuePair<string, SchemaInference>> Ifc2x3TypeMap { get => _ifc2x3Inferences; }
 
         private static Lazy<IDictionary<string, SchemaInference>> lazySchemaMap = new Lazy<IDictionary<string, SchemaInference>>(() => BuildSchemaInferenceMappings());
 
@@ -79,7 +88,7 @@ namespace Xbim.IDS.Validator.Core.Helpers
             {
                 if (baseSchema.ExpressType(type.ExpressNameUpper) == null)
                 {
-                    // New in the targer schema. Check if a Type exists by convention we can use
+                    // New in the target (newer) schema. Check if a Type exists by convention we can use in the base schema
                     var baseSchemaType = baseSchema.ExpressType(type.ExpressNameUpper + "TYPE");
                     if (baseSchemaType != null)
                     {
@@ -127,19 +136,26 @@ namespace Xbim.IDS.Validator.Core.Helpers
 
     }
 
-    internal class SchemaInference
+    /// <summary>
+    /// Defines a combination of IfcElement and IfcType that can be used to infer an IFC4+ type in IFC2x3
+    /// </summary>
+    /// <remarks>e.g. IFC2x3's IFCAIRTERMINAL = IFCFlOWTERMINAL defined by an IFCAIRTERMINALTYPE</remarks>
+    public class SchemaInference
     {
 
-        public SchemaInference(ClassInfo elementType, ClassInfo definingType)
+        internal SchemaInference(ClassInfo elementType, ClassInfo definingType)
         {
             DefiningType = definingType ?? throw new ArgumentNullException(nameof(definingType));
             ElementType = elementType ?? throw new ArgumentNullException(nameof(elementType));
         }
         /// <summary>
-        /// The 
+        /// The IfcTypeObject that defines the IFC2x3 element
         /// </summary>
         public ClassInfo DefiningType { get; private set; }
 
+        /// <summary>
+        /// The IfcProduct appropriate to the IFC2x3 element
+        /// </summary>
         public ClassInfo ElementType { get; private set; }
     }
 }
