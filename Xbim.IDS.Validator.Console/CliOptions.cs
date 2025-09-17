@@ -31,7 +31,8 @@ namespace Xbim.IDS.Validator.Console
                 new VerifyCommand(provider),
                 new AuditCommand(provider),
                 new MigrateCommand(provider),
-                new DetokeniseCommand(provider),
+                new DetokeniseFileCommand(provider),
+                new DetokeniseFolderCommand(provider),
             };
 
             rootCommand.AddGlobalOption(VerbosityOption);
@@ -62,7 +63,7 @@ namespace Xbim.IDS.Validator.Console
 
             public static readonly Option<string> IdsFilterOption = new Option<string>
                 (aliases: new[] { "--filter", "-f" },
-                description: "Only IDS specs matching this filter")
+                description: "Only run IDS specs matching this filter. (* = matching spec 'Name', otherwise searches 'identifier')")
             {
                 Arity = ArgumentArity.ZeroOrOne,
                 IsRequired = false,
@@ -104,20 +105,39 @@ namespace Xbim.IDS.Validator.Console
         }
 
         /// <summary>
-        /// Defines the 'detokenise' sub-command
+        /// Defines the 'detokenise' sub-command for files
         /// </summary>
-        public class DetokeniseCommand : BaseCommand
+        public class DetokeniseFileCommand : BaseCommand
         {
             public static readonly Argument<FileInfo> IdsTemplateFileArgument = new Argument<FileInfo>("template", "An IDS template file (*.ids|*.xml)");
-            public static readonly Argument<FileInfo> IdsOutputFileArgument = new Argument<FileInfo>("output", "An IDS template file (*.ids|*.xml)");
+            public static readonly Argument<FileInfo> IdsOutputFileArgument = new Argument<FileInfo>("output", "The name of the IDS file to output [optional]") { Arity = ArgumentArity.ZeroOrOne };
 
-            public DetokeniseCommand(IServiceProvider provider) : base(provider, "detokenise", "Detokenise IDS files replacing tokens (e.g. {{ProjectCode}} ) in an IDS template with values of your choosing")
+            public DetokeniseFileCommand(IServiceProvider provider) : base(provider, "detokenise", "Detokenise IDS files replacing tokens (e.g. {{ProjectCode}} ) in an IDS template with values of your choosing")
 
             {
                 this.AddArgument(IdsTemplateFileArgument);
                 this.AddArgument(IdsOutputFileArgument);
 
-                SetCommandHandler<IdsDetokeniseCommand>();
+                SetCommandHandler<IdsDetokeniseFileCommand>();
+            }
+        }
+
+        /// <summary>
+        /// Defines the 'detokenise' sub-command for files
+        /// </summary>
+        public class DetokeniseFolderCommand : BaseCommand
+        {
+            public static readonly Argument<DirectoryInfo> IdsTemplateFolderArgument = new Argument<DirectoryInfo>("folder", "A folder containing IDS files");
+            public static readonly Argument<DirectoryInfo> IdsOutputFolderArgument = new Argument<DirectoryInfo>("output", "The folder where the output should go [optional]") { Arity = ArgumentArity.ZeroOrOne };
+            public static readonly Option<bool> SubFoldersOption = new Option<bool> (aliases: new[] { "--recursive", "-r" }, description: "Include sub folders"){ IsRequired = false };
+            public DetokeniseFolderCommand(IServiceProvider provider) : base(provider, "detokenise-folder", "Detokenise a folder of IDS files replacing tokens with values of your choosing")
+
+            {
+                this.AddOption(SubFoldersOption);
+                this.AddArgument(IdsTemplateFolderArgument);
+                this.AddArgument(IdsOutputFolderArgument);
+
+                SetCommandHandler<IdsDetokeniseFolderCommand>();
             }
         }
     }

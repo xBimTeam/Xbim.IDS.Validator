@@ -42,15 +42,16 @@ namespace Xbim.IDS.Validator.Core
         /// <inheritdoc/>
         public XDocument ReplaceTokens(XDocument template, IDictionary<string, string> tokens)
         {
-            var tokenKeys = tokens.Keys;
-            logger.LogInformation("Replacing IDS tokens: {tokenKeys}", tokenKeys);
             var content = template.ToString();
+            var count = 0;
             // Naive token replacement. We could be using something like HandleBars.net if we want to optimise or employ control flow concepts etc.
             foreach (var pair in tokens)
             {
                 var key = "{{" + pair.Key + "}}";
                 content = content.Replace(key, pair.Value);
+                count++;
             }
+            logger.LogDebug("Replaced {count} tokens", count);
 
             return XDocument.Parse(content);
         }

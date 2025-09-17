@@ -35,17 +35,23 @@ partial class Program
     [RequiresUnreferencedCode("Calls Microsoft.Extensions.DependencyInjection.OptionsBuilderConfigurationExtensions.Bind<TOptions>(IConfiguration)")]
     public static HostApplicationBuilder CreateHostBuilder(string[] args)
     {
-        var host = Host.CreateApplicationBuilder(args);
+        var host = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { Args = args, DisableDefaults=false });
 
-        
+
         host.Services
-            .AddLogging(o => o.AddConsole().SetMinimumLevel(LogLevel.Warning))
+            .AddLogging(o => o.AddSimpleConsole(c => 
+            {
+                c.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Enabled;
+                c.IncludeScopes = false;
+                c.SingleLine = true;
+            }).SetMinimumLevel(LogLevel.Debug))
             .AddIdsValidation(cfg => cfg.AddCOBie())
             .AddXbimToolkit(opt => opt.AddMemoryModel())
             .AddTransient<VerifyIfcCommand>()
             .AddTransient<IdsAuditCommand>()
             .AddTransient<IdsMigratorCommand>()
-            .AddTransient<IdsDetokeniseCommand>()
+            .AddTransient<IdsDetokeniseFileCommand>()
+            .AddTransient<IdsDetokeniseFolderCommand>()
 
             .AddOptions<IdsConfig>()
             .Bind(host.Configuration.GetSection(IdsConfig.SectionName));

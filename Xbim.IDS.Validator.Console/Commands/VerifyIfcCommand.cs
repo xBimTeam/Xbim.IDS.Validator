@@ -59,7 +59,11 @@ namespace Xbim.IDS.Validator.Console.Commands
                 IModel? model = default;
                 try
                 {
-
+                    if (File.Exists(modelFile) != true)
+                    {
+                        logger.LogWarning("Model {file} not found", modelFile);
+                        return -1;
+                    }
 
                     console.WriteImportantLine("IFC File: {0}", modelFile);
                     console.WriteInfoLine("Loading Model...");
@@ -83,6 +87,11 @@ namespace Xbim.IDS.Validator.Console.Commands
 
                     foreach (var ids in idsFiles)
                     {
+                        if (File.Exists(ids) != true)
+                        {
+                            logger.LogWarning("IDS {file} not found", ids);
+                            return -2;
+                        }
                         console.WriteImportantLine("IDS File: {0}", ids);
                         console.WriteInfoLine("Validating...");
                         var options = new VerificationOptions
@@ -93,7 +102,10 @@ namespace Xbim.IDS.Validator.Console.Commands
                             PerformInPlaceSchemaUpgrade = true,
                             PermittedIdsAuditStatuses = VerificationOptions.AnyState,
                             SkipIncompatibleSpecification = true,
-                            SpecExecutionFilter = s => string.IsNullOrEmpty(specNameFilter) || s?.Name?.Contains(specNameFilter, StringComparison.InvariantCultureIgnoreCase) != false,
+                            SpecExecutionFilter = s => 
+                                string.IsNullOrEmpty(specNameFilter) ||
+                                (!specNameFilter.StartsWith("*") && (s.Guid.StartsWith(specNameFilter) || s.Name?.StartsWith(specNameFilter) == true)) || // Spec ID starts with pattern
+                                (specNameFilter.StartsWith("*") && s?.Name?.Contains(specNameFilter.Replace("*", ""), StringComparison.InvariantCultureIgnoreCase) != false), // Spec Name contains pattern
                             RuntimeTokens = config.Detokenise ? config.Tokens : new(),
                         };
 

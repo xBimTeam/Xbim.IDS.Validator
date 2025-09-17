@@ -2,7 +2,7 @@
   "profiles": {
     "Xbim.IDS.Validator.Console": {
       "commandName": "Project",
-      "commandLineArgs": "verify ../../../../../Xbim.IDS.Validator.Core.Tests/TestModels/Samplehouse4.ifc -ids ../../../../../Xbim.IDS.Validator.Core.Tests/TestModels/BasicRequirements1-0.ids "
+      "commandLineArgs": "verify ../Dormitory-ARC-R2025.ifc -ids TestFiles\\FRM2021-XBIM-XX-XX-T-X-0001-InitialIDS-Stage3-Template.ids -f *05"
     }
   }
 }
