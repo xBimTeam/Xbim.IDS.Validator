@@ -52,6 +52,34 @@ namespace Xbim.IDS.Validator.Core.Tests
         }
 
         [Fact]
+        public async Task Can_Handle_No_ApplicableItems()
+        {
+            string modelFile = @"TestModels\SampleHouse4.ifc";
+            string idsScript = @"TestModels\SpecWithSkips.ids";
+
+            var model = BuildModel(modelFile);
+
+            var logger = TestEnvironment.GetXunitLogger<IdsModelValidatorTests>(output);
+
+
+            var idsValidator = provider.GetRequiredService<IIdsModelValidator>();
+
+            var results = await idsValidator.ValidateAgainstIdsAsync(model, idsScript, logger, verificationOptions: new VerificationOptions { PermittedIdsAuditStatuses = VerificationOptions.Relaxed });
+
+            results.Should().NotBeNull();
+
+            results.Status.Should().Be(ValidationStatus.Inconclusive);
+            results.ExecutedRequirements.Should().NotBeEmpty();
+
+            results.ExecutedRequirements.Count().Should().Be(1);
+
+            results.ExecutedRequirements[0].Status.Should().Be(ValidationStatus.Inconclusive);
+            results.ExecutedRequirements[0].ApplicableResults.Should().BeEmpty();
+
+
+        }
+
+        [Fact]
 
         public async Task Can_ValidateModelsWithGlobalGuidExceptions()
         {

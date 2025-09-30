@@ -427,7 +427,11 @@ namespace Xbim.IDS.Validator.Core
                     else
                     {
                         // Optional pass so long as we had no failure
-                        validation.Status = ValidationStatus.Pass;
+                        if(validation.ApplicableResults.Any())
+                        {
+                            validation.Status = ValidationStatus.Pass;
+                        }
+                        // else default: inconclusive
                     }
                 }
 
