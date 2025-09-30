@@ -71,7 +71,12 @@ namespace Xbim.IDS.Validator.Core.Helpers
 
             foreach( var mapping in implicitlyMapped )
             {
-                var inference = new SchemaInference(SchemaInfo.SchemaIfc2x3[mapping.NewType.SuperType.ExpressName], SchemaInfo.SchemaIfc2x3[mapping.DefinedBy.ExpressName]);
+
+                string ifc2x3Element = mapping.NewType.SuperType.Type.IsAbstract ?
+                    "IFCDISCRETEACCESSORY" :    // Special case for IfcVibrationIsolatorType which moved to abstract IfcElementComponent[Type] in IFC4
+                    mapping.NewType.SuperType.ExpressName;
+                
+                var inference = new SchemaInference(SchemaInfo.SchemaIfc2x3[ifc2x3Element], SchemaInfo.SchemaIfc2x3[mapping.DefinedBy.ExpressName]);
                 dict.Add(mapping.NewType.ExpressNameUpper, inference);
             }
             return dict;
