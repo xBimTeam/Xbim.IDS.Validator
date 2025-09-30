@@ -45,7 +45,7 @@ namespace Xbim.IDS.Validator.Core.Extensions
             var predefinedType = GetPredefinedType(obj, out bool isUserDefined);
             
             return facet.PredefinedType?.IsSatisfiedBy(predefinedType, true) == true ||
-                (isUserDefined && facet.PredefinedType?.IsSatisfiedBy("USEREDEFINED", true) == true);
+                (isUserDefined && facet.PredefinedType?.IsSatisfiedBy("USERDEFINED", true) == true);
         }
 
         public static string? GetPredefinedType(IIfcObjectDefinition obj, out bool isUserdefined)

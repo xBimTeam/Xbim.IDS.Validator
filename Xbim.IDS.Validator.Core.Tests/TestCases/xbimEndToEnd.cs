@@ -61,6 +61,15 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             outcome.Status.Should().Be(expected);
         }
 
+        [InlineData(@"TestCases/xbim/pass-userdefined_predefined_types_may_be_specified.ids", ValidationStatus.Pass)]
+        [Theory]
+        public async Task Issue_Userdefined_Applicability_Failed(string idsFile, ValidationStatus expected)
+        {
+            var outcome = await VerifyIdsFile(idsFile, options: new VerificationOptions { PermittedIdsAuditStatuses = VerificationOptions.Relaxed });
+
+            outcome.Status.Should().Be(expected);
+        }
+
 
         [InlineData(@"TestCases/xbim/pass-ifc4-measures-supported.ids")]
         [Theory]

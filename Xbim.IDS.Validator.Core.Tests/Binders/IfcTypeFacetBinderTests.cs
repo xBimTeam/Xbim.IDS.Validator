@@ -94,6 +94,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         }
 
         [InlineData("IfcWall", "SOLIDWALL", 1, typeof(IIfcWall))]
+        [InlineData("IfcWindowType", "USERDEFINED", 1, typeof(IIfcWindowType))]
         [InlineData("IfcWallStandardCase", "PARTITIONING", 2, typeof(IIfcWallStandardCase))]
         [InlineData("IfcSpace", "INTERNAL", 1, typeof(IIfcSpace))]
         [InlineData("IfcFurnitureType", "CHAIR", 2, typeof(IIfcFurnitureType))]
