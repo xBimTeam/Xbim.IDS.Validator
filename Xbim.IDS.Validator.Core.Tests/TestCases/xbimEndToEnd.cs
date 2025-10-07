@@ -80,6 +80,15 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             outcome.Status.Should().Be(ValidationStatus.Pass);
         }
 
+        [InlineData(@"TestCases/xbim/fail-regex_patterns_with_or.ids")]
+        [Theory]
+        public async Task Xbim_Regex_Patterns_with_Or(string idsFile)
+        {
+            var outcome = await VerifyIdsFile(idsFile, false, XbimSchemaVersion.Ifc4, new VerificationOptions { IncludeSubtypes = true, PermittedIdsAuditStatuses = VerificationOptions.AnyState });
+
+            outcome.Status.Should().Be(ValidationStatus.Fail);
+        }
+
 
     }
 }

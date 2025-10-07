@@ -40,6 +40,9 @@
        <DependentUpon>%(Filename).ids</DependentUpon>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+     <None Update="TestCases\xbim\fail-regex_patterns_with_or.ifc">
+       <DependentUpon>fail-regex_patterns_with_or.ids</DependentUpon>
+     </None>
      <None Update="TestModels\BasicRequirements0-97.ids">
        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
      </None>
