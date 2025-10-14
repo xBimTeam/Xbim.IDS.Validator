@@ -69,12 +69,15 @@ namespace Xbim.IDS.Validator.Core.Helpers
 
             var dict = new Dictionary<string, SchemaInference>();
 
-            foreach( var mapping in implicitlyMapped )
+            foreach( var mapping in implicitlyMapped)
             {
-
-                string ifc2x3Element = mapping.NewType.SuperType.Type.IsAbstract ?
-                    "IFCDISCRETEACCESSORY" :    // Special case for IfcVibrationIsolatorType which moved to abstract IfcElementComponent[Type] in IFC4
-                    mapping.NewType.SuperType.ExpressName;
+                // The IFC2x3 element is usually the supertype of the IFC type, but not always
+                string ifc2x3Element = mapping.NewType.ExpressNameUpper switch
+                {
+                    "IFCVIBRATIONISOLATOR" => "IFCEQUIPMENTELEMENT",    // Special case for IfcVibrationIsolatorType which moved to abstract IfcElementComponent[Type] in IFC4
+                    "IFCSPACEHEATER" => "IFCENERGYCONVERSIONDEVICE",    // Spacial case for SpaceHeaterType which moved to IfcFlowTerminal in IFC4
+                    _ => mapping.NewType.SuperType.ExpressName
+                };
                 
                 var inference = new SchemaInference(SchemaInfo.SchemaIfc2x3[ifc2x3Element], SchemaInfo.SchemaIfc2x3[mapping.DefinedBy.ExpressName]);
                 dict.Add(mapping.NewType.ExpressNameUpper, inference);
