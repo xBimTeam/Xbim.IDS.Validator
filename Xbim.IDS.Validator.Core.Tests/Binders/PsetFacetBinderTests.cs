@@ -36,6 +36,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData("Pset_MemberCommon", "Span", "2043.570045136", 1)]
         [InlineData("Other", "FrameDepth", "89", 1)]    // Pset on Type
         [InlineData("BaseQuantities", "Width", "1810", 5)]  // ElementQuantity  TODO: should factor in Unit Conversion?
+        [InlineData("Acme_Project", "PrjNo", "1234", 1)]
         [Theory]
         public void Can_Query_By_Properties(string psetName, string propName, object propValue, int expectedCount,
             ConstraintType psetConstraint = ConstraintType.Exact,
@@ -50,6 +51,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
 
 
         //[InlineData(421, "Pset_SpaceCommon", "IsExternal", false)]
+        [InlineData(103, "Acme_Project", "PrjNo", "1234")]
         [InlineData(323, "Energy Analysis", "Area per Person", 28.5714285714286d)]
         [InlineData(323, "Dimensions", "Area", 15.41678125d)]
         [InlineData(323, "Dimensions", "AREA", 15.41678125d)]
