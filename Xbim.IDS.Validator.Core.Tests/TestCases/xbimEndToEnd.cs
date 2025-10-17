@@ -89,6 +89,15 @@ namespace Xbim.IDS.Validator.Core.Tests.TestCases
             outcome.Status.Should().Be(ValidationStatus.Fail);
         }
 
+        [InlineData(@"TestCases/xbim/pass-ifc4-projects-support_properties.ids")]
+        [Theory]
+        public async Task Xbim_Ifc4_Projects_Have_Properties(string idsFile)
+        {
+            var outcome = await VerifyIdsFile(idsFile, false, XbimSchemaVersion.Ifc4, new VerificationOptions { IncludeSubtypes = true, PermittedIdsAuditStatuses = VerificationOptions.AnyState });
 
+            outcome.Status.Should().Be(ValidationStatus.Pass);
+        }
+
+        //pass-ifc4-projects-support_properties
     }
 }

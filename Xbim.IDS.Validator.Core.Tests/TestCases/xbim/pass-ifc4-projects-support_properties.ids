@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ids xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://standards.buildingsmart.org/IDS http://standards.buildingsmart.org/IDS/1.0/ids.xsd" xmlns="http://standards.buildingsmart.org/IDS">
+  <info>
+    <title>IFCProjects support Properties</title>
+    <description>Hand edited.</description>
+  </info>
+  <specifications>
+    <specification name="Ifc4 Projects get Properties via IfcContext not IfcObject" ifcVersion="IFC4">
+      <applicability maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCPROJECT</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <property dataType="IFCLABEL">
+          <propertySet>
+            <simpleValue>Foo_Bar</simpleValue>
+          </propertySet>
+          <baseName>
+            <xs:restriction base="xs:string">
+              <xs:pattern value="Foo.*" />
+            </xs:restriction>
+          </baseName>
+          <value>
+            <simpleValue>x</simpleValue>
+          </value>
+        </property>
+      </requirements>
+    </specification>
+  </specifications>
+</ids>

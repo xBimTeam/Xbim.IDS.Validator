@@ -556,6 +556,14 @@ namespace Xbim.IDS.Validator.Core.Binders
 
 
             }
+            else if(entity is IIfcContext ctx)
+            {
+                return ctx.IsDefinedBy
+                    .Where(r => r.RelatingPropertyDefinition is IIfcPropertySet ps && ps.Name == psetName)
+                    .SelectMany(p => ((IIfcPropertySet)p.RelatingPropertyDefinition)
+                        .HasProperties.Where(ps => constraint.IsSatisfiedBy(ps.Name.Value, true, logger))
+                        .OfType<T>());
+            }
             else
             {
                 return Enumerable.Empty<T>();
@@ -600,6 +608,14 @@ namespace Xbim.IDS.Validator.Core.Binders
 
 
             }
+            else if(entity is IIfcContext ctx)
+            {
+                return ctx.IsDefinedBy
+                    .Where(r => r.RelatingPropertyDefinition is IIfcElementQuantity ps && ps.Name == psetName)
+                    .SelectMany(p => ((IIfcElementQuantity)p.RelatingPropertyDefinition)
+                        .Quantities.Where(ps => nameConstraint.IsSatisfiedBy(ps.Name.Value, true, logger)));
+            }
+
             else
             {
                 return Enumerable.Empty<IIfcPhysicalQuantity>();
@@ -683,6 +699,13 @@ namespace Xbim.IDS.Validator.Core.Binders
                 }
 
                 return entityProperties;
+            }
+            else if (entity is IIfcContext ctx)
+            {
+                // IFCProject etc in IFC4+
+                return ctx.IsDefinedBy
+                    .Where(t => t.RelatingPropertyDefinition is IIfcPropertySetDefinition ps && psetConstraint?.IsSatisfiedBy(ps.Name.ToString(), true, logger) == true)
+                    .Select(p => (IIfcPropertySetDefinition)p.RelatingPropertyDefinition);
             }
             else
             {

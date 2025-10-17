@@ -43,6 +43,9 @@
      <None Update="TestCases\xbim\fail-regex_patterns_with_or.ifc">
        <DependentUpon>fail-regex_patterns_with_or.ids</DependentUpon>
      </None>
+     <None Update="TestCases\xbim\pass-ifc4-projects-support_properties.ifc">
+       <DependentUpon>pass-ifc4-projects-support_properties.ids</DependentUpon>
+     </None>
      <None Update="TestModels\BasicRequirements0-97.ids">
        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
      </None>
