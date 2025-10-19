@@ -60,7 +60,7 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData("IfcWall.*,IfcDoor.*", 9 + 12, typeof(IIfcWall), typeof(IIfcWallType),
             typeof(IIfcDoor), typeof(IIfcDoorType),
             typeof(IIfcDoorLiningProperties), typeof(IIfcDoorPanelProperties))]
-        [InlineData("^(?!IFCPROJECT|IFCBUILDING|IFCBUILDINGSTOREY|IFCSITE)(.+)", 176484, typeof(IPersistEntity))]
+        [InlineData("^(?!IFCPROJECT|IFCBUILDING|IFCBUILDINGSTOREY|IFCSITE)(.+)", 176496, typeof(IPersistEntity))]
         [Theory]
         public void Can_Query_IfcType_Patterns(string ifcType, int expectedCount, params Type[] expectedTypes)
         {
