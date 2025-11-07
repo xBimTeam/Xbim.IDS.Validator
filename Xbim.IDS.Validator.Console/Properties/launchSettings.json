@@ -2,7 +2,7 @@
   "profiles": {
     "Xbim.IDS.Validator.Console": {
       "commandName": "Project",
-      "commandLineArgs": "verify ../10623_PE_ARC_01_R0.ifc -ids ..\\10623_PE_IDS_01_R0_InformationDeliveryStandard_ARC.ids -f Pset_Anagrafica"
+      "commandLineArgs": "verify ../Dormitory-ARC-R2025.ifc -ids TestFiles\\FRM2021-XBIM-XX-XX-T-X-0001-InitialIDS-Stage3-Template.ids -f *05"
     }
   }
 }
