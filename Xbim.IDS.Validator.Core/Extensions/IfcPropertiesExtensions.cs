@@ -134,16 +134,16 @@ namespace Xbim.IDS.Validator.Core.Extensions
                         facet!.PropertyName?.IsSatisfiedBy(psv.Name.Value, true) == true &&
                         (
                             facet.PropertyValue?.HasAnyAcceptedValue() != true ||
-                            facet!.PropertyValue?.IsSatisfiedBy(psv.NominalValue.Value, true) == true)
+                            facet!.PropertyValue?.IsSatisfiedBy(psv.NominalValue?.Value, true) == true)
                         ).Any()
                         // Bounded Values
                         || ps.HasProperties.OfType<IIfcPropertyBoundedValue>().Where(pbv =>
                         facet!.PropertyName?.IsSatisfiedBy(pbv.Name.Value, true) == true &&
                         (
                             facet.PropertyValue?.HasAnyAcceptedValue() != true ||
-                            facet!.PropertyValue?.IsSatisfiedBy(pbv.UpperBoundValue.Value, true) == true ||
-                            facet!.PropertyValue?.IsSatisfiedBy(pbv.LowerBoundValue.Value, true) == true ||
-                            facet!.PropertyValue?.IsSatisfiedBy(pbv.SetPointValue.Value, true) == true
+                            facet!.PropertyValue?.IsSatisfiedBy(pbv.UpperBoundValue?.Value, true) == true ||
+                            facet!.PropertyValue?.IsSatisfiedBy(pbv.LowerBoundValue?.Value, true) == true ||
+                            facet!.PropertyValue?.IsSatisfiedBy(pbv.SetPointValue?.Value, true) == true
                         )).Any()
                         // Enum Values
                         || ps.HasProperties.OfType<IIfcPropertyEnumeratedValue>().Where(pe =>
