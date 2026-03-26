@@ -62,6 +62,24 @@ namespace Xbim.IDS.Validator.Core.Extensions
                     .Where(r => facet.EntityType?.PredefinedType == null || r.RelatingStructure is IIfcObject p && facet.EntityType?.PredefinedType?.IsSatisfiedBy(p.ObjectType, true) == true)
                     .SelectMany(r => r.RelatedElements).OfType<IIfcProduct>();
             }
+            else if (typeof(IIfcRelVoidsElement).IsAssignableFrom(innerType))
+            {
+                var items = rel.Cast<IIfcRelVoidsElement>();
+                return items.Where(r => facet.EntityType?.IfcType?.IsSatisfiedBy(r.RelatingBuildingElement.GetType().Name, true) == true)
+                  .Where(r => facet.EntityType?.PredefinedType == null || r.RelatingBuildingElement is IIfcObject p && facet.EntityType?.PredefinedType?.IsSatisfiedBy(p.ObjectType, true) == true)
+                  .Select(r => r.RelatedOpeningElement).OfType<IIfcOpeningElement>()
+                  .SelectMany(o => o.HasFillings).Select(r => r.RelatedBuildingElement).OfType<IIfcObjectDefinition>();
+            }
+            else if (typeof(IIfcRelationship).IsAssignableFrom(innerType))
+            {
+                // return all
+                return Enumerable.Empty<IIfcObjectDefinition>()
+                    .Union(GetRelatedIfcObjects(rel.OfType<IIfcRelAggregates>(), facet))
+                    .Union(GetRelatedIfcObjects(rel.OfType<IIfcRelNests>(), facet))
+                    .Union(GetRelatedIfcObjects(rel.OfType<IIfcRelAssignsToGroup>(), facet))
+                    .Union(GetRelatedIfcObjects(rel.OfType<IIfcRelContainedInSpatialStructure>(), facet))
+                    .Union(GetRelatedIfcObjects(rel.OfType<IIfcRelVoidsElement>(), facet));
+            }
             else
             {
                 throw new NotImplementedException($"{innerType} is not a supported relationship");
@@ -100,7 +118,14 @@ namespace Xbim.IDS.Validator.Core.Extensions
         {
             var relation = facet.GetRelation();
 
+            IEnumerable<IIfcObjectDefinition> ancestry = GetAncestryForEntity(obj, relation);
 
+            return ancestry.Where(p => MatchesPart(p, facet));
+
+        }
+
+        private static IEnumerable<IIfcObjectDefinition> GetAncestryForEntity(IIfcObjectDefinition obj, PartOfRelation relation)
+        {
             var ancestry = relation switch
             {
                 PartOfRelation.IfcRelAggregates => obj.Decomposes.Select(r => r.RelatingObject)
@@ -116,12 +141,21 @@ namespace Xbim.IDS.Validator.Core.Extensions
                         : new[] { pr }.UnionAncestry(PartOfRelation.IfcRelAggregates).OfType<IIfcProduct>().Select(p => p.IsContainedIn).Where(c => c != null).UnionAncestry(relation)
 
                     : Enumerable.Empty<IIfcObjectDefinition>(),
+                PartOfRelation.IfcRelVoidsFillsElement => obj is IIfcElement el
+                    ? el.FillsVoids.Select(r => r.RelatingOpeningElement).OfType<IIfcOpeningElement>().Select(o => o.VoidsElements).Select(r => r.RelatingBuildingElement)
+                        .UnionAncestry(relation)
+                    : Enumerable.Empty<IIfcObjectDefinition>(),
+                PartOfRelation.Undefined => Enumerable.Empty<IIfcObjectDefinition>()
+                    .Union(GetAncestryForEntity(obj, PartOfRelation.IfcRelAggregates))
+                    .Union(GetAncestryForEntity(obj, PartOfRelation.IfcRelNests))
+                    .Union(GetAncestryForEntity(obj, PartOfRelation.IfcRelAssignsToGroup))
+                    .Union(GetAncestryForEntity(obj, PartOfRelation.IfcRelContainedInSpatialStructure))
+                    .Union(GetAncestryForEntity(obj, PartOfRelation.IfcRelVoidsFillsElement))
+                    ,
 
-                _ => Enumerable.Empty<IIfcObjectDefinition>()
+                _ => throw new NotImplementedException($"Relation {relation} is not supported")
             };
-
-            return ancestry.Where(p => MatchesPart(p, facet));
-
+            return ancestry;
         }
 
         private static bool MatchesPart(IIfcObjectDefinition obj, PartOfFacet facet)
@@ -149,7 +183,8 @@ namespace Xbim.IDS.Validator.Core.Extensions
                 PartOfRelation.IfcRelNests => objs.Union(objs.SelectMany(o => o.Nests.Select(r => r.RelatingObject)).UnionAncestry(relation)),
                 PartOfRelation.IfcRelAssignsToGroup => objs.Union(objs.SelectMany(o => o.HasAssignments.OfType<IIfcRelAssignsToGroup>().Select(r => r.RelatingGroup)).UnionAncestry(relation)),
                 PartOfRelation.IfcRelContainedInSpatialStructure => objs.Union(objs.Cast<IIfcSpatialStructureElement>().Select(sp => sp.IsContainedIn).Where(s => s != null).UnionAncestry(relation)),
-
+                PartOfRelation.IfcRelVoidsFillsElement => objs.Union(objs.OfType<IIfcElement>()
+                    .SelectMany(el => el.FillsVoids.Select(r => r.RelatingOpeningElement).OfType<IIfcOpeningElement>().Select(o => o.VoidsElements).Select(r => r.RelatingBuildingElement)).UnionAncestry(relation))                        ,
                 _ => Enumerable.Empty<IIfcObjectDefinition>()
             };
 

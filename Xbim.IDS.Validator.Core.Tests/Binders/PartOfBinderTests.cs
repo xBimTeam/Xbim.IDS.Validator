@@ -36,9 +36,11 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
         [InlineData(PartOfRelation.IfcRelAggregates, "IfcActor", 0)]
         [InlineData(PartOfRelation.IfcRelContainedInSpatialStructure, "IfcSpace", 14)]
         [InlineData(PartOfRelation.IfcRelContainedInSpatialStructure, "IfcBuildingStorey", 20)]
+        [InlineData(PartOfRelation.IfcRelVoidsFillsElement, "IfcWall", 5)]
+        [InlineData(null, "IfcWall", 5)]
         // TODO: Nests and Groups examples - none in the Sample model currently
         [Theory]
-        public void Can_Query_By_PartOf(PartOfRelation relation, string entityType, int expectedCount, 
+        public void Can_Query_By_PartOf(PartOfRelation? relation, string entityType, int expectedCount, 
             ConstraintType sysConType = ConstraintType.Exact)
         {
             var typeFacet = new IfcTypeFacet
@@ -49,7 +51,11 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
             {
                EntityType = typeFacet
             };
-            facet.SetRelation(relation);
+
+            // RelationType is optional, so only set if provided
+            if (relation.HasValue)
+                facet.SetRelation(relation.Value);
+
             switch (sysConType)
             {
                 case ConstraintType.Exact:
@@ -59,26 +65,26 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                     typeFacet.IfcType.AddAccepted(new PatternConstraint(entityType)); break;
             }
            
-
             // Act
             var expression = Binder.BindSelectionExpression(query.InstancesExpression, facet);
 
             // Assert
-
             var result = query.Execute(expression, Model);
             result.Should().HaveCount(expectedCount);
 
         }
 
-
+        
         [InlineData(531, PartOfRelation.IfcRelAggregates, "IfcBuildingStorey")] // Storey has Space
         //[InlineData(531, PartOfRelation.IfcRelAggregates, "IfcDoor")] 
 
         [InlineData(38397, PartOfRelation.IfcRelContainedInSpatialStructure, "IfcSpace")]
         //[InlineData(38397, PartOfRelation.IfcRelContainedInSpatialStructure, "IfcSite")]
+        [InlineData(10993, PartOfRelation.IfcRelVoidsFillsElement, "IfcWall")]
+        [InlineData(10993, null, "IfcWall")]
         // TODO: Nests, Groups
         [Theory]
-        public void Can_Validate_Parts(int entityLabel, PartOfRelation relation,  string entityType)
+        public void Can_Validate_Parts(int entityLabel, PartOfRelation? relation,  string entityType)
         {
 
             var entity = Model.Instances[entityLabel];
@@ -91,13 +97,13 @@ namespace Xbim.IDS.Validator.Core.Tests.Binders
                 EntityType = typeFacet
             };
             typeFacet.IfcType.AddAccepted(new PatternConstraint(entityType));
-            propFacet.SetRelation(relation);
+            if (relation.HasValue) propFacet.SetRelation(relation.Value);
+
             FacetGroup group = BuildGroup(propFacet);
             var result = new IdsValidationResult(entity, group);
             Binder.ValidateEntity(entity, propFacet, Cardinality.Expected, result);
 
             // Assert
-
             result.Successful.Should().NotBeEmpty();
             result.Failures.Should().BeEmpty();
             result.ValidationStatus.Should().Be(ValidationStatus.Pass);

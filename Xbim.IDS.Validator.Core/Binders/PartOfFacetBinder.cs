@@ -42,16 +42,19 @@ namespace Xbim.IDS.Validator.Core.Binders
             var expression = baseExpression;
             // When an Ifc Type has not yet been specified, we start with the EntityRelation Type defined by the facet
             
-            var expressType = Model.Metadata.ExpressType(facet.EntityRelation.ToUpperInvariant());
-            if(expressType == null)
+            var expressType = Model.Metadata.ExpressType(facet.EntityRelation?.ToUpperInvariant() ?? "");
+
+            // "IFCRELVOIDSELEMENT IFCRELFILLSELEMENT" needs special handling. It should traverse both and return the entity on the other side.
+            if (expressType == null && facet.EntityRelation?.ToUpperInvariant().Equals("IFCRELVOIDSELEMENT IFCRELFILLSELEMENT", StringComparison.OrdinalIgnoreCase) == true)
             {
-                logger.LogWarning("Unexpected EntityRelation: {ifcTypes} for schema {ifcSchema}", expressType, Model.SchemaVersion);
-                throw new InvalidOperationException($"Invalid EntityRelation '{expressType}' for {Model.SchemaVersion}");
+                expressType = Model.Metadata.ExpressType("IFCRELVOIDSELEMENT");
             }
+            // EntityRelation is optional, we should handle it and return all objects from all PartOf relations
+            expressType ??= Model.Metadata.ExpressType("IFCRELATIONSHIP");
 
             if (expression.Type.IsInterface && typeof(IEntityCollection).IsAssignableFrom(expression.Type))
             {
-                expression = BindIfcExpressType(expression, expressType, false);
+                expression = BindIfcExpressType(expression, expressType, true);
                 return BindPartOfSelection(expression, facet);
             }
 

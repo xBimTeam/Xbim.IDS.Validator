@@ -16,6 +16,7 @@
     <SelfContained>true</SelfContained>
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>partial</TrimMode>
+    <LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
   <PropertyGroup Condition="'$(SupportSQLite)' == 'True'">
