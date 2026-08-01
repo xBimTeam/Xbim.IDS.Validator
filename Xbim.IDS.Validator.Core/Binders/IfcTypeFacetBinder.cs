@@ -124,7 +124,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             while(currentEntityType != null)
             {
                 var actualName = currentEntityType?.Name.ToUpperInvariant();
-                if (f.IfcType.ExpectationIsSatisifedBy(actualName, ctx, logger))
+                if (f.IfcType.ExpectationIsSatisifedBy(actualName, ctx, false, logger))
                 {
                     result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.IfcType!, actualName, "Correct IFC Type", item));
                     break;
@@ -150,7 +150,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                 var preDefValue = GetPredefinedType(item, out bool isUserDefined);
                 var satisifiedByAnyUserDefined = isUserDefined && f!.PredefinedType.IsSatisfiedBy("USERDEFINED");
 
-                if (f!.PredefinedType.ExpectationIsSatisifedBy(preDefValue, ctx, logger))
+                if (f!.PredefinedType.ExpectationIsSatisifedBy(preDefValue, ctx, true, logger))
                 {
                     result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PredefinedType!, preDefValue, "Correct Predefined Type", item));
                 }

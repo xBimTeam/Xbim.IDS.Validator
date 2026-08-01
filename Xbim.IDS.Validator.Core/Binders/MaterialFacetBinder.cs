@@ -122,7 +122,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                     {
                         var materialName = material;
                     
-                        if (facet.Value.ExpectationIsSatisifedBy(materialName, ctx, logger, true))
+                        if (facet.Value.ExpectationIsSatisifedBy(materialName, ctx, false, logger))
                         {
                             result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.Value!, materialName, "Material matched", item));
                             success = true;

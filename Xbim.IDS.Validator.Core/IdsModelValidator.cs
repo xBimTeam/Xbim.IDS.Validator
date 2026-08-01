@@ -76,7 +76,7 @@ namespace Xbim.IDS.Validator.Core
                 if (verificationOptions.PermittedIdsAuditStatuses != VerificationOptions.AnyState)
                 {
                     // Validate the IDS
-                    Audit.Status schemaStatus = ValidateIdsSchema(idsSpec, userLogger);
+                    Audit.Status schemaStatus = ValidateIdsSchema(idsSpec, userLogger); // this step also performs a cleanup, changing capitalization of types
 
                     if (!verificationOptions.PermittedIdsAuditStatuses.HasFlag(schemaStatus))
                     {
@@ -213,7 +213,7 @@ namespace Xbim.IDS.Validator.Core
                 XDocument doc = detokeniser.ReplaceTokens(new FileInfo(idsFile), verificationOptions.RuntimeTokens);
                 return Xids.LoadBuildingSmartIDS(doc.Root, logger);
             }
-            return Xids.LoadBuildingSmartIDS(idsFile, logger);
+            return Xids.Load(new FileInfo(idsFile), logger);
         }
 
         private ValidationRequirement VerifyModelAgainstSpecification(Specification spec, IModel model, ILogger userLogger, CancellationToken token, VerificationOptions options)
