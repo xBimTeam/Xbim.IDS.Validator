@@ -137,7 +137,7 @@ namespace Xbim.IDS.Validator.Tests.Common
                 logger.LogInformation("Verifying {schema} model {model}", schemaVersion, modelFile);
                 model = LoadModel(modelFile, schemaVersion, spotfix);
 
-                options ??= new VerificationOptions { PerformInPlaceSchemaUpgrade = false};
+                options ??= new VerificationOptions { PerformInPlaceSchemaUpgrade = false, PermittedIdsAuditStatuses = AuditStatus.IdsStructureWarning };
                 var validator = provider.GetRequiredService<IIdsModelValidator>();
 
                 var outcome = await validator.ValidateAgainstIdsAsync(model, idsFile, logger, null, options);

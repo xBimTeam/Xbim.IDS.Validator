@@ -320,7 +320,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                     if (facet.PropertyValue != null)
                     {
                         attrvalue = MapValue(attrvalue, valueMapper);
-                        if (IsTypeAppropriateForConstraint(facet.PropertyValue, attrvalue) && facet.PropertyValue.ExpectationIsSatisifedBy(attrvalue, ctx, logger))
+                        if (IsTypeAppropriateForConstraint(facet.PropertyValue, attrvalue) && facet.PropertyValue.ExpectationIsSatisifedBy(attrvalue, ctx, true, logger))
                         {
                             result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.PropertyValue!, attrvalue, "Predefined Property value matched", predef));
                             success = true;
@@ -719,7 +719,7 @@ namespace Xbim.IDS.Validator.Core.Binders
         {
             if (pf.PropertyValue != null)
             {
-                if (IsTypeAppropriateForConstraint(pf.PropertyValue, value) && pf.PropertyValue.ExpectationIsSatisifedBy(value, ctx, logger))
+                if (IsTypeAppropriateForConstraint(pf.PropertyValue, value) && pf.PropertyValue.ExpectationIsSatisifedBy(value, ctx, true, logger))
                 {
                     return true;
                 }

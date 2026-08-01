@@ -202,7 +202,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             if (!facet.ClassificationSystem.IsNullOrEmpty())
             {
                 var systemName = system.Name.Value?.ToString();
-                if(facet.ClassificationSystem.ExpectationIsSatisifedBy(systemName, ctx, logger, true) == true)
+                if(facet.ClassificationSystem.ExpectationIsSatisifedBy(systemName, ctx, false, logger) == true)
                 {
                     result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.ClassificationSystem!, systemName, "Classification System matched", system));
                     matched |= ClassificationSatisfiedBy.System;
@@ -244,7 +244,7 @@ namespace Xbim.IDS.Validator.Core.Binders
             foreach (var match in matches)
             {
                 var id = match.GetClassificationIdentifiers(logger)
-                    .FirstOrDefault(id => facet.Identification.ExpectationIsSatisifedBy(id, ctx, logger, true));
+                    .FirstOrDefault(id => facet.Identification.ExpectationIsSatisifedBy(id, ctx, false, logger));
                 if (id != null)
                 {
                     result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.Identification!, id, "Classification Identifier matched", match));

@@ -221,7 +221,7 @@ namespace Xbim.IDS.Validator.Core.Binders
                     {
                         // Unwrap the value from IfcValues etc.
                         attrvalue = MapValue(attrvalue, valueMapper);
-                        if (IsTypeAppropriateForConstraint(af.AttributeValue, attrvalue) && af.AttributeValue.ExpectationIsSatisifedBy(attrvalue, ctx, logger))
+                        if (IsTypeAppropriateForConstraint(af.AttributeValue, attrvalue) && af.AttributeValue.ExpectationIsSatisifedBy(attrvalue, ctx, true, logger))
                             result.MarkSatisified(ValidationMessage.Success(ctx, fn => fn.AttributeValue!, attrvalue, "Attribute value OK", item));
                         else
                         {

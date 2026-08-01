@@ -21,12 +21,12 @@ namespace Xbim.IDS.Validator.Core.Extensions
         /// <param name="constraint"></param>
         /// <param name="candidateValue"></param>
         /// <param name="ctx"></param>
-        /// <param name="logger"></param>
         /// <param name="caseSensitive"></param>
+        /// <param name="logger"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
         [return: NotNull]
-        public static bool ExpectationIsSatisifedBy<T>([NotNullWhen(true)]this ValueConstraint? constraint, object candidateValue, ValidationContext<T> ctx, ILogger? logger = null, bool caseSensitive = false) where T: IFacet
+        public static bool ExpectationIsSatisifedBy<T>([NotNullWhen(true)] this ValueConstraint? constraint, object candidateValue, ValidationContext<T> ctx, bool caseSensitive = true, ILogger? logger = null) where T: IFacet
         {
             var expectation = ctx.FacetCardinality switch
             {
@@ -36,7 +36,8 @@ namespace Xbim.IDS.Validator.Core.Extensions
                 
                 _ => throw new NotImplementedException()
             };
-            return constraint?.IsSatisfiedBy(candidateValue, caseSensitive, logger) == expectation;
+            // warning: the IsSatisfied expect a IgnoreCase parameter, as opposed to our caseSensitive, we negate it
+            return constraint?.IsSatisfiedBy(candidateValue, !caseSensitive, logger) == expectation; 
         }
 
         /// <summary>
